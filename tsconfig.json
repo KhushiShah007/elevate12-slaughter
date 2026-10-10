@@ -12,7 +12,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "types": ["vite/client", "vite-plugin-pwa/client"]
+    "types": ["vite/client", "vite-plugin-pwa/client", "node"]
   },
-  "include": ["src", "tailwind.config.ts", "vite.config.ts"]
+  "include": ["src", "api", "tailwind.config.ts", "vite.config.ts"]
 }

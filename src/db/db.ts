@@ -21,6 +21,13 @@ import type {
   User,
 } from '../types';
 
+/** Saved AI answers, so the same request is never sent twice. */
+export interface AiCacheEntry {
+  key: string;
+  value: string;
+  createdAt: string;
+}
+
 export interface Meta {
   key: 'seededAt' | 'dataVersion' | 'currentUserId' | 'lastSyncedAt';
   value: string;
@@ -48,6 +55,7 @@ export class VoyageDB extends Dexie {
   pickups!: Table<FamilyPickup, string>;
   syncQueue!: Table<SyncEntry, number>;
   meta!: Table<Meta, string>;
+  aiCache!: Table<AiCacheEntry, string>;
 
   constructor() {
     super('voyage');
@@ -73,6 +81,8 @@ export class VoyageDB extends Dexie {
       syncQueue: '++seq, &key, status',
       meta: 'key',
     });
+    // v2: cache for AI wording (Goal 4). Existing data is kept.
+    this.version(2).stores({ aiCache: 'key' });
   }
 }
 

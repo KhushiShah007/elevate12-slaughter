@@ -67,7 +67,7 @@ Mood: warm, tactile, travel-scrapbook. Think passport stamps, boarding passes, l
 ## 5. Technical approach (decisions already made, do not re-debate)
 
 - Vite + React + TypeScript + Tailwind + Framer Motion + react-router-dom + vite-plugin-pwa + Dexie (IndexedDB) + Fuse.js + lucide-react.
-- Hosting: Vercel. One serverless function in `/api` that calls Gemini, so the API key is never in the browser.
+- Hosting: Vercel. One serverless function in `/api` (`/api/ai`) that calls Groq, so the API key (`GROQ_API_KEY`) is never in the browser. (Changed from Gemini to Groq at the team's request during Goal 4.)
 - Not Flutter, not Next.js, not a big backend. Skip the "compare frameworks" step.
 - Folder rule: UI in `src/screens` and `src/components`; pure logic in `src/engines`; storage in `src/db`; AI calls in `src/ai`; translations in `src/i18n`; sample data in `src/data`. UI never contains business logic.
 
@@ -81,9 +81,9 @@ Mood: warm, tactile, travel-scrapbook. Think passport stamps, boarding passes, l
 | Airports + terminal guide | On-device (bundled JSON) | Yes |
 | Phrasebook + read-aloud | On-device (Fuse.js + speech synthesis) | Yes |
 | Hinglish intent (fallback) | On-device keyword matcher | Yes |
-| Hinglish intent (smart) | Cloud (Gemini via `/api`) | No, falls back |
-| Friendly wording of options | Cloud (Gemini), cached | No, falls back to templates |
-| Email/SMS paste -> trip | Cloud (Gemini) | No, sample fallback |
+| Hinglish intent (smart) | Cloud (Groq via `/api`) | No, falls back |
+| Friendly wording of options | Cloud (Groq), cached | No, falls back to templates |
+| Email/SMS paste -> trip | Cloud (Groq) | No, sample fallback |
 | Weather, share link, live pickup page | Cloud | No |
 
 Every screen shows a small chip: ON-DEVICE or CLOUD. Rule for AI: code decides, AI only rewrites wording. Every AI call has a timeout, a cache and a non-AI fallback.

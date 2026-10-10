@@ -1,8 +1,8 @@
 import { ArrowRight } from 'lucide-react';
-import type { RecoveryOption } from '../../types';
+import type { RecheckRow } from '../../engines/ranking';
 
 /** Old vs new after a recheck. Changed rows are highlighted. */
-export function RecheckDiff({ rows }: { rows: RecoveryOption['recheck'] }) {
+export function RecheckDiff({ rows }: { rows: RecheckRow[] }) {
   return (
     <ul className="divide-y divide-line overflow-hidden rounded-md border border-line bg-paper">
       {rows.map((r) => (

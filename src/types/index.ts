@@ -184,13 +184,32 @@ export interface CascadeEffect {
   icon: 'plane' | 'hotel' | 'car' | 'family' | 'coffee' | 'clock';
 }
 
-export interface RecoveryOption {
+/** A possible fix for a disruption, with the raw facts the ranking engine needs. */
+export interface RecoveryCandidate {
   id: string;
+  appliesTo: DisruptionType[];
   title: string;
-  trueCost: number;
-  timeLost: string;
-  why: string;
-  recheck: { field: string; before: string; after: string; changed: boolean }[];
+  provider: string;
+  kind: 'flight' | 'stay' | 'ground' | 'advice';
+  arrive?: Iso; // new final arrival, for options that change the flight
+  timeLostMin?: number; // for options that do not change the arrival
+  farePerPerson: number; // new money for tickets, per traveller
+  extraStay: number; // new hotel spend
+  extraTransport: number; // new ground transport spend
+  fees: number;
+  seats?: number; // seats left, when it matters
+  risk?: string; // e.g. a tight onward connection
+  note: string; // the main fact behind this option, used in its reason
+}
+
+/** What a recheck with the provider found. */
+export interface RecheckResult {
+  candidateId: string;
+  farePerPerson: number;
+  extraStay: number;
+  seats?: number;
+  soldOut: boolean;
+  checkedAt: Iso;
 }
 
 /** What the cascade engine works out from one changed event. */
