@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { AlertTriangle, BedDouble, Car, Clock, Coffee, Plane, Users } from 'lucide-react';
-import type { CascadeEffect, Disruption, RiskLevel } from '../../types';
+import type { CascadeEffect, CascadeResult, RiskLevel } from '../../types';
 import { fadeUp, stagger } from '../../design/motion';
 import { RedRipple } from './RedRipple';
 
@@ -22,19 +22,20 @@ const ring: Record<RiskLevel, string> = {
 const levelWord: Record<RiskLevel, string> = { ok: 'Fine', warn: 'Affected', bad: 'Breaks' };
 
 /** What the trigger breaks, one knock-on effect at a time. */
-export function CascadeTimeline({ d }: { d: Disruption }) {
-  const calm = d.effects.every((e) => e.level === 'ok');
+export function CascadeTimeline({ d }: { d: CascadeResult }) {
+  const breaks = !!d.brokenAt || d.effects.some((e) => e.level === 'bad');
+  const tight = !breaks && d.effects.some((e) => e.level === 'warn');
   return (
     <div className="rounded-lg border border-line bg-paper p-4 shadow-card">
       <div className="flex items-center gap-3">
-        {calm ? (
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-ok text-paper">
-            <Coffee size={20} />
-          </span>
-        ) : (
+        {breaks ? (
           <RedRipple>
             <AlertTriangle size={20} />
           </RedRipple>
+        ) : (
+          <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-full text-paper ${tight ? 'bg-warn' : 'bg-ok'}`}>
+            {tight ? <Clock size={20} /> : <Coffee size={20} />}
+          </span>
         )}
         <div className="min-w-0">
           <p className="font-display text-xl leading-tight text-ink">{d.headline}</p>

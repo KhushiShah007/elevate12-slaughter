@@ -4,6 +4,7 @@ import { useTrip, useTraveller } from '../../hooks/useTrip';
 import { BoardingPassCard } from '../../components/flight/BoardingPassCard';
 import { Chip } from '../../components/ui/Chip';
 import { SourceChip } from '../../components/layout/SourceChip';
+import { currentCascade } from '../../db/repos/trips';
 import NotFound from '../NotFound';
 
 /** Public, read-only page for family. No app chrome, no points, no private data. */
@@ -17,6 +18,9 @@ export default function FamilyPickup() {
   const { pickup, flights, steps, doneStepIds } = data;
   const arriving = flights[flights.length - 1];
   const lastDone = [...steps].reverse().find((s) => doneStepIds.has(s.id));
+  // Live: recomputed from the current flight status every time it changes.
+  const { result } = currentCascade(data);
+  const moved = result.familyLeave && result.familyLeave !== result.familyLeaveWas;
 
   return (
     <div className="px-gutter pb-12 pt-6">
@@ -30,9 +34,20 @@ export default function FamilyPickup() {
         {traveller.name} lands in {arriving?.toCity}
       </h1>
 
-      <div className="mt-6 rounded-xl border border-line bg-butter p-6 text-center shadow-card">
-        <p className="text-sm font-medium text-espresso">Leave home at</p>
-        <p className="font-display text-[4.5rem] leading-none text-ink">{pickup.leaveHomeAt}</p>
+      <div className={`mt-6 rounded-xl border border-line p-6 text-center shadow-card ${result.familyLeave ? 'bg-butter' : 'bg-rose'}`}>
+        {result.familyLeave ? (
+          <>
+            <p className="text-sm font-medium text-espresso">Leave home at</p>
+            <p className="font-display text-[4.5rem] leading-none text-ink">{result.familyLeave}</p>
+            {moved && <p className="mt-1 text-sm text-espresso">Changed from <span className="line-through">{result.familyLeaveWas}</span>: {result.headline}</p>}
+          </>
+        ) : (
+          <>
+            <p className="text-sm font-medium text-espresso">Don't leave yet</p>
+            <p className="font-display text-[2.75rem] leading-none text-ink">On hold</p>
+            <p className="mt-2 text-sm text-espresso">{result.headline}. A new time appears here once the new flight is known.</p>
+          </>
+        )}
         <p className="mt-2 flex items-center justify-center gap-1 text-sm text-espresso">
           <MapPin size={14} /> {pickup.meetPoint}
         </p>

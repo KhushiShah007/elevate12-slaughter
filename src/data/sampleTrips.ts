@@ -130,7 +130,10 @@ export const flights: Flight[] = [
 ];
 
 // Live status is simulated in the prototype.
-export const flightStatuses: FlightStatus[] = [{ flightId: 'f1', tripId: 't-japan', delayMin: 0, lastSynced: '2026-10-10T18:05:00+05:30' }];
+export const flightStatuses: FlightStatus[] = [
+  { flightId: 'f1', tripId: 't-japan', delayMin: 0, preponedMin: 0, missed: false, source: 'sample', lastSynced: '2026-10-10T18:05:00+05:30' },
+  { flightId: 'f2', tripId: 't-japan', delayMin: 0, preponedMin: 0, missed: false, source: 'sample', lastSynced: '2026-10-10T18:05:00+05:30' },
+];
 
 export const bookings: Booking[] = [
   { id: 'b1', tripId: 't-japan', kind: 'flight', title: 'AI 865 + AI 306 (2 adults)', amount: 68400, status: 'confirmed', bookedViaApp: true },
@@ -146,13 +149,13 @@ export const bookings: Booking[] = [
 ];
 
 export const accommodations: Accommodation[] = [
-  { id: 'a1', tripId: 't-japan', name: 'Hotel Gracery', area: 'Shinjuku, Tokyo', checkIn: '2026-10-14T15:00:00+09:00', checkOut: '2026-10-18T11:00:00+09:00', nights: 4, amount: 38900, note: 'Late arrival noted for 23:59' },
-  { id: 'a2', tripId: 't-japan', name: 'Ryokan Yoshida-sanso', area: 'Higashiyama, Kyoto', checkIn: '2026-10-18T15:00:00+09:00', checkOut: '2026-10-22T10:00:00+09:00', nights: 4, amount: 42600, note: 'Kaiseki dinner included, veg on request' },
+  { id: 'a1', tripId: 't-japan', name: 'Hotel Gracery', area: 'Shinjuku, Tokyo', checkIn: '2026-10-14T15:00:00+09:00', checkOut: '2026-10-18T11:00:00+09:00', nights: 4, amount: 38900, note: 'Late arrival guaranteed until 02:30', latestArrival: '2026-10-15T02:30:00+09:00', fromAirportMin: 90 },
+  { id: 'a2', tripId: 't-japan', name: 'Ryokan Yoshida-sanso', area: 'Higashiyama, Kyoto', checkIn: '2026-10-18T15:00:00+09:00', checkOut: '2026-10-22T10:00:00+09:00', nights: 4, amount: 42600, note: 'Kaiseki dinner included, veg on request', latestArrival: '2026-10-18T22:00:00+09:00' },
 ];
 
 export const transport: TransportBooking[] = [
-  { id: 'tr1', tripId: 't-japan', mode: 'cab', title: 'Airport cab', from: 'Home, Bandra', to: 'BOM T2', at: '2026-10-14T03:40:00+05:30', amount: 1450, ref: 'CAB-22918' },
-  { id: 'tr2', tripId: 't-japan', mode: 'train', title: 'Skyliner', from: 'Narita T2', to: 'Ueno', at: '2026-10-15T00:20:00+09:00', amount: 1650, ref: 'SKY-4410' },
+  { id: 'tr1', tripId: 't-japan', mode: 'cab', title: 'Airport cab', from: 'Home, Bandra', to: 'BOM T2', at: '2026-10-14T03:30:00+05:30', amount: 1450, ref: 'CAB-22918' },
+  { id: 'tr2', tripId: 't-japan', mode: 'train', title: 'Skyliner', from: 'Narita T2', to: 'Ueno', at: '2026-10-15T00:40:00+09:00', amount: 1650, ref: 'SKY-4410' },
   { id: 'tr3', tripId: 't-japan', mode: 'train', title: 'Shinkansen Nozomi', from: 'Tokyo', to: 'Kyoto', at: '2026-10-18T09:30:00+09:00', amount: 8900, ref: 'JR-77120' },
   { id: 'tr4', tripId: 't-japan', mode: 'metro', title: 'Suica card top-up', from: 'Any station', to: 'Tokyo metro', at: '2026-10-15T09:00:00+09:00', amount: 2600, ref: 'IC card' },
 ];
@@ -238,7 +241,7 @@ export const completedMemories: CompletedTripMemory[] = [
 ];
 
 export const journeySteps: JourneyStep[] = [
-  { id: 's1', tripId: 't-japan', label: 'Leave home', hint: 'Cab CAB-22918 arrives 03:40', at: '03:30' },
+  { id: 's1', tripId: 't-japan', label: 'Leave home', hint: 'Cab CAB-22918 picks you up', at: '03:30' },
   { id: 's2', tripId: 't-japan', label: 'Reach airport', hint: 'BOM Terminal 2, Gate 8 entry', at: '04:20' },
   { id: 's3', tripId: 't-japan', label: 'Check-in', hint: 'Air India counters, row D', at: '04:30' },
   { id: 's4', tripId: 't-japan', label: 'Bag drop', hint: '2 bags · 23 kg each', at: '04:45' },
@@ -247,10 +250,10 @@ export const journeySteps: JourneyStep[] = [
   { id: 's7', tripId: 't-japan', label: 'Boarding', hint: 'Zone 3 · seat 14A', at: '05:40' },
 ];
 
-// Family pickup at the destination. Goal 3 computes leaveHomeAt from the live arrival.
+// Family pickup at the destination. The leave-home time is computed from the arrival.
 export const familyPickups: FamilyPickup[] = [{
   tripId: 't-japan',
   pickerName: 'Meera',
-  leaveHomeAt: '22:15',
+  travelMin: 75,
   meetPoint: 'Narita Terminal 2 · Arrivals Gate B',
 }];

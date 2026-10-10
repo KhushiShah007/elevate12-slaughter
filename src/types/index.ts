@@ -80,6 +80,8 @@ export interface Accommodation {
   nights: number;
   amount: number;
   note: string;
+  latestArrival?: Iso; // after this the hotel may mark a no-show
+  fromAirportMin?: number; // travel time from the arrival airport, for the first stay
 }
 
 export interface TransportBooking {
@@ -191,12 +193,13 @@ export interface RecoveryOption {
   recheck: { field: string; before: string; after: string; changed: boolean }[];
 }
 
-export interface Disruption {
-  type: DisruptionType;
+/** What the cascade engine works out from one changed event. */
+export interface CascadeResult {
   headline: string;
   trigger: string;
   effects: CascadeEffect[];
-  options: RecoveryOption[];
+  brokenAt: string | null; // flight id of a connection that breaks
+  newArrival: Iso | null; // null when it depends on a new flight
 }
 
 export interface LoyaltyEntry {
@@ -222,13 +225,16 @@ export interface FlightStatus {
   flightId: string;
   tripId: string;
   delayMin: number;
+  preponedMin: number;
+  missed: boolean;
+  source: 'sample' | 'simulated' | 'reported'; // never shown as live airline data
   lastSynced: Iso;
 }
 
 export interface FamilyPickup {
   tripId: string;
   pickerName: string;
-  leaveHomeAt: string;
+  travelMin: number; // their home to the arrival airport
   meetPoint: string;
 }
 

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Luggage, Plus, Stamp, Wifi, WifiOff } from 'lucide-react';
+import { AlertTriangle, ArrowRight, ChevronRight, Luggage, Plus, Stamp, Wifi, WifiOff } from 'lucide-react';
 import { useNextFlight, useTrips, useTraveller } from '../../hooks/useTrip';
 import { useOnline } from '../../hooks/useOnline';
 import { fadeUp, stagger } from '../../design/motion';
@@ -9,7 +9,9 @@ import { Tile } from '../../components/ui/Tile';
 import { Chip, SampleTag } from '../../components/ui/Chip';
 import { SourceChip } from '../../components/layout/SourceChip';
 import { SyncStatus } from '../../components/layout/SyncStatus';
-import { clock, day, greeting } from '../../utils/format';
+import { clock, day, greeting, localTime } from '../../utils/format';
+
+const screenFor = { delay: 'delay', prepone: 'preponed', missed: 'missed' } as const;
 
 export default function Home() {
   const online = useOnline();
@@ -59,12 +61,31 @@ export default function Home() {
             <h2 className="text-xl">Next flight</h2>
             <SampleTag />
           </div>
+          {next.event && (
+            <Link
+              to={`/trips/${next.trip.id}/disruption/${screenFor[next.event.kind]}`}
+              className="mb-3 flex min-h-tap items-center gap-3 rounded-lg border border-bad/30 bg-rose px-4 py-3 shadow-card"
+            >
+              <AlertTriangle size={20} className="shrink-0 text-bad" />
+              <span className="min-w-0 flex-1">
+                <span className="block font-display text-lg leading-tight text-ink">{next.headline}</span>
+                <span className="text-xs text-espresso">See what it affects and your options</span>
+              </span>
+              <ChevronRight size={18} className="shrink-0 text-espresso" />
+            </Link>
+          )}
           <Link to={`/trips/${next.trip.id}/flights`} className="block">
             <BoardingPassCard
               flight={next.leg}
               risk={next.risk}
               pastel="sky"
-              footer={next.lastSynced && <span className="text-[0.6875rem] text-muted">Last synced {clock(next.lastSynced)}</span>}
+              footer={
+                next.status && (
+                  <span className="text-[0.6875rem] text-muted">
+                    {next.status.source === 'simulated' ? 'Simulated' : next.status.source === 'reported' ? 'Reported by you' : 'Last synced'} {localTime(next.status.lastSynced)}
+                  </span>
+                )
+              }
             />
           </Link>
           {next.onward && (

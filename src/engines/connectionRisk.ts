@@ -3,9 +3,7 @@ import type { RiskLevel } from '../types';
 // Minimum connection time we treat as safe for a domestic -> international change.
 export const MIN_CONNECTION_MIN = 90;
 
-export function minutesBetween(a: string, b: string): number {
-  return Math.round((new Date(b).getTime() - new Date(a).getTime()) / 60000);
-}
+export { minutesBetween } from './time';
 
 /**
  * Connection risk from the layover left after any delay.

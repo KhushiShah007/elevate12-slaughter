@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, GitCompareArrows, RotateCcw, Zap } from 'lucide-react';
-import { judgeScenarios } from '../../data/judgeScenarios';
+import { JUDGE_TRIP, judgeScenarios, type JudgeScenario } from '../../data/judgeScenarios';
+import { setDelay, setMissed, setPrepone } from '../../db/repos/status';
 import { PillButton } from '../../components/ui/PillButton';
 import { Chip } from '../../components/ui/Chip';
 import { resetDemo } from '../../db/seed';
@@ -9,6 +10,13 @@ import { stageSyncConflict } from '../../db/repos/demo';
 /** Hidden demo panel (long-press the logo). Fires sample disasters for judges. */
 export default function JudgeMode() {
   const navigate = useNavigate();
+
+  const fire = async ({ type, change }: JudgeScenario) => {
+    if (change.kind === 'delay') await setDelay(JUDGE_TRIP, change.flightId, change.minutes ?? 0, 'simulated');
+    else if (change.kind === 'prepone') await setPrepone(JUDGE_TRIP, change.flightId, change.minutes ?? 0, 'simulated');
+    else await setMissed(JUDGE_TRIP, change.flightId, 'simulated');
+    navigate(`/trips/${JUDGE_TRIP}/disruption/${type}`);
+  };
 
   return (
     <div className="px-gutter pb-12 pt-3">
@@ -28,7 +36,7 @@ export default function JudgeMode() {
         {judgeScenarios.map((s, i) => (
           <button
             key={s.type}
-            onClick={() => navigate(`/trips/t-japan/disruption/${s.type}`)}
+            onClick={() => void fire(s)}
             className="flex min-h-[4.5rem] w-full items-center gap-4 rounded-lg border border-bad/30 bg-rose px-4 text-left shadow-card active:scale-[0.98]"
           >
             <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-bad font-display text-lg text-paper">{i + 1}</span>
