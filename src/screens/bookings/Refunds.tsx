@@ -7,6 +7,7 @@ import { Chip } from '../../components/ui/Chip';
 import { Input } from '../../components/ui/Input';
 import { api, ApiError } from '../../api/client';
 import { countdown } from '../../engines/refund';
+import { markCancelled } from '../../db/repos/booking';
 import { inr } from '../../utils/format';
 
 interface Request {
@@ -169,6 +170,32 @@ export default function RefundDetail() {
                 Confirm this update
               </PillButton>
             )}
+          </div>
+        )}
+
+        {r.status === 'quoted' && d.quote && (
+          <div className="space-y-2 rounded-lg border border-line bg-paper p-4">
+            <p className="text-sm text-ink">
+              You will get back about <span className="font-semibold">{inr(d.quote.refundInr)}</span> (fee {inr(d.quote.feeInr)}), expected in about {d.quote.days || 1} days. Nothing is cancelled until you confirm.
+            </p>
+            <PillButton
+              full
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                try {
+                  const res = await api<{ request: { refundedInr: number } }>('POST', `/cancellations/${id}/confirm`, { confirm: true });
+                  if (!external) await markCancelled((r.booking as unknown as { clientId: string }).clientId, res.request.refundedInr || d.quote!.refundInr, id);
+                  load();
+                } catch (e) {
+                  setError(e instanceof ApiError ? e.message : 'Could not cancel.');
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              Confirm cancellation
+            </PillButton>
           </div>
         )}
 

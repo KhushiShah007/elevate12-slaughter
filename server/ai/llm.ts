@@ -66,3 +66,40 @@ export async function complete(
   if (!message) throw new LlmError('upstream', 'Empty AI reply');
   return { message: { role: 'assistant', content: message.content ?? null, tool_calls: message.tool_calls }, model: data.model ?? p.model };
 }
+
+/** Stream a plain reply (no tools): yields text pieces as they arrive. */
+export async function* completeStream(p: LlmProvider, messages: LlmMessage[], opts: { maxTokens?: number; temperature?: number } = {}): AsyncGenerator<string> {
+  let res: Response;
+  try {
+    res = await fetch(p.url, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${p.key}` },
+      body: JSON.stringify({ model: p.model, messages, temperature: opts.temperature ?? 0.3, max_tokens: opts.maxTokens ?? 600, stream: true }),
+      signal: AbortSignal.timeout(45_000),
+    });
+  } catch {
+    throw new LlmError('upstream', 'AI service unreachable');
+  }
+  if (res.status === 429) throw new LlmError('rate_limited', 'AI service is busy');
+  if (!res.ok || !res.body) throw new LlmError('upstream', `AI service error ${res.status}`);
+  const reader = res.body.getReader();
+  const dec = new TextDecoder();
+  let buf = '';
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    const lines = buf.split('\n');
+    buf = lines.pop() ?? '';
+    for (const line of lines) {
+      const data = line.replace(/^data:\s*/, '').trim();
+      if (!data || data === '[DONE]') continue;
+      try {
+        const piece = (JSON.parse(data) as { choices?: { delta?: { content?: string } }[] }).choices?.[0]?.delta?.content;
+        if (piece) yield piece;
+      } catch {
+        /* keep-alive or partial line */
+      }
+    }
+  }
+}

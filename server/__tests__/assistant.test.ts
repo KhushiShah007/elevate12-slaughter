@@ -55,11 +55,35 @@ describe('assistant API', () => {
     delete process.env.XAI_API_KEY;
   });
 
-  it('says clearly when no AI key is set', async () => {
-    expect((await call('GET', '/assistant/status')).body.provider).toBeNull();
-    const res = await call('POST', '/assistant/chat', { message: 'hi' });
-    expect(res.status).toBe(503);
-    expect(res.body.error.code).toBe('ai_not_configured');
+  it('answers from built-in rules when no AI key is set (never an error)', async () => {
+    expect((await call('GET', '/assistant/status')).body).toMatchObject({ provider: null, fallback: 'rules' });
+    const res = await call('POST', '/assistant/chat', { message: 'What trips do I have?' });
+    expect(res.status).toBe(200);
+    expect(res.body.provider).toBe('rules');
+    expect(res.body.reply).toContain('Jaipur with Nani');
+    expect(res.body.links[0].to).toBe('/trips/trip-1');
+  });
+
+  it('replans the day from chat ("I feel sick today"), undoable', async () => {
+    await call('POST', '/itineraries/trip-1/generate');
+    const res = await call('POST', '/assistant/chat', { message: 'I feel sick today' });
+    expect(res.body.reply).toMatch(/changed .* of Jaipur with Nani/);
+    expect(res.body.reply).toContain('112');
+    expect(res.body.links[0].to).toBe('/trips/trip-1/itinerary');
+    const it2 = await call('GET', '/itineraries/trip-1');
+    expect(it2.body.versions[0].reason).toBe('Feeling sick');
+  });
+
+  it('starts a cancellation from chat but never cancels by itself', async () => {
+    const res = await call('POST', '/assistant/chat', { message: 'cancel something that does not exist' });
+    expect(res.body.reply).toMatch(/No confirmed booking matches/);
+  });
+
+  it('streams replies as server-sent events', async () => {
+    const res = await app.request('/api/assistant/chat/stream', { method: 'POST', headers: { 'content-type': 'application/json', cookie }, body: JSON.stringify({ message: 'what is my budget' }) });
+    const text = await res.text();
+    expect(text).toContain('event: done');
+    expect(text).toContain('Jaipur with Nani');
   });
 
   it('answers from tool data, links to the trip, and saves the conversation', async () => {
@@ -79,7 +103,7 @@ describe('assistant API', () => {
     expect(seen[0].messages[0].content).toContain('Meera');
 
     const list = await call('GET', '/assistant/conversations');
-    expect(list.body.conversations).toHaveLength(1);
+    expect(list.body.conversations.some((cv: { id: string }) => cv.id === res.body.conversationId)).toBe(true);
     const conv = await call('GET', `/assistant/conversations/${res.body.conversationId}`);
     expect(conv.body.messages.map((m: { role: string }) => m.role)).toEqual(['user', 'assistant']);
   });

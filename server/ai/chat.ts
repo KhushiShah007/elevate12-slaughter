@@ -99,3 +99,59 @@ export async function runChat(p: LlmProvider, userId: string, system: string, hi
   transcript.push({ role: 'assistant', content: reply });
   return { turn: { reply, links, toolsUsed: used, model, grounded: true }, transcript };
 }
+
+/**
+ * Streaming variant: tools run first; once data is gathered the final answer streams token
+ * by token. The price guard runs on the full text; if it fails, a corrected reply replaces it.
+ */
+export async function runChatStream(
+  p: LlmProvider,
+  userId: string,
+  system: string,
+  history: LlmMessage[],
+  userText: string,
+  emit: (event: 'tool' | 'delta' | 'replace', data: string) => Promise<void>,
+): Promise<ChatTurn> {
+  const { completeStream } = await import('./llm');
+  const messages: LlmMessage[] = [{ role: 'system', content: system }, ...history.slice(-12), { role: 'user', content: userText }];
+  const outputs: string[] = [];
+  const links: ToolLink[] = [];
+  const used: string[] = [];
+  for (let round = 0; round < 4; round++) {
+    const out = await complete(p, messages, { tools: TOOLS, maxTokens: 600 });
+    const msg = out.message;
+    if (!msg.tool_calls?.length) {
+      // Answered without tools: send it in small pieces.
+      const reply = (msg.content ?? '').trim();
+      for (const piece of reply.match(/\S+\s*/g) ?? []) await emit('delta', piece);
+      const grounded = pricesAreGrounded(reply, outputs);
+      const final = grounded ? reply : reply.replace(/(?:₹|rs\.?|inr)\s?[\d,]+(?:\.\d+)?/gi, '(see the app for prices)');
+      if (!grounded) await emit('replace', final);
+      return { reply: final, links, toolsUsed: used, model: out.model, grounded };
+    }
+    messages.push(msg);
+    for (const call of msg.tool_calls.slice(0, 4)) {
+      await emit('tool', call.function.name);
+      const result = await runTool(userId, call.function.name, call.function.arguments);
+      const content = JSON.stringify(result.data).slice(0, 6000);
+      outputs.push(content);
+      used.push(call.function.name);
+      for (const l of result.links) if (!links.some((x) => x.to === l.to)) links.push(l);
+      messages.push({ role: 'tool', tool_call_id: call.id, content });
+    }
+    // Next: the answer itself, streamed (no more tools).
+    let reply = '';
+    for await (const piece of completeStream(p, messages, { maxTokens: 600 })) {
+      reply += piece;
+      await emit('delta', piece);
+    }
+    reply = reply.trim();
+    const grounded = pricesAreGrounded(reply, outputs);
+    if (!grounded) {
+      reply = reply.replace(/(?:₹|rs\.?|inr)\s?[\d,]+(?:\.\d+)?/gi, '(see the app for prices)');
+      await emit('replace', reply);
+    }
+    return { reply, links: links.slice(0, 4), toolsUsed: used, model: p.model, grounded };
+  }
+  return { reply: 'Sorry, I could not finish that.', links, toolsUsed: used, model: p.model, grounded: true };
+}

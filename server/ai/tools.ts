@@ -4,6 +4,8 @@ import { searchFlights } from '../flights';
 import { searchHotels } from '../hotels';
 import { getWeather } from '../routes/live';
 import type { LlmTool } from './llm';
+import { adaptItinerary } from '../routes/itinerary';
+import { createQuote } from '../routes/cancellations';
 
 // What the assistant can look up. Every tool is read-only and scoped to the signed-in
 // traveller. Results are small JSON the model summarises; each also yields "links"
@@ -96,6 +98,42 @@ export const TOOLS: LlmTool[] = [
       name: 'list_my_documents',
       description: "The traveller's saved documents: kind, title, holder, expiry date. ID numbers are masked.",
       parameters: { type: 'object', properties: {}, additionalProperties: false },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'replan_itinerary',
+      description: "Change today's plan of the traveller's next trip because of how they feel or the weather. Creates a new version they can undo.",
+      parameters: {
+        type: 'object',
+        properties: { mode: { type: 'string', enum: ['sick', 'tired', 'lighter', 'rain', 'late'] }, date: { type: 'string', description: 'yyyy-mm-dd; default today or the first full day' } },
+        required: ['mode'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'start_cancellation',
+      description: "Start a cancellation for one of the traveller's bookings and get a refund estimate. It does NOT cancel: the traveller must confirm in the app.",
+      parameters: { type: 'object', properties: { booking: { type: 'string', description: 'Booking name, hotel, flight number or PNR' } }, required: ['booking'] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'trip_budget',
+      description: "Budget of the traveller's trip: total budget, booked and saved costs, refunds, spent so far.",
+      parameters: { type: 'object', properties: { trip: { type: 'string', description: 'Trip title or destination (optional)' } } },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'flight_status',
+      description: "Status of one of the traveller's flights.",
+      parameters: { type: 'object', properties: { flight: { type: 'string', description: 'Flight number, e.g. 6E 5321' } }, required: ['flight'] },
     },
   },
 ];
@@ -222,6 +260,77 @@ export async function runTool(userId: string, name: string, rawArgs: string): Pr
       return {
         data: { today: today(), documents: docs.map((d) => ({ kind: d.docType, title: d.title, holder: d.holder, expires: d.expiresOn, number: d.maskedNumber })) },
         links: [{ label: 'Open wallet', to: '/wallet' }],
+      };
+    }
+    case 'replan_itinerary': {
+      const mode = str('mode') as 'sick' | 'tired' | 'lighter' | 'rain' | 'late';
+      if (!['sick', 'tired', 'lighter', 'rain', 'late'].includes(mode)) return { data: { error: 'Unknown mode.' }, links: [] };
+      const its = await db.select().from(s.itineraries).where(eq(s.itineraries.userId, userId));
+      const trips = its.length ? await db.select().from(s.trips).where(eq(s.trips.userId, userId)) : [];
+      const today = new Date().toISOString().slice(0, 10);
+      const pick = its
+        .map((i) => ({ i, t: trips.find((t) => t.id === i.tripId) }))
+        .filter((x) => x.t && x.t.endDate >= today)
+        .sort((a, b) => a.t!.startDate.localeCompare(b.t!.startDate))[0];
+      if (!pick) return { data: { error: 'No upcoming trip has an itinerary yet. Open a trip and its Itinerary first.' }, links: [] };
+      const plan = pick.i.plan as { days: { date: string; kind: string }[] };
+      const date = str('date') || plan.days.find((d) => d.date === today)?.date || plan.days.find((d) => d.kind === 'full')?.date || plan.days[0].date;
+      const r = await adaptItinerary(userId, pick.i.tripId, { mode, date, baseVersion: pick.i.version });
+      return {
+        data: { trip: pick.t!.title, date, changed: r.changed, changes: (r as { changes?: string[] }).changes ?? [], emergency: (r as { emergency?: unknown }).emergency ?? null, undo: 'The traveller can undo this in the itinerary.' },
+        links: [{ label: 'Open the itinerary', to: `/trips/${pick.i.tripId}/itinerary` }],
+      };
+    }
+    case 'start_cancellation': {
+      const q = str('booking').toLowerCase().trim();
+      if (q.length < 2) return { data: { error: 'Say which booking.' }, links: [] };
+      const server = (await db.select().from(s.bookings).where(and(eq(s.bookings.userId, userId), eq(s.bookings.status, 'confirmed')))).find(
+        (b) => (b.title ?? '').toLowerCase().includes(q) || (b.pnr ?? '').toLowerCase() === q,
+      );
+      if (server) {
+        const r = await createQuote(userId, { bookingId: server.id });
+        return {
+          data: { booking: server.title, refundEstimateInr: r.estimate.refundInr, feeInr: r.estimate.feeInr, days: r.estimate.days, status: 'estimate only: not cancelled until the traveller confirms' },
+          links: [{ label: 'Review and confirm', to: `/refunds/${r.request.id}` }],
+        };
+      }
+      const recs = await db.select({ payload: s.userRecords.payload }).from(s.userRecords).where(and(eq(s.userRecords.userId, userId), eq(s.userRecords.tbl, 'bookings'), eq(s.userRecords.deleted, false)));
+      const ext = recs
+        .map((r) => r.payload as { id: string; tripId: string; title: string; status: string; pnr?: string })
+        .find((b) => b.status === 'confirmed' && (b.title.toLowerCase().includes(q) || b.pnr?.toLowerCase() === q));
+      if (!ext) return { data: { error: 'No confirmed booking matches that.' }, links: [] };
+      return { data: { booking: ext.title, note: 'Open the booking to see the refund estimate and confirm.' }, links: [{ label: `Cancel ${ext.title}`, to: `/trips/${ext.tripId}/bookings/${ext.id}` }] };
+    }
+    case 'trip_budget': {
+      const trips = await db.select().from(s.trips).where(eq(s.trips.userId, userId)).orderBy(asc(s.trips.startDate));
+      const q = str('trip').toLowerCase();
+      const today = new Date().toISOString().slice(0, 10);
+      const t = trips.find((x) => q && (x.title.toLowerCase().includes(q) || x.destinationName.toLowerCase().includes(q))) ?? trips.find((x) => x.endDate >= today);
+      if (!t) return { data: { error: 'No trip found.' }, links: [] };
+      const recs = await db.select({ tbl: s.userRecords.tbl, payload: s.userRecords.payload }).from(s.userRecords).where(and(eq(s.userRecords.userId, userId), eq(s.userRecords.deleted, false)));
+      const bookings = recs.filter((r) => r.tbl === 'bookings').map((r) => r.payload as { tripId: string; amount: number; status: string; refundInr?: number }).filter((b) => b.tripId === t.id);
+      const expenses = recs.filter((r) => r.tbl === 'expenses').map((r) => r.payload as { tripId: string; amount: number }).filter((e) => e.tripId === t.id);
+      return {
+        data: {
+          trip: t.title,
+          budgetInr: t.budgetInr,
+          bookedInr: bookings.filter((b) => b.status === 'confirmed').reduce((x, b) => x + b.amount, 0),
+          savedOptionsInr: bookings.filter((b) => b.status === 'suggested').reduce((x, b) => x + b.amount, 0),
+          refundedInr: bookings.reduce((x, b) => x + (b.refundInr ?? 0), 0),
+          spentInr: expenses.reduce((x, e) => x + e.amount, 0),
+        },
+        links: [{ label: 'Open the budget', to: `/trips/${t.id}/budget` }],
+      };
+    }
+    case 'flight_status': {
+      const q = str('flight').toUpperCase().replace(/\s+/g, '');
+      const recs = await db.select({ payload: s.userRecords.payload }).from(s.userRecords).where(and(eq(s.userRecords.userId, userId), eq(s.userRecords.tbl, 'flights'), eq(s.userRecords.deleted, false)));
+      const f = recs.map((r) => r.payload as { flightNo: string; depart: string; arrive: string; fromCode: string; toCode: string; tripId: string }).find((x) => x.flightNo.toUpperCase().replace(/\s+/g, '') === q);
+      return {
+        data: f
+          ? { flight: f.flightNo, route: `${f.fromCode}-${f.toCode}`, scheduledDeparture: f.depart, scheduledArrival: f.arrive, status: 'scheduled (demo: no live status provider)', note: 'Live delays and gates need an AeroDataBox or AviationStack key.' }
+          : { error: 'That flight is not in your trips.', note: 'Live status needs an AeroDataBox or AviationStack key.' },
+        links: f ? [{ label: 'Open flights', to: `/trips/${f.tripId}/flights` }] : [],
       };
     }
     default:

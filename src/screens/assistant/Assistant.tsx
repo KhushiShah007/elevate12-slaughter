@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowUp, ArrowUpRight, Mic, Plus, Smartphone, Sparkles, Square, Volume2 } from 'lucide-react';
+import { ArrowUp, ArrowUpRight, History, Mic, Plus, Smartphone, Sparkles, Square, Trash2, Volume2, VolumeX } from 'lucide-react';
+import { Sheet } from '../../components/ui/Sheet';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { Chip } from '../../components/ui/Chip';
 import { useNextFlight, useTraveller, useTrip, useTrips } from '../../hooks/useTrip';
 import { usePoints } from '../../hooks/usePoints';
 import { useOnline } from '../../hooks/useOnline';
-import { speak, useVoiceInput } from '../../hooks/useSpeech';
+import { isMuted, setMuted, speak, stopSpeaking, useSpeaking, useVoiceInput } from '../../hooks/useSpeech';
 import { languageInfo, useT, type MessageKey, type Params } from '../../i18n';
 import { useSettings } from '../../state/settings';
 import { useAuth } from '../../state/auth';
@@ -41,11 +42,12 @@ type Msg =
       provider?: string;
       suggest?: boolean;
       note?: MessageKey;
+      noteText?: string;
     };
 
 const SUGGESTIONS: MessageKey[] = ['asst.suggest.delay', 'asst.suggest.boarding', 'asst.suggest.layover', 'asst.suggest.missed'];
 const NEEDS_FLIGHT: Intent[] = ['delay', 'missed', 'connecting', 'layover', 'preponed', 'boardingPass', 'nextFlight', 'family'];
-const providerName = (p: string | null | undefined) => (p === 'grok' ? 'Grok' : p === 'groq' ? 'Groq' : 'AI');
+const providerName = (p: string | null | undefined) => (p === 'grok' ? 'Grok' : p === 'groq' ? 'Groq' : p === 'rules' ? 'Voyage’s built-in assistant' : 'AI');
 
 // The conversation survives tapping an 'Open' button and coming back; AI chats are also
 // saved on the account and reopened from there.
@@ -92,6 +94,11 @@ export default function Assistant() {
   const [thinking, setThinking] = useState(false);
   const [provider, setProvider] = useState<string | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(readConv);
+  const [looking, setLooking] = useState<string | null>(null);
+  const [chats, setChats] = useState<{ id: string; title: string; updatedAt: string }[] | null>(null);
+  const [muted, setMutedState] = useState(isMuted);
+  const speaking = useSpeaking();
+  const spokenRef = useRef(false);
   const end = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -189,22 +196,72 @@ export default function Assistant() {
 
       setThinking(true);
       try {
-        if (provider && online) {
+        if (online) {
+          // The server answers: the AI with tools when configured, else its built-in rules.
+          // The reply streams in as it is written.
+          const id = nextId++;
+          let shown = false;
+          const show = (patch: Partial<Extract<Msg, { from: 'voyage' }>>) =>
+            setMsgs((m) => {
+              const has = m.some((x) => x.id === id);
+              if (!has) return [...m, { id, from: 'voyage', text: '', source: 'ai', ...patch } as Msg];
+              return m.map((x) => (x.id === id ? ({ ...x, ...patch } as Msg) : x));
+            });
           try {
-            const r = await api<{ conversationId: string; reply: string; links: Link[]; provider: string }>(
-              'POST',
-              '/assistant/chat',
-              { conversationId: conversationId ?? undefined, message: said, lang },
-              45_000,
-            );
-            setConversationId(r.conversationId);
-            writeConv(r.conversationId);
-            setMsgs((m) => [...m, { id: nextId++, from: 'voyage', text: r.reply, links: r.links, source: 'ai', provider: r.provider }]);
+            const res = await fetch('/api/assistant/chat/stream', {
+              method: 'POST',
+              credentials: 'same-origin',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({ conversationId: conversationId ?? undefined, message: said, lang }),
+            });
+            if (!res.ok || !res.body) throw new Error(`chat ${res.status}`);
+            const reader = res.body.getReader();
+            const dec = new TextDecoder();
+            let buf = '';
+            let text = '';
+            for (;;) {
+              const { value, done } = await reader.read();
+              if (done) break;
+              buf += dec.decode(value, { stream: true });
+              const events = buf.split('\n\n');
+              buf = events.pop() ?? '';
+              for (const ev of events) {
+                const event = ev.match(/^event: (.+)$/m)?.[1];
+                const data = ev
+                  .split('\n')
+                  .filter((l) => l.startsWith('data:'))
+                  .map((l) => l.slice(5).replace(/^ /, ''))
+                  .join('\n');
+                if (event === 'tool') setLooking(data);
+                else if (event === 'delta') {
+                  text += data;
+                  shown = true;
+                  setThinking(false);
+                  show({ text });
+                } else if (event === 'replace') {
+                  text = data;
+                  shown = true;
+                  setThinking(false);
+                  show({ text });
+                } else if (event === 'note') show({ noteText: data });
+                else if (event === 'done') {
+                  const d = JSON.parse(data) as { conversationId: string; reply: string; links: Link[]; provider: string };
+                  setConversationId(d.conversationId);
+                  writeConv(d.conversationId);
+                  show({ text: d.reply, links: d.links, provider: d.provider, source: d.provider === 'rules' ? 'device' : 'ai' });
+                  if (spokenRef.current) speak(d.reply, info.speech);
+                }
+              }
+            }
+            if (!shown) throw new Error('empty');
             return;
           } catch {
-            // AI busy, down or offline: the on-device assistant still answers.
+            // Server unreachable: the on-device assistant still answers.
             await answerOnDevice(said, 'asst.aiBusy');
             return;
+          } finally {
+            setLooking(null);
+            spokenRef.current = false;
           }
         }
         await answerOnDevice(said);
@@ -212,10 +269,21 @@ export default function Assistant() {
         setThinking(false);
       }
     },
-    [settings, provider, online, conversationId, lang, answerOnDevice],
+    [settings, online, conversationId, lang, answerOnDevice, info.speech],
   );
 
-  const voice = useVoiceInput(info.speech, (heard) => void send(heard));
+  const [serverStt, setServerStt] = useState(false);
+  useEffect(() => {
+    if (online) api<{ stt: string | null }>('GET', '/assistant/voice').then((r) => setServerStt(!!r.stt)).catch(() => undefined);
+  }, [online]);
+  const voice = useVoiceInput(
+    info.speech,
+    (heard) => {
+      spokenRef.current = true; // a spoken question gets a spoken answer
+      void send(heard);
+    },
+    { serverStt },
+  );
 
   const render = (m: Extract<Msg, { from: 'voyage' }>) => {
     if (m.text) return m.text;
@@ -249,15 +317,81 @@ export default function Assistant() {
         source="cloud"
         right={
           <>
+            <button
+              onClick={() => {
+                setChats([]);
+                api<{ conversations: { id: string; title: string; updatedAt: string }[] }>('GET', '/assistant/conversations')
+                  .then((r) => setChats(r.conversations))
+                  .catch(() => setChats([]));
+              }}
+              aria-label="Chat history"
+              className="grid h-tap w-9 place-items-center rounded-full text-espresso"
+            >
+              <History size={16} />
+            </button>
+            <button
+              onClick={() => {
+                setMuted(!muted);
+                setMutedState(!muted);
+              }}
+              aria-label={muted ? 'Turn read-aloud on' : 'Mute read-aloud'}
+              aria-pressed={muted}
+              className="grid h-tap w-9 place-items-center rounded-full text-espresso"
+            >
+              {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+            </button>
             {msgs.length > 0 && (
               <button onClick={newChat} aria-label={t('asst.newChat')} className="flex min-h-tap items-center gap-1 rounded-pill px-2 text-xs font-medium text-espresso">
                 <Plus size={14} /> {t('asst.newChat')}
               </button>
             )}
-            <Chip tone={provider && online ? 'ok' : undefined}>{provider && online ? t('asst.connected', { provider: providerName(provider) }) : t('asst.fallback')}</Chip>
+            <Chip tone={provider && online ? 'ok' : undefined}>{provider && online ? t('asst.connected', { provider: providerName(provider) }) : online ? 'Built-in assistant' : t('asst.fallback')}</Chip>
           </>
         }
       />
+      {speaking && (
+        <button onClick={stopSpeaking} className="mx-gutter mb-2 flex min-h-tap items-center gap-2 rounded-pill bg-ink px-4 text-sm text-ivory">
+          <Square size={14} /> Stop reading aloud
+        </button>
+      )}
+      {chats && (
+        <Sheet open onClose={() => setChats(null)} title="Your chats">
+          <ul className="max-h-[55vh] space-y-1 overflow-y-auto">
+            {chats.length === 0 && <li className="px-2 py-3 text-sm text-muted">No saved chats yet.</li>}
+            {chats.map((cv) => (
+              <li key={cv.id}>
+                <button
+                  onClick={() => {
+                    setChats(null);
+                    api<{ messages: { role: string; text: string; links: Link[] }[] }>('GET', `/assistant/conversations/${cv.id}`).then((r) => {
+                      setConversationId(cv.id);
+                      writeConv(cv.id);
+                      setMsgs(r.messages.map((m) => (m.role === 'user' ? { id: nextId++, from: 'me' as const, text: m.text } : { id: nextId++, from: 'voyage' as const, text: m.text, links: m.links, source: 'ai' as const })));
+                    });
+                  }}
+                  className="flex min-h-tap w-full items-center justify-between rounded-md px-3 text-left text-sm hover:bg-sand"
+                >
+                  <span className="truncate text-ink">{cv.title}</span>
+                  <span className="shrink-0 text-xs text-muted">{new Date(cv.updatedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+          {chats.length > 0 && (
+            <button
+              onClick={() => {
+                void api('DELETE', '/assistant/conversations').then(() => {
+                  setChats(null);
+                  newChat();
+                });
+              }}
+              className="mt-3 flex min-h-tap w-full items-center justify-center gap-2 text-sm text-bad underline underline-offset-4"
+            >
+              <Trash2 size={14} /> Clear all chats
+            </button>
+          )}
+        </Sheet>
+      )}
 
       <div className="flex-1 space-y-3 px-gutter" aria-live="polite">
         {[hello, ...msgs].map((m) =>
@@ -278,6 +412,7 @@ export default function Assistant() {
               className="max-w-[88%] rounded-lg rounded-bl-sm border border-line bg-paper px-4 py-3 text-[0.9375rem] leading-relaxed text-ink"
             >
               {m.note && <p className="mb-2 text-xs text-muted">{t(m.note)}</p>}
+              {m.noteText && <p className="mb-2 text-xs text-muted">{m.noteText}</p>}
               <p className="whitespace-pre-line">{render(m)}</p>
 
               {m.suggest && (
@@ -326,6 +461,9 @@ export default function Assistant() {
               )}
             </motion.div>
           ),
+        )}
+        {looking && (
+          <p className="text-xs text-muted">Looking up {looking.replace(/_/g, ' ')}…</p>
         )}
         {thinking && (
           <div className="flex w-16 gap-1 rounded-lg border border-line bg-paper px-4 py-3">

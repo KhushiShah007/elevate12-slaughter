@@ -100,9 +100,15 @@ export async function applyRefundResult(requestId: string, outcome: 'processed' 
 
 // ---------- Quote ----------
 
+const quoteBody = z.object({ bookingId: z.string().uuid().optional(), booking: snapshot.optional(), reason: z.string().max(300).optional() });
+
 cancellations.post('/cancellations/quote', async (c) => {
-  const body = await jsonBody(c, z.object({ bookingId: z.string().uuid().optional(), booking: snapshot.optional(), reason: z.string().max(300).optional() }));
-  const userId = c.get('userId');
+  const body = await jsonBody(c, quoteBody);
+  return c.json(await createQuote(c.get('userId'), body));
+});
+
+/** Start (or refresh) a cancellation with a refund estimate. Never cancels anything by itself. */
+export async function createQuote(userId: string, body: z.infer<typeof quoteBody>) {
   const { db } = await getDb();
   let snap: Snapshot;
   let bookingId: string | null = null;
@@ -152,8 +158,8 @@ cancellations.post('/cancellations/quote', async (c) => {
   }
   await db.insert(s.refundQuotes).values({ requestId: request.id, refundInr: est.refundInr, feeInr: est.feeInr, components: est.components, method: est.method, days: est.days, source: snap.source === 'in_app' ? paymentProvider().name : 'rules', notes: est.notes });
   request = await move(request.id, userId, 'quoted', 'system', `Estimate: Rs ${est.refundInr} back, fee Rs ${est.feeInr}`, { refundMethod: est.method });
-  return c.json({ request, estimate: { ...est, policyIsEstimate: !snap.policy } });
-});
+  return { request, estimate: { ...est, policyIsEstimate: !snap.policy } };
+}
 
 // ---------- Confirm (the traveller's tap) ----------
 

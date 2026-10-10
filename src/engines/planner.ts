@@ -373,7 +373,7 @@ export function adaptDay(plan: Plan, mode: AdaptMode, o: AdaptOptions): AdaptRes
       changes.push('Added rest; strenuous plans moved; nearest pharmacy and hospital shown');
     } else {
       // Something gentle and indoors instead: a café or a museum.
-      const gentle = pool.filter((p) => indoorOf(p) && intensityOf(p) <= 2).sort((a, b) => b.score - a.score)[0];
+      const gentle = pool.filter((p) => (p.kind === 'see' && indoorOf(p) && intensityOf(p) <= 2) || (p.kind === 'eat' && p.category === 'cafe')).sort((a, b) => b.score - a.score)[0];
       if (gentle) {
         day.items.push(itemFrom(gentle, toMin('15:30'), null, o.paidEntryEstimate ?? 0, 'lighter'));
         changes.push(`Added ${gentle.name} (easy, indoors)`);
