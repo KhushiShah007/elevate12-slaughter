@@ -244,4 +244,11 @@ export const hinglish: Messages = {
   'match.forYou': 'Tumhare liye',
   'food.notVeg': 'Veg nahi',
   'food.jainNote': 'Bina pyaaz-lehsun maango',
+
+  // Itinerary (Goal 6)
+  'itin.suggested': 'Suggestion',
+  'itin.basedOn': 'Tumhare {persona} persona ke hisaab se free time bhara hai. Booked plans waise hi rahenge.',
+  'itin.note.rest': 'Aaram ka time',
+  'itin.note.veg': 'Veg',
+  'itin.empty': 'Kuch plan nahi. Free din enjoy karo.',
 };

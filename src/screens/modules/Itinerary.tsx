@@ -1,8 +1,16 @@
-import { useState } from 'react';
-import { BedDouble, Camera, Plane, TrainFront, Utensils } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { BedDouble, Camera, Leaf, Plane, Sparkles, TrainFront, Utensils } from 'lucide-react';
 import { ModuleFrame } from './ModuleFrame';
 import type { ItineraryItem } from '../../types';
+import type { TripBundle } from '../../db/repos/trips';
 import { day } from '../../utils/format';
+import { buildItinerary, type PlanNote } from '../../engines/itineraryBuilder';
+import { usePersona } from '../../hooks/usePersona';
+import { useTranslated } from '../../hooks/useTranslated';
+import { nearbyPlaces } from '../../data/sampleTrips';
+import { Chip } from '../../components/ui/Chip';
+import { useT, type MessageKey } from '../../i18n';
+import type { Persona } from '../../engines/persona';
 
 const kindIcon: Record<ItineraryItem['kind'], typeof Plane> = {
   flight: Plane,
@@ -12,60 +20,105 @@ const kindIcon: Record<ItineraryItem['kind'], typeof Plane> = {
   move: TrainFront,
 };
 
+const noteKey: Record<PlanNote, MessageKey> = {
+  match: 'match.forYou',
+  veg: 'itin.note.veg',
+  jain: 'food.jainNote',
+  rest: 'itin.note.rest',
+};
+
 export default function Itinerary() {
-  const [dayId, setDayId] = useState<string | null>(null);
+  const p = usePersona();
+  return <ModuleFrame module="itinerary" title="Itinerary">{(data) => (p ? <ItineraryView data={data} persona={p.persona} /> : null)}</ModuleFrame>;
+}
+
+function ItineraryView({ data, persona }: { data: TripBundle; persona: Persona }) {
+  const { t, info } = useT();
+  const days = useMemo(
+    () =>
+      buildItinerary({
+        trip: data.trip,
+        days: data.days,
+        items: data.items,
+        stays: data.accommodations,
+        experiences: data.experiences,
+        restaurants: data.restaurants,
+        persona,
+        nearby: nearbyPlaces,
+      }),
+    [data, persona],
+  );
+  const [date, setDate] = useState<string | null>(null);
+  const current = days.find((d) => d.date === date) ?? days.find((d) => !d.travelDay) ?? days[0];
+  const { tr } = useTranslated(current ? [{ id: 'title', text: current.title }, ...current.items.map((i) => ({ id: i.id, text: i.title }))] : []);
+  if (!current) return null;
 
   return (
-    <ModuleFrame module="itinerary" title="Itinerary">
-      {({ days, items }) => {
-        const active = dayId ?? days[0]?.id;
-        const current = days.find((d) => d.id === active);
-        return (
-          <>
-            {/* Calendar strip */}
-            <div className="no-scrollbar -mx-gutter flex gap-2 overflow-x-auto px-gutter pb-2">
-              {days.map((d) => {
-                const on = d.id === active;
-                return (
-                  <button
-                    key={d.id}
-                    onClick={() => setDayId(d.id)}
-                    className={`flex min-h-[4.5rem] w-16 shrink-0 flex-col items-center justify-center rounded-md border ${
-                      on ? 'border-ink bg-ink text-ivory' : 'border-line bg-paper text-ink'
-                    }`}
-                  >
-                    <span className="text-[0.625rem] font-semibold uppercase tracking-widest opacity-80">{day(d.date, { weekday: 'short' })}</span>
-                    <span className="font-display text-2xl">{day(d.date, { day: 'numeric' })}</span>
-                  </button>
-                );
-              })}
-            </div>
+    <>
+      <p className="mb-3 flex items-start gap-2 text-xs leading-relaxed text-espresso">
+        <span className="text-base leading-none">{persona.emoji}</span>
+        {t('itin.basedOn', { persona: t(`persona.${persona.id}.title` as MessageKey) })}
+      </p>
 
-            {current && (
-              <div className="mt-4 rounded-lg border border-line bg-paper p-5 shadow-card">
-                <p className="text-xs font-semibold uppercase tracking-widest text-muted">{day(current.date, { weekday: 'long', day: 'numeric', month: 'long' })}</p>
-                <h2 className="mt-1 text-2xl">{current.title}</h2>
-                <ol className="mt-4 space-y-1">
-                  {items
-                    .filter((it) => it.dayId === current.id)
-                    .map((it) => {
-                      const Icon = kindIcon[it.kind];
-                      return (
-                        <li key={it.id} className="flex min-h-tap items-center gap-3">
-                          <span className="w-12 shrink-0 text-sm font-semibold tabular-nums text-espresso">{it.time}</span>
-                          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-lavender">
-                            <Icon size={16} className="text-ink" />
-                          </span>
-                          <span className="text-sm text-ink">{it.title}</span>
-                        </li>
-                      );
-                    })}
-                </ol>
-              </div>
-            )}
-          </>
-        );
-      }}
-    </ModuleFrame>
+      {/* Calendar strip: every day of the trip */}
+      <div className="no-scrollbar -mx-gutter flex gap-2 overflow-x-auto px-gutter pb-2">
+        {days.map((d) => {
+          const on = d.date === current.date;
+          const suggested = d.items.some((i) => i.suggested);
+          return (
+            <button
+              key={d.date}
+              onClick={() => setDate(d.date)}
+              aria-pressed={on}
+              // Keep the chosen day visible in the strip.
+              ref={on ? (el) => el?.scrollIntoView({ inline: 'center', block: 'nearest' }) : undefined}
+              className={`relative flex min-h-[4.5rem] w-16 shrink-0 flex-col items-center justify-center rounded-md border ${
+                on ? 'border-ink bg-ink text-ivory' : 'border-line bg-paper text-ink'
+              }`}
+            >
+              <span className="text-[0.625rem] font-semibold uppercase tracking-widest opacity-80">{day(d.date, { weekday: 'short' }, info.intl)}</span>
+              <span className="font-display text-2xl">{day(d.date, { day: 'numeric' }, 'en-GB')}</span>
+              {suggested && <span className={`absolute bottom-1.5 h-1.5 w-1.5 rounded-full ${on ? 'bg-butter' : 'bg-ok'}`} />}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-4 rounded-lg border border-line bg-paper p-5 shadow-card">
+        <p className="text-xs font-semibold uppercase tracking-widest text-muted">{day(current.date, { weekday: 'long', day: 'numeric', month: 'long' }, info.intl)}</p>
+        <h2 className="mt-1 text-2xl">{tr('title', current.title)}</h2>
+        {current.region && <p className="text-sm text-muted">{current.region}</p>}
+        {current.items.length === 0 && <p className="mt-4 text-sm text-espresso">{t('itin.empty')}</p>}
+        <ol className="mt-4 space-y-2">
+          {current.items.map((it) => {
+            const Icon = kindIcon[it.kind];
+            return (
+              <li
+                key={it.id}
+                className={`flex min-h-tap items-center gap-3 rounded-md px-2 py-1.5 ${it.suggested ? 'border border-dashed border-ok/50 bg-mint/40' : ''}`}
+              >
+                <span className="w-12 shrink-0 text-sm font-semibold tabular-nums text-espresso">{it.time}</span>
+                <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${it.suggested ? 'bg-mint' : 'bg-lavender'}`}>
+                  <Icon size={16} className="text-ink" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm text-ink">{tr(it.id, it.title)}</span>
+                  {it.suggested && (
+                    <span className="mt-0.5 flex flex-wrap gap-1">
+                      <Chip icon={<Sparkles size={10} />}>{t('itin.suggested')}</Chip>
+                      {it.note && it.note !== 'rest' && (
+                        <Chip tone="ok" icon={it.note === 'match' ? undefined : <Leaf size={10} />}>
+                          {t(noteKey[it.note])}
+                        </Chip>
+                      )}
+                    </span>
+                  )}
+                </span>
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+    </>
   );
 }

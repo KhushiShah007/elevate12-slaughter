@@ -244,4 +244,11 @@ export const mr: Messages = {
   'match.forYou': 'तुमच्यासाठी',
   'food.notVeg': 'शाकाहारी नाही',
   'food.jainNote': 'कांदा-लसूण नको असे सांगा',
+
+  // Itinerary (Goal 6)
+  'itin.suggested': 'सूचना',
+  'itin.basedOn': 'तुमच्या {persona} पर्सोनानुसार मोकळा वेळ भरला आहे. बुक केलेल्या योजना तशाच राहतात.',
+  'itin.note.rest': 'विश्रांतीची वेळ',
+  'itin.note.veg': 'शाकाहारी',
+  'itin.empty': 'काही ठरलेले नाही. मोकळ्या दिवसाचा आनंद घ्या.',
 };

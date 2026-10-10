@@ -244,4 +244,11 @@ export const bn: Messages = {
   'match.forYou': 'আপনার জন্য',
   'food.notVeg': 'নিরামিষ নয়',
   'food.jainNote': 'পেঁয়াজ-রসুন ছাড়া চান',
+
+  // Itinerary (Goal 6)
+  'itin.suggested': 'পরামর্শ',
+  'itin.basedOn': 'আপনার {persona} পারসোনা অনুযায়ী ফাঁকা সময় ভরা হয়েছে। বুক করা পরিকল্পনা যেমন ছিল তেমনই থাকবে।',
+  'itin.note.rest': 'বিশ্রামের সময়',
+  'itin.note.veg': 'নিরামিষ',
+  'itin.empty': 'কিছু পরিকল্পনা নেই। একটা ফাঁকা দিন উপভোগ করুন।',
 };

@@ -258,3 +258,9 @@ export const familyPickups: FamilyPickup[] = [{
   travelMin: 75,
   meetPoint: 'Narita Terminal 2 · Arrivals Gate B',
 }];
+
+// Places close enough to a city for a day out, used by the itinerary builder.
+export const nearbyPlaces: Record<string, string[]> = {
+  Kyoto: ['Nara', 'Uji', 'Fushimi', 'Arashiyama'],
+  Tokyo: ['Toyosu', 'Shinjuku', 'Ueno'],
+};

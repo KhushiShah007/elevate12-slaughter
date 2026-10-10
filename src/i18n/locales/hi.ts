@@ -244,4 +244,11 @@ export const hi: Messages = {
   'match.forYou': 'आपके लिए',
   'food.notVeg': 'शाकाहारी नहीं',
   'food.jainNote': 'बिना प्याज़-लहसुन माँगें',
+
+  // Itinerary (Goal 6)
+  'itin.suggested': 'सुझाव',
+  'itin.basedOn': 'आपके {persona} पर्सोना के हिसाब से ख़ाली समय भरा गया है। बुक की हुई योजनाएँ वैसी ही रहती हैं।',
+  'itin.note.rest': 'आराम का समय',
+  'itin.note.veg': 'शाकाहारी',
+  'itin.empty': 'कुछ तय नहीं। एक ख़ाली दिन का मज़ा लें।',
 };

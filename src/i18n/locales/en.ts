@@ -255,6 +255,13 @@ export const en = {
   'match.forYou': 'Matches you',
   'food.notVeg': 'Not vegetarian',
   'food.jainNote': 'Ask for no onion or garlic',
+
+  // Itinerary (Goal 6)
+  'itin.suggested': 'Suggested',
+  'itin.basedOn': 'Free time is filled for you as a {persona}. Booked plans stay as they are.',
+  'itin.note.rest': 'Time to rest',
+  'itin.note.veg': 'Vegetarian',
+  'itin.empty': 'Nothing planned. Enjoy a free day.',
 } as const;
 
 export type MessageKey = keyof typeof en;
