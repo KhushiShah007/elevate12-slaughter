@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import path from 'node:path';
 import type { PgDatabase, PgQueryResultHKT } from 'drizzle-orm/pg-core';
 import * as schema from './schema';
@@ -12,7 +13,7 @@ export type Db = PgDatabase<PgQueryResultHKT, typeof schema>;
 // From the project root, so it works in the dev server, scripts and on Vercel (see vercel.json includeFiles).
 const MIGRATIONS = process.env.MIGRATIONS_DIR ?? path.resolve(process.cwd(), 'server/db/migrations');
 
-type Conn = { db: Db; kind: 'postgres' | 'pglite'; close: () => Promise<void> };
+type Conn = { db: Db; kind: 'postgres' | 'pglite'; close: () => Promise<void>; migrate: () => Promise<void> };
 // Kept on globalThis so dev-server reloads reuse the one open database.
 const g = globalThis as unknown as { __voyageDb?: Promise<Conn> | null };
 
@@ -25,7 +26,7 @@ async function connect() {
     const sql = postgres(url, { max: 5, prepare: false }); // prepare:false works with poolers (Supabase/Neon)
     const db = drizzle(sql, { schema });
     await migrate(db, { migrationsFolder: MIGRATIONS });
-    return { db: db as unknown as Db, kind: 'postgres' as const, close: () => sql.end() };
+    return { db: db as unknown as Db, kind: 'postgres' as const, close: () => sql.end(), migrate: () => migrate(db, { migrationsFolder: MIGRATIONS }) };
   }
 
   if (process.env.VERCEL) throw new Error('DATABASE_URL is not set. Add your Supabase or Neon connection string in Vercel settings.');
@@ -36,15 +37,49 @@ async function connect() {
   const client = dir === 'memory' ? new PGlite() : new PGlite(dir);
   const db = drizzle(client, { schema });
   await migrate(db, { migrationsFolder: MIGRATIONS });
-  return { db: db as unknown as Db, kind: 'pglite' as const, close: () => client.close() };
+  return { db: db as unknown as Db, kind: 'pglite' as const, close: () => client.close(), migrate: () => migrate(db, { migrationsFolder: MIGRATIONS }) };
 }
+
+const migrationCount = () => {
+  try {
+    return fs.readdirSync(MIGRATIONS).filter((f) => f.endsWith('.sql')).length;
+  } catch {
+    return 0;
+  }
+};
+const m = globalThis as unknown as { __voyageMigrations?: number };
 
 /** The database, connected and migrated. Safe to call from every request. */
 export function getDb(): Promise<Conn> {
-  g.__voyageDb ??= connect().catch((err) => {
-    g.__voyageDb = null; // allow a retry on the next request
-    throw err;
-  });
+  // A handle opened by an older copy of this module (dev reload) has no count yet: check once.
+  if (g.__voyageDb && m.__voyageMigrations == null) m.__voyageMigrations = 0;
+  g.__voyageDb ??= connect()
+    .then((c) => {
+      m.__voyageMigrations = migrationCount();
+      return c;
+    })
+    .catch((err) => {
+      g.__voyageDb = null; // allow a retry on the next request
+      throw err;
+    });
+  // Dev server: a migration added while it runs is applied on the next request (additive only).
+  if (!process.env.VERCEL && m.__voyageMigrations != null && migrationCount() > m.__voyageMigrations) {
+    m.__voyageMigrations = migrationCount();
+    const before = g.__voyageDb;
+    g.__voyageDb = before.then(async (c) => {
+      try {
+        if (typeof c.migrate === 'function') await c.migrate();
+        else {
+          // Opened by an older copy of this module: run the migrator directly.
+          const { migrate } = c.kind === 'pglite' ? await import('drizzle-orm/pglite/migrator') : await import('drizzle-orm/postgres-js/migrator');
+          await migrate(c.db as never, { migrationsFolder: MIGRATIONS });
+        }
+      } catch (err) {
+        console.error('[db] could not apply new migrations', err);
+      }
+      return c;
+    });
+  }
   return g.__voyageDb;
 }
 

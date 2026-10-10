@@ -9,6 +9,7 @@ import type { Persona } from '../../engines/persona';
 import type { Guide, GuidePlace } from '../../hooks/useGuide';
 import type { Pastel } from '../../design/tokens';
 import type { Allowance } from '../../hooks/useAllowance';
+import { addToItinerary } from '../../api/itinerary';
 
 type Order = 'you' | 'cheap' | 'rated';
 
@@ -18,7 +19,18 @@ const sightLabel = (c: string | null) => (c ? c.replace(/_/g, ' ') : 'Place');
 const priceRank = (p: GuidePlace) => (p.kind === 'eat' ? (p.costRange?.[0] ?? 1e6) : p.entry === 'free' ? 0 : p.entry === null ? 1 : 2);
 
 /** Places to see or eat from the city guide, ordered for the traveller, with costs and links. */
-export function PlaceList({ guide, kind, persona, pastels, allowance }: { guide: Guide; kind: 'see' | 'eat'; persona: Persona; pastels: Pastel[]; allowance?: Allowance | null }) {
+export function PlaceList({ guide, kind, persona, pastels, allowance, tripId }: { guide: Guide; kind: 'see' | 'eat'; persona: Persona; pastels: Pastel[]; allowance?: Allowance | null; tripId?: string | null }) {
+  const [added, setAdded] = useState<Record<number, string>>({});
+  const add = async (p: GuidePlace) => {
+    if (!tripId) return;
+    setAdded((a) => ({ ...a, [p.id]: 'Adding…' }));
+    try {
+      const r = await addToItinerary(tripId, `${kind}-${p.id}`);
+      setAdded((a) => ({ ...a, [p.id]: r.changed ? 'Added to plan' : 'Already planned' }));
+    } catch {
+      setAdded((a) => ({ ...a, [p.id]: 'Could not add' }));
+    }
+  };
   const [order, setOrder] = useState<Order>(persona.id === 'saver' ? 'cheap' : 'you');
   const [vegOnly, setVegOnly] = useState(false);
   const [fitsOnly, setFitsOnly] = useState(false);
@@ -123,6 +135,11 @@ export function PlaceList({ guide, kind, persona, pastels, allowance }: { guide:
             <a href={p.mapUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-[2rem] items-center gap-1 text-espresso underline underline-offset-4">
               Map <MapPin size={12} />
             </a>
+            {tripId && (
+              <button onClick={() => void add(p)} disabled={!!added[p.id]} className="inline-flex min-h-[2rem] items-center gap-1 font-medium text-ink underline underline-offset-4 disabled:no-underline disabled:opacity-70">
+                {added[p.id] ?? '+ Add to plan'}
+              </button>
+            )}
           </p>
         </TagCard>
       ))}

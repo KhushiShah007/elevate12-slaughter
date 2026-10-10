@@ -61,7 +61,7 @@ function CitySights({ trip }: { trip: Trip }) {
   return (
     <section className="space-y-3">
       <h2 className="text-xl">Things to do in {guide.destination.name}</h2>
-      <PlaceList guide={guide} kind="see" persona={p?.persona ?? defaultPersona()} pastels={['lavender', 'mint', 'rose', 'butter']} allowance={allowanceFor(trip, guide, style)} />
+      <PlaceList guide={guide} kind="see" persona={p?.persona ?? defaultPersona()} pastels={['lavender', 'mint', 'rose', 'butter']} allowance={allowanceFor(trip, guide, style)} tripId={trip.sample ? null : trip.id} />
     </section>
   );
 }

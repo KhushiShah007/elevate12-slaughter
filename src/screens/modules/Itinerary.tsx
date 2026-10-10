@@ -14,6 +14,7 @@ import type { Persona } from '../../engines/persona';
 import { useGuide, type Guide } from '../../hooks/useGuide';
 import { budgetStyle, budgetStyleLabel } from '../../engines/personalize';
 import { inr } from '../../utils/format';
+import { LiveItinerary } from '../../components/itinerary/LiveItinerary';
 import type { Experience, Restaurant } from '../../types';
 
 const INTEREST: Record<string, string> = { museum: 'culture', monument: 'culture', castle: 'culture', fort: 'culture', gallery: 'culture', ruins: 'culture', archaeological_site: 'culture', viewpoint: 'nature', zoo: 'nature', theme_park: 'nature' };
@@ -43,7 +44,8 @@ const noteKey: Record<PlanNote, MessageKey> = {
 
 export default function Itinerary() {
   const p = usePersona();
-  return <ModuleFrame module="itinerary" title="Itinerary">{(data) => (p ? <ItineraryView data={data} persona={p.persona} /> : null)}</ModuleFrame>;
+  // Own trips get the living, server-side itinerary; the bundled sample keeps its hand-made plan.
+  return <ModuleFrame module="itinerary" title="Itinerary">{(data) => (data.trip.sample ? (p ? <ItineraryView data={data} persona={p.persona} /> : null) : <LiveItinerary trip={data.trip} />)}</ModuleFrame>;
 }
 
 function ItineraryView({ data, persona }: { data: TripBundle; persona: Persona }) {

@@ -16,6 +16,7 @@ import { guide } from './routes/guide';
 import { budget } from './routes/budget';
 import { payments } from './routes/payments';
 import { cancellations } from './routes/cancellations';
+import { itinerary } from './routes/itinerary';
 import { handleAi } from '../api/_ai';
 
 // The Voyage API. Runs inside `npm run dev` (Vite middleware) and on Vercel (api/index.ts).
@@ -64,6 +65,8 @@ app.use('/payments/*', rateLimit('payments', 30, 60_000));
 app.use('/cancellations/*', rateLimit('refunds', 40, 60_000));
 app.route('/', payments);
 app.route('/', cancellations);
+app.use('/itineraries/*', rateLimit('itinerary', 60, 60_000));
+app.route('/', itinerary);
 app.route('/', catalog);
 
 // Accounts. Tight limit on anything that checks a password or a code.

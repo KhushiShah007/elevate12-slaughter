@@ -20,3 +20,10 @@ One line each, in the order they were made.
 - Provider contacts store official support page URLs only; no email addresses were invented (all `verified=false`), so the user types the address from the support page.
 - Inbound email: generic webhook `/api/inbound/email/:secret` (SendGrid/Postmark shapes); replies become suggestions the user confirms. Gmail read-only OAuth not built (needs a Google OAuth app).
 - QA runs on a separate dev server (`npm run dev:qa`, port 5174, database `.data/pglite-qa`) because the user's own dev server was holding the main local database.
+- Itinerary is stored as one validated JSON plan per trip (`itineraries.plan`) with full snapshots in `itinerary_versions` (reason + readable diff, used for Undo), instead of separate itinerary_days/itinerary_items tables: simpler atomic versioning; the item fields match the spec (type, start/end, place, coordinates, cost, intensity 1-5, indoor, booking, locked, status).
+- Planner is deterministic (no LLM): nearest-neighbour clustering by coordinates, travel time ~20 km/h + 10 min (Google Routes not wired: no key), OpenStreetMap opening hours parsed, meal slots, family/slow rest breaks, daily intensity cap, daily budget, indoor-first on forecast rain days.
+- With a trip budget, places are priced at the style the on-the-ground money covers (65% of budget / days / travellers), not the persona's style.
+- Today mode: sick (only easy items, rest, pharmacy/hospital links, local emergency number), tired/lighter (~60% effort, gentle indoor addition), rain (indoor swaps), late (shift, drop overflow), skip, add, overspend (cheaper swaps). Locked items never move; paid items warn and link to Cancel/Refund.
+- Real-time sync: Server-Sent Events from the API plus a 60 s poll fallback (serverless hosts cut long streams); version numbers reject stale writes (409).
+- Vegetarian travellers: places marked vegetarian first, untagged places allowed (most OSM listings have no diet tag), places tagged non-vegetarian never.
+- Dev server applies new migration files on the next request (no restart needed); a dev server started before that code needs one restart.

@@ -464,6 +464,36 @@ export const creditShells = pgTable('credit_shells', {
   createdAt: created(),
 });
 
+/** A trip's living itinerary: the current plan (days and items) and its version. */
+export const itineraries = pgTable('itineraries', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  tripId: text('trip_id').notNull().unique(),
+  version: integer('version').notNull().default(1),
+  plan: jsonb('plan').notNull(), // { days: [{ date, items: [...] }], postponed: [...] }
+  createdAt: created(),
+  updatedAt: updated(),
+});
+
+/** Every change to an itinerary, with the reason and a readable diff; used for Undo. */
+export const itineraryVersions = pgTable(
+  'itinerary_versions',
+  {
+    id: serial('id').primaryKey(),
+    itineraryId: uuid('itinerary_id')
+      .notNull()
+      .references(() => itineraries.id, { onDelete: 'cascade' }),
+    version: integer('version').notNull(),
+    reason: text('reason').notNull(),
+    changes: jsonb('changes').notNull(), // string[]
+    plan: jsonb('plan').notNull(),
+    createdAt: created(),
+  },
+  (t) => [uniqueIndex('itinerary_versions_unique').on(t.itineraryId, t.version)],
+);
+
 export const savedPlaces = pgTable('saved_places', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id')
