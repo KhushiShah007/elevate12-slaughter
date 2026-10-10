@@ -8,7 +8,7 @@ Paste these in **Vercel → Project → Settings → Environment Variables**. Ne
 
 | Variable | Value |
 |---|---|
-| `DATABASE_URL` | Postgres connection string from Supabase or Neon (use the pooled one). Migrations and seed data run on first request. |
+| `DATABASE_URL` | Postgres connection string. Supabase: Project → Connect → **Transaction pooler** (host `aws-0-…pooler.supabase.com`, port `6543`); the direct `db.…supabase.co` host does not work from Vercel. Replace `[YOUR-PASSWORD]` with your real password (brackets removed). No quotes. Neon: the pooled string. Migrations and seed data run on first request. |
 | `DOCS_ENCRYPTION_KEY` | 32 random bytes, base64. Make one with `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`. Keep a copy; losing it makes uploaded documents unreadable. |
 | `MOCK_PAYMENT_SECRET` | Any long random string. Signs demo payments when Razorpay keys are absent; without it a public default is used. |
 

@@ -17,8 +17,30 @@ type Conn = { db: Db; kind: 'postgres' | 'pglite'; close: () => Promise<void>; m
 // Kept on globalThis so dev-server reloads reuse the one open database.
 const g = globalThis as unknown as { __voyageDb?: Promise<Conn> | null };
 
+/**
+ * Tidy a pasted connection string: trim spaces and quotes, drop a "DATABASE_URL=" prefix,
+ * and percent-encode the password (Supabase passwords often contain @ # / ?).
+ */
+export function normalizeDbUrl(raw: string | undefined): string | undefined {
+  let u = raw?.trim().replace(/^DATABASE_URL\s*=\s*/, '').replace(/^["']|["']$/g, '').trim();
+  if (!u) return undefined;
+  const m = u.match(/^(postgres(?:ql)?:\/\/)([^:/@]+):(.*)@([^@]+)$/);
+  if (m) {
+    const [, scheme, user, pass, rest] = m;
+    let plain = pass;
+    try {
+      plain = decodeURIComponent(pass);
+    } catch {
+      /* not encoded */
+    }
+    u = `${scheme}${user}:${encodeURIComponent(plain)}@${rest}`;
+  }
+  if (/\[YOUR-PASSWORD\]/i.test(raw ?? '') || /%5BYOUR-PASSWORD%5D/i.test(u)) throw new Error('DATABASE_URL still contains the [YOUR-PASSWORD] placeholder. Put your real database password there.');
+  return u;
+}
+
 async function connect() {
-  const url = process.env.DATABASE_URL;
+  const url = normalizeDbUrl(process.env.DATABASE_URL);
   if (url) {
     const { default: postgres } = await import('postgres');
     const { drizzle } = await import('drizzle-orm/postgres-js');

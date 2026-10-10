@@ -606,8 +606,24 @@ var init_schema = __esm({
 // server/db/client.ts
 import fs from "node:fs";
 import path from "node:path";
+function normalizeDbUrl(raw) {
+  let u = raw?.trim().replace(/^DATABASE_URL\s*=\s*/, "").replace(/^["']|["']$/g, "").trim();
+  if (!u) return void 0;
+  const m2 = u.match(/^(postgres(?:ql)?:\/\/)([^:/@]+):(.*)@([^@]+)$/);
+  if (m2) {
+    const [, scheme, user, pass, rest] = m2;
+    let plain = pass;
+    try {
+      plain = decodeURIComponent(pass);
+    } catch {
+    }
+    u = `${scheme}${user}:${encodeURIComponent(plain)}@${rest}`;
+  }
+  if (/\[YOUR-PASSWORD\]/i.test(raw ?? "") || /%5BYOUR-PASSWORD%5D/i.test(u)) throw new Error("DATABASE_URL still contains the [YOUR-PASSWORD] placeholder. Put your real database password there.");
+  return u;
+}
 async function connect() {
-  const url = process.env.DATABASE_URL;
+  const url = normalizeDbUrl(process.env.DATABASE_URL);
   if (url) {
     const { default: postgres } = await import("postgres");
     const { drizzle: drizzle2 } = await import("drizzle-orm/postgres-js");
