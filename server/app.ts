@@ -12,6 +12,7 @@ import { flights } from './routes/flights';
 import { hotels } from './routes/hotels';
 import { documents } from './routes/documents';
 import { assistant } from './routes/assistant';
+import { guide } from './routes/guide';
 import { handleAi } from '../api/_ai';
 
 // The Voyage API. Runs inside `npm run dev` (Vite middleware) and on Vercel (api/index.ts).
@@ -52,6 +53,8 @@ app.use('/destinations/*', rateLimit('catalog', 120, 60_000));
 app.use('/airports', rateLimit('catalog', 120, 60_000));
 app.use('/fx', rateLimit('catalog', 120, 60_000));
 app.route('/', live); // before catalog, so /destinations/:slug/weather is matched
+app.use('/transport/*', rateLimit('catalog', 120, 60_000));
+app.route('/', guide);
 app.route('/', catalog);
 
 // Accounts. Tight limit on anything that checks a password or a code.

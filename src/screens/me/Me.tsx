@@ -11,6 +11,7 @@ import { Toggle } from '../../components/ui/Toggle';
 import { StorageNote, SyncStatus } from '../../components/layout/SyncStatus';
 import { PersonaEffects, PersonaStamp } from '../../components/persona/PersonaCard';
 import { usePersona } from '../../hooks/usePersona';
+import { CardsEditor } from '../../components/guide/CardsEditor';
 import { num } from '../../utils/format';
 
 export default function Me() {
@@ -48,6 +49,8 @@ export default function Me() {
           <h2 className="mb-3 text-lg">{t('quiz.whatChanges')}</h2>
           <PersonaEffects persona={persona.persona} />
         </section>
+
+        <CardsEditor />
 
         <section>
           <h2 className="mb-2 text-lg">{t('me.sync')}</h2>

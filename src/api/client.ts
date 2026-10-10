@@ -1,3 +1,5 @@
+import type { SavedCard } from '../data/cardOffers';
+
 // Browser side of the Voyage API. Same origin, session cookie sent automatically.
 // Every failure becomes an ApiError with a message that is safe to show.
 
@@ -54,6 +56,7 @@ export interface Me {
   personaId: string | null;
   personaAnswers: Record<string, string> | null;
   personaNotes: Record<string, string> | null;
+  cards: SavedCard[];
 }
 
 export interface OtpSent {

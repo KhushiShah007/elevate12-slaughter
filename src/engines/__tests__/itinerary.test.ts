@@ -47,3 +47,24 @@ describe('itinerary builder', () => {
     expect(lunches.some((i) => i.title.includes('Nishiki'))).toBe(false); // not vegetarian
   });
 });
+
+describe('trips without a stay yet', () => {
+  it('plans in the destination city', async () => {
+    const { buildItinerary } = await import('../itineraryBuilder');
+    const { derivePersona } = await import('../persona');
+    const trip = { id: 't', title: 'Jaipur', from: '', to: 'Jaipur', startDate: '2027-01-10', endDate: '2027-01-13', status: 'upcoming' as const, travellers: 2 };
+    const days = buildItinerary({
+      trip,
+      days: [],
+      items: [],
+      stays: [],
+      experiences: [{ id: 'e1', tripId: 't', title: 'Amber Fort', area: 'Jaipur', duration: '2 h', amount: 0, tag: 'fort', interests: ['culture'] }],
+      restaurants: [{ id: 'r1', tripId: 't', name: 'LMB', area: 'Jaipur', cuisine: 'Rajasthani', veg: true, priceLevel: 2, note: '' }],
+      persona: derivePersona({ interests: 'culture' }),
+      defaultRegion: 'Jaipur',
+    });
+    const middle = days[1];
+    expect(middle.region).toBe('Jaipur');
+    expect(middle.items.map((i) => i.title)).toEqual(expect.arrayContaining(['Amber Fort', 'Lunch at LMB']));
+  });
+});

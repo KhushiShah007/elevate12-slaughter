@@ -29,3 +29,16 @@ export function loyaltySummary(bookings: Booking[]) {
   const spend = entries.reduce((sum, e) => sum + e.amount, 0);
   return { entries, spend, total: pointsFor(spend) };
 }
+
+// ---------- Using points ----------
+
+/** 1 point is worth ₹1 off. Points can pay for up to 20% of a booking. */
+export const POINT_VALUE_INR = 1;
+export const MAX_REDEEM_SHARE = 0.2;
+
+/** How many points a booking can use, what that saves, and what is left to pay. */
+export function redeemFor(balance: number, amount: number) {
+  if (amount <= 0 || balance <= 0) return { points: 0, savesInr: 0, payInr: Math.max(0, amount) };
+  const points = Math.min(balance, Math.floor((amount * MAX_REDEEM_SHARE) / POINT_VALUE_INR));
+  return { points, savesInr: points * POINT_VALUE_INR, payInr: amount - points * POINT_VALUE_INR };
+}

@@ -9,6 +9,7 @@ import { loadDestinations } from '../../hooks/useDestinations';
 import { removeOption, saveOption } from '../../db/repos/bookings';
 import { useAuth } from '../../state/auth';
 import { duration, inr } from '../../utils/format';
+import { PayHelp } from '../guide/PayHelp';
 import type { Booking, Trip } from '../../types';
 
 interface Offer {
@@ -183,6 +184,8 @@ export function FlightFinder({ trip, saved }: { trip: Trip; saved: Booking[] }) 
             </div>
           ))}
           <p className="text-xs text-muted">Totals are for all {trip.travellers} travellers. Saved options are not bookings.</p>
+          <p className="pt-1 text-xs font-medium text-ink">Pay less on the cheapest saved option ({inr(Math.min(...options.map((o) => o.amount)))}):</p>
+          <PayHelp amount={Math.min(...options.map((o) => o.amount))} kind="flight" />
         </div>
       )}
     </section>

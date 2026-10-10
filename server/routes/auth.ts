@@ -39,6 +39,7 @@ export async function loadMe(userId: string) {
     personaId: profile?.personaId ?? null,
     personaAnswers: profile?.personaAnswers ?? null,
     personaNotes: profile?.personaNotes ?? null,
+    cards: ((profile?.preferences as { cards?: unknown[] } | undefined)?.cards ?? []) as { id: string; bankId: string; network: string; kind: 'credit' | 'debit'; label: string }[],
   };
 }
 
@@ -128,6 +129,19 @@ auth.patch('/me', requireUser, async (c) => {
       seniorMode: z.boolean().optional(),
       personaAnswers: answerMap,
       personaNotes: answerMap,
+      // Cards: which bank and network only, so offers can be suggested. Never a number.
+      cards: z
+        .array(
+          z.object({
+            id: z.string().max(60),
+            bankId: z.string().max(20),
+            network: z.enum(['Visa', 'Mastercard', 'RuPay', 'Amex', 'Diners']),
+            kind: z.enum(['credit', 'debit']),
+            label: z.string().trim().max(40).refine((v) => !/\d{6,}/.test(v.replace(/[\s-]/g, '')), 'Do not enter card numbers.'),
+          }),
+        )
+        .max(10)
+        .optional(),
     }),
   );
   const userId = c.get('userId');
@@ -137,6 +151,10 @@ auth.patch('/me', requireUser, async (c) => {
   if (body.homeCity !== undefined) patch.homeCity = body.homeCity;
   if (body.language !== undefined) patch.language = body.language;
   if (body.seniorMode !== undefined) patch.seniorMode = body.seniorMode;
+  if (body.cards) {
+    const [cur] = await db.select({ preferences: s.profiles.preferences }).from(s.profiles).where(eq(s.profiles.userId, userId)).limit(1);
+    patch.preferences = { ...(cur?.preferences ?? {}), cards: body.cards };
+  }
   if (body.personaAnswers) {
     // The persona is worked out on the server from the answers, so every device agrees.
     patch.personaAnswers = body.personaAnswers;

@@ -18,7 +18,7 @@ interface AuthApi {
   signedIn: (me: Me) => Promise<void>;
   signOut: () => Promise<void>;
   /** Save profile fields to the server (and the device copy). */
-  saveProfile: (patch: Partial<Pick<Me, 'name' | 'homeCity' | 'language' | 'seniorMode'>> & { personaAnswers?: Record<string, string>; personaNotes?: Record<string, string> }) => Promise<Me | null>;
+  saveProfile: (patch: Partial<Pick<Me, 'name' | 'homeCity' | 'language' | 'seniorMode' | 'cards'>> & { personaAnswers?: Record<string, string>; personaNotes?: Record<string, string> }) => Promise<Me | null>;
 }
 
 const CACHE_KEY = 'voyage.me';

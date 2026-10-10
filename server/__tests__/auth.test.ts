@@ -101,3 +101,18 @@ describe('accounts', () => {
     expect(bad.body.error.fields.contact).toBeTruthy();
   });
 });
+
+describe('saved cards', () => {
+  it('keeps bank and network only, and refuses anything like a card number', async () => {
+    const api = client();
+    await api('POST', '/auth/login', { contact: 'riya@example.com', password: 'new-password-1' });
+    const card = { id: 'c1', bankId: 'icici', network: 'Visa', kind: 'credit', label: 'Travel card' };
+    const ok = await api('PATCH', '/me', { cards: [card] });
+    expect(ok.status).toBe(200);
+    expect(ok.body.me.cards).toEqual([card]);
+    const bad = await api('PATCH', '/me', { cards: [{ ...card, label: '4111 1111 1111 1111' }] });
+    expect(bad.status).toBe(400);
+    // Other profile settings are untouched.
+    expect(ok.body.me.personaId).toBe('family');
+  });
+});

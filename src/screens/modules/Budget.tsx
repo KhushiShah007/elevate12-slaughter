@@ -5,6 +5,61 @@ import { loyaltySummary } from '../../engines/loyalty';
 import { inr, num } from '../../utils/format';
 import type { Pastel } from '../../design/tokens';
 import { pastelBg } from '../../design/tokens';
+import { PayHelp } from '../../components/guide/PayHelp';
+import { useGuide } from '../../hooks/useGuide';
+import { budgetStyleLabel } from '../../engines/personalize';
+import type { Booking, Trip } from '../../types';
+
+/** Plan vs budget for a trip: cheapest saved flight and stay, plus typical daily spend. */
+function PlanVsBudget({ trip, bookings }: { trip: Trip; bookings: Booking[] }) {
+  const { guide, style } = useGuide(trip);
+  const days = Math.max(1, Math.round((Date.parse(trip.endDate) - Date.parse(trip.startDate)) / 86_400_000) + 1);
+  const cheapest = (kind: Booking['kind']) => {
+    const booked = bookings.filter((b) => b.kind === kind && b.status === 'confirmed' && !b.sample);
+    if (booked.length) return { amount: booked.reduce((s, b) => s + b.amount, 0), booked: true };
+    const saved = bookings.filter((b) => b.kind === kind && b.status === 'suggested');
+    return saved.length ? { amount: Math.min(...saved.map((b) => b.amount)), booked: false } : null;
+  };
+  const flight = cheapest('flight');
+  const stay = cheapest('hotel');
+  // Daily spend covers food and local travel; the stay is counted separately when there is one.
+  const daily = guide?.destination.dailyCostInr ? Math.round(guide.destination.dailyCostInr[style] * (stay ? 0.55 : 1)) * days * trip.travellers : null;
+  const rows: [string, number | null, string][] = [
+    ['Flights', flight?.amount ?? null, flight ? (flight.booked ? 'booked' : 'cheapest saved option') : 'none saved yet'],
+    ['Stay', stay?.amount ?? null, stay ? (stay.booked ? 'booked' : 'cheapest saved option') : 'none saved yet'],
+    [stay ? 'Food & local travel' : 'Daily spend', daily, `${budgetStyleLabel[style].toLowerCase()} style, ${days} days × ${trip.travellers}, estimate`],
+  ];
+  const total = rows.reduce((s, [, v]) => s + (v ?? 0), 0);
+  const left = trip.budgetInr != null ? trip.budgetInr - total : null;
+  return (
+    <div className="mb-6 rounded-lg border border-line bg-paper p-5 shadow-card">
+      <p className="text-sm text-muted">Planned so far</p>
+      <p className="font-display text-[2.25rem] leading-none text-ink">{inr(total)}</p>
+      {left != null && (
+        <p className={`mt-1 text-sm font-medium ${left >= 0 ? 'text-ok' : 'text-bad'}`}>
+          {left >= 0 ? `${inr(left)} under your ${inr(trip.budgetInr!)} budget` : `${inr(-left)} over your ${inr(trip.budgetInr!)} budget`}
+        </p>
+      )}
+      <ul className="mt-4 space-y-2 text-sm">
+        {rows.map(([label, v, note]) => (
+          <li key={label} className="flex items-start justify-between gap-3">
+            <span className="text-espresso">
+              {label}
+              <span className="block text-xs text-muted">{note}</span>
+            </span>
+            <span className="tabular-nums text-ink">{v != null ? inr(v) : '—'}</span>
+          </li>
+        ))}
+      </ul>
+      {(flight || stay) && (
+        <div className="mt-4">
+          <p className="mb-1 text-xs font-medium text-ink">Pay less on flights and stay ({inr((flight?.amount ?? 0) + (stay?.amount ?? 0))}):</p>
+          <PayHelp amount={(flight?.amount ?? 0) + (stay?.amount ?? 0)} kind="travel" />
+        </div>
+      )}
+    </div>
+  );
+}
 
 const barPastel: Record<string, Pastel> = {
   tickets: 'sky',
@@ -18,11 +73,13 @@ const barPastel: Record<string, Pastel> = {
 export default function Budget() {
   return (
     <ModuleFrame module="budget" title="Budget" sub="The true journey cost, not only the ticket.">
-      {({ expenses, bookings }) => {
+      {({ trip, expenses, bookings }) => {
         const cost = trueCost(expenses);
         const points = loyaltySummary(bookings);
+        if (!trip.sample && expenses.length === 0) return <PlanVsBudget trip={trip} bookings={bookings} />;
         return (
           <>
+            {!trip.sample && <PlanVsBudget trip={trip} bookings={bookings} />}
             <div className="rounded-lg border border-line bg-paper p-5 shadow-card">
               <p className="text-sm text-muted">True journey cost</p>
               <p className="font-display text-[2.75rem] leading-none text-ink">{inr(cost.total)}</p>

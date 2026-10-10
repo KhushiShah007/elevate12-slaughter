@@ -61,7 +61,7 @@ export interface Booking {
   recoveryFor?: string; // which disruption this booking fixes (so it is not booked twice)
   sample?: boolean; // part of the bundled demo trip: never earns the traveller points
   /** Saved options: where the price came from and how to book it. */
-  details?: { provider: string; live: boolean; priceIsEstimate: boolean; priceRange?: [number, number] | null; bookUrl?: string; summary?: string };
+  details?: { provider: string; live: boolean; priceIsEstimate: boolean; priceRange?: [number, number] | null; bookUrl?: string; summary?: string; lat?: number | null; lon?: number | null };
   rev?: number;
 }
 

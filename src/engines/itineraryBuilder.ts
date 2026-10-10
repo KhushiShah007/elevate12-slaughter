@@ -34,6 +34,8 @@ export interface BuildInput {
   persona: Persona;
   /** Places close enough to a city for a day out, e.g. { Kyoto: ['Nara', 'Uji'] }. */
   nearby?: Record<string, string[]>;
+  /** City to plan in when no stay is booked yet (usually the trip's destination). */
+  defaultRegion?: string | null;
 }
 
 const SIGHT_SLOTS = ['10:00', '15:30', '11:30', '17:30'];
@@ -83,7 +85,7 @@ export function buildItinerary(input: BuildInput): PlannedDay[] {
       kind: i.kind,
       suggested: false,
     }));
-    const region = regionFor(date, input.stays);
+    const region = regionFor(date, input.stays) ?? input.defaultRegion ?? null;
     const travelDay = index === 0 || index === dates.length - 1 || booked.some((i) => i.kind === 'flight');
     const items = [...booked];
     let n = 0;

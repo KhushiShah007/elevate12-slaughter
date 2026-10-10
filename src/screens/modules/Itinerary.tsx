@@ -11,6 +11,20 @@ import { nearbyPlaces } from '../../data/sampleTrips';
 import { Chip } from '../../components/ui/Chip';
 import { useT, type MessageKey } from '../../i18n';
 import type { Persona } from '../../engines/persona';
+import { useGuide, type Guide } from '../../hooks/useGuide';
+import { budgetStyle, budgetStyleLabel } from '../../engines/personalize';
+import { inr } from '../../utils/format';
+import type { Experience, Restaurant } from '../../types';
+
+const INTEREST: Record<string, string> = { museum: 'culture', monument: 'culture', castle: 'culture', fort: 'culture', gallery: 'culture', ruins: 'culture', archaeological_site: 'culture', viewpoint: 'nature', zoo: 'nature', theme_park: 'nature' };
+
+/** City-guide places as itinerary candidates, for trips with no hand-made plan. */
+function fromGuide(guide: Guide, tripId: string) {
+  const area = guide.destination.name;
+  const experiences: Experience[] = guide.see.map((p) => ({ id: `g-${p.id}`, tripId, title: p.name, area, duration: '1–2 h', amount: 0, tag: p.category ?? 'sight', interests: p.category && INTEREST[p.category] ? [INTEREST[p.category]] : [] }));
+  const restaurants: Restaurant[] = guide.eat.map((p) => ({ id: `g-${p.id}`, tripId, name: p.name, area, cuisine: p.cuisine ?? '', veg: !!p.vegetarian, priceLevel: p.category === 'restaurant' ? 2 : 1, note: '' }));
+  return { experiences, restaurants };
+}
 
 const kindIcon: Record<ItineraryItem['kind'], typeof Plane> = {
   flight: Plane,
@@ -34,20 +48,24 @@ export default function Itinerary() {
 
 function ItineraryView({ data, persona }: { data: TripBundle; persona: Persona }) {
   const { t, info } = useT();
-  const days = useMemo(
-    () =>
-      buildItinerary({
-        trip: data.trip,
-        days: data.days,
-        items: data.items,
-        stays: data.accommodations,
-        experiences: data.experiences,
-        restaurants: data.restaurants,
-        persona,
-        nearby: nearbyPlaces,
-      }),
-    [data, persona],
-  );
+  // Own trips have no hand-made places: plan from the city guide instead.
+  const needsGuide = data.experiences.length === 0;
+  const { guide } = useGuide(needsGuide ? data.trip : null);
+  const style = budgetStyle(persona);
+  const days = useMemo(() => {
+    const extra = needsGuide && guide ? fromGuide(guide, data.trip.id) : null;
+    return buildItinerary({
+      trip: data.trip,
+      days: data.days,
+      items: data.items,
+      stays: data.accommodations,
+      experiences: extra?.experiences ?? data.experiences,
+      restaurants: extra?.restaurants ?? data.restaurants,
+      persona,
+      nearby: nearbyPlaces,
+      defaultRegion: guide?.destination.name ?? data.trip.to,
+    });
+  }, [data, persona, guide, needsGuide]);
   const [date, setDate] = useState<string | null>(null);
   const current = days.find((d) => d.date === date) ?? days.find((d) => !d.travelDay) ?? days[0];
   const { tr } = useTranslated(current ? [{ id: 'title', text: current.title }, ...current.items.map((i) => ({ id: i.id, text: i.title }))] : []);
@@ -59,6 +77,12 @@ function ItineraryView({ data, persona }: { data: TripBundle; persona: Persona }
         <span className="text-base leading-none">{persona.emoji}</span>
         {t('itin.basedOn', { persona: t(`persona.${persona.id}.title` as MessageKey) })}
       </p>
+      {guide?.destination.dailyCostInr && (
+        <p className="mb-3 rounded-md border border-line bg-butter px-3 py-2 text-xs text-ink">
+          Typical spend for a {budgetStyleLabel[style].toLowerCase()} day in {guide.destination.name}: about {inr(guide.destination.dailyCostInr[style])} per person (stay, food, local travel), so about{' '}
+          {inr(guide.destination.dailyCostInr[style] * data.trip.travellers * days.length)} for the whole trip. Estimate.
+        </p>
+      )}
 
       {/* Calendar strip: every day of the trip */}
       <div className="no-scrollbar -mx-gutter flex gap-2 overflow-x-auto px-gutter pb-2">
