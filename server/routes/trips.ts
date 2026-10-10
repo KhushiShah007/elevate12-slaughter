@@ -19,6 +19,7 @@ trips.use('/trips', requireUser);
 /** Device tables that sync. Anything else is refused. */
 export const SYNC_TABLES = [
   'trips',
+  'flights',
   'bookings',
   'documents',
   'journeyProgress',

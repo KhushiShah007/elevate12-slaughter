@@ -15,6 +15,25 @@ import { usePersona } from '../../hooks/usePersona';
 import { defaultPersona } from '../../engines/persona';
 import { budgetStyle, budgetStyleLabel, tripEstimate } from '../../engines/personalize';
 import { inr } from '../../utils/format';
+import { api, ApiError } from '../../api/client';
+import { missingFor, tripFromBooking, type ParsedBooking } from '../../db/repos/importBooking';
+
+/** Label/value rows for the details found in a pasted booking. */
+function bookingFields(b: ParsedBooking): [string, string][] {
+  const rows: [string, string | number | null][] = [
+    ['Flight', b.flightNo],
+    ['Route', b.from && b.to ? `${b.from} → ${b.to}` : null],
+    ['Departs', b.departDate ? `${b.departDate}${b.departTime ? ` ${b.departTime}` : ''}` : null],
+    ['Arrives', b.arriveTime ? `${b.arriveDate ?? ''} ${b.arriveTime}`.trim() : null],
+    ['Hotel', b.hotelName],
+    ['Check-in', b.checkIn],
+    ['Check-out', b.checkOut],
+    ['PNR / ref', b.pnr],
+    ['Travellers', b.travellers],
+    ['Total', b.totalInr != null ? inr(b.totalInr) : null],
+  ];
+  return rows.filter(([, v]) => v != null && v !== '').map(([k, v]) => [k, String(v)]);
+}
 
 const saveLabel: Record<SaveState, string> = {
   idle: '',
@@ -41,6 +60,34 @@ export default function NewTrip() {
   }, [preset]);
   const [showErrors, setShowErrors] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [pasted, setPasted] = useState('');
+  const [parsed, setParsed] = useState<{ source: 'ai' | 'rules'; booking: ParsedBooking } | null>(null);
+  const [pasteError, setPasteError] = useState<string | null>(null);
+
+  const readBooking = async () => {
+    setBusy(true);
+    setPasteError(null);
+    try {
+      setParsed(await api<{ source: 'ai' | 'rules'; booking: ParsedBooking }>('POST', '/assistant/parse-booking', { text: pasted }, 40_000));
+    } catch (err) {
+      setPasteError(err instanceof ApiError ? err.message : 'Could not read the booking. Try again.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const fromBooking = async () => {
+    if (!parsed) return;
+    setBusy(true);
+    try {
+      const trip = await tripFromBooking(parsed.booking, pasted);
+      navigate(`/trips/${trip.id}`, { replace: true });
+    } catch {
+      setPasteError('Could not create the trip. Please try again.');
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const today = new Date().toISOString().slice(0, 10);
   const budget = d.budgetInr.trim() ? Number(d.budgetInr.replace(/[,\s₹]/g, '')) : null;
@@ -161,26 +208,54 @@ export default function NewTrip() {
               </span>
               <textarea
                 rows={7}
-                disabled
+                value={pasted}
+                onChange={(e) => {
+                  setPasted(e.target.value);
+                  setParsed(null);
+                }}
                 placeholder="Paste your airline or hotel confirmation here…"
                 className="w-full rounded-md border border-line bg-paper p-4 text-base text-ink outline-none placeholder:text-muted/70 focus:border-ink disabled:opacity-60"
               />
             </label>
-            <div className="rounded-md border border-line bg-sky/60 p-4 text-sm leading-relaxed text-espresso">
-              Reading a booking needs the AI assistant, which is being connected next. For now, use Plan it.
-              {!online && (
-                <div className="mt-2">
-                  <Chip tone="warn" dot>
-                    You are offline
-                  </Chip>
-                </div>
-              )}
-            </div>
+            {parsed ? (
+              <div className="rounded-md border border-line bg-paper p-4 text-sm">
+                <p className="mb-2 flex items-center justify-between gap-2">
+                  <span className="font-display text-lg text-ink">{parsed.booking.kind === 'hotel' ? 'Hotel booking' : parsed.booking.kind === 'flight' ? 'Flight booking' : 'Not sure what this is'}</span>
+                  <Chip>{parsed.source === 'ai' ? 'Read by AI' : 'Read on our server'}</Chip>
+                </p>
+                <dl className="grid grid-cols-2 gap-x-3 gap-y-2">
+                  {bookingFields(parsed.booking).map(([k, v]) => (
+                    <div key={k}>
+                      <dt className="text-[0.625rem] font-semibold uppercase tracking-widest text-muted">{k}</dt>
+                      <dd className="text-ink">{v}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <p className="mt-3 text-xs text-muted">Only details found in your text are used. Anything missing you can add later.</p>
+                {missingFor(parsed.booking).length > 0 && <p className="mt-2 text-sm text-bad">Could not find: {missingFor(parsed.booking).join(', ')}.</p>}
+              </div>
+            ) : (
+              <div className="rounded-md border border-line bg-sky/60 p-4 text-sm leading-relaxed text-espresso">
+                We pick out the PNR, flight, airports, dates, times and amount. Your text is read on our server and not stored.
+                {!online && (
+                  <div className="mt-2">
+                    <Chip tone="warn" dot>
+                      You are offline
+                    </Chip>
+                  </div>
+                )}
+              </div>
+            )}
+            {pasteError && <p className="text-sm text-bad">{pasteError}</p>}
           </>
         )}
 
-        <PillButton full disabled={mode === 'paste' || busy} onClick={() => void create()}>
-          {mode === 'plan' ? (busy ? 'Saving…' : 'Create trip') : 'Read booking'}
+        <PillButton
+          full
+          disabled={busy || (mode === 'paste' && (!online || pasted.trim().length < 20 || (!!parsed && missingFor(parsed.booking).length > 0)))}
+          onClick={() => void (mode === 'plan' ? create() : parsed ? fromBooking() : readBooking())}
+        >
+          {mode === 'plan' ? (busy ? 'Saving…' : 'Create trip') : busy ? 'Reading…' : parsed ? 'Create trip from this booking' : 'Read booking'}
         </PillButton>
         {mode === 'plan' && (
           <p className="text-center text-xs text-muted" role="status">

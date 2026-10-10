@@ -40,7 +40,7 @@ export default function TripWorkspace() {
   const savedOf = (kind: string) => data.bookings.filter((b) => b.kind === kind && b.status === 'suggested').length;
   const withSaved = (text: string, kind: string) => (savedOf(kind) ? `${text} · ${savedOf(kind)} saved` : text);
   const counts: Record<ModuleKey, string> = {
-    flights: withSaved(`${data.flights.length} legs`, 'flight'),
+    flights: withSaved(`${data.flights.length} ${data.flights.length === 1 ? 'leg' : 'legs'}`, 'flight'),
     documents: `${data.documents.length} saved`,
     transportation: `${data.transport.length} bookings`,
     accommodation: withSaved(`${data.accommodations.length} stays`, 'hotel'),

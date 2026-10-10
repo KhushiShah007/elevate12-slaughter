@@ -32,6 +32,19 @@ links that expire after 5 minutes. ID numbers are validated (Aadhaar checksum,
 PAN and passport formats) and only a masked form such as `XXXX XXXX 1234` is kept.
 "Available offline" keeps a copy on the phone. Scans can be backed up to the account.
 
+## Assistant
+
+With `XAI_API_KEY` (Grok) or `GROQ_API_KEY` the assistant chats using tools that read
+the traveller's own trips, saved options and documents (masked), the destination
+catalogue, flight and stay search and weather. Every rupee amount in a reply must
+appear in the tool results, or the reply is retried and then stripped of prices.
+Conversations are saved on the account. Without a key (or offline) the on-device
+assistant answers: keyword intents in 6 languages, and any of the 53 destinations by
+name. Voice typing and read-aloud use the browser's speech features.
+
+"Paste booking" reads a confirmation email/SMS (AI when keyed, pattern rules always).
+Only values that literally appear in the pasted text are kept.
+
 ## Data: live vs fallback
 
 | Area | Source today | Licence |

@@ -120,11 +120,11 @@ async function metNorway(lat: number, lon: number): Promise<Weather> {
 
 const lastGood = new Map<string, Weather>();
 
-live.get('/destinations/:slug/weather', async (c) => {
-  const slug = parse(z.string().regex(/^[a-z0-9-]{1,60}$/), c.req.param('slug'));
+/** Forecast for a destination (null if unknown). Throws only if no forecast is available at all. */
+export async function getWeather(slug: string): Promise<(Weather & { stale?: boolean }) | null> {
   const { db } = await getDb();
   const [d] = await db.select({ lat: s.destinations.lat, lon: s.destinations.lon }).from(s.destinations).where(eq(s.destinations.slug, slug)).limit(1);
-  if (!d) throw new AppError(404, 'not_found', 'We could not find that destination.');
+  if (!d) return null;
   try {
     const out = await cached(`wx:${slug}`, 60 * 60_000, async () => {
       try {
@@ -134,13 +134,20 @@ live.get('/destinations/:slug/weather', async (c) => {
       }
     });
     lastGood.set(slug, out);
-    return c.json(out);
+    return out;
   } catch {
     // Both sources failed: an older forecast is better than none, if it says how old.
     const stale = lastGood.get(slug);
-    if (stale) return c.json({ ...stale, stale: true });
+    if (stale) return { ...stale, stale: true };
     throw new AppError(503, 'weather_unavailable', 'Weather is not available right now.');
   }
+}
+
+live.get('/destinations/:slug/weather', async (c) => {
+  const slug = parse(z.string().regex(/^[a-z0-9-]{1,60}$/), c.req.param('slug'));
+  const out = await getWeather(slug);
+  if (!out) throw new AppError(404, 'not_found', 'We could not find that destination.');
+  return c.json(out);
 });
 
 /** Currency of each destination country. */

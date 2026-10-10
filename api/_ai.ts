@@ -1,5 +1,5 @@
 // Server-side AI core. Runs on Vercel (api/ai.ts) and in the Vite dev server.
-// The Groq key is read from the server environment and never sent to the browser.
+// The Grok/Groq key is read from the server environment and never sent to the browser.
 // Files starting with "_" are not exposed as their own routes on Vercel.
 //
 // Rule for every task: code decides, AI only rewords, translates or picks from a fixed list.
@@ -17,6 +17,14 @@ const MAX_TEXT = 400;
 export interface AiEnv {
   GROQ_API_KEY?: string;
   GROQ_MODEL?: string;
+  XAI_API_KEY?: string;
+  XAI_MODEL?: string;
+}
+
+/** Grok (xAI) when its key is set, else Groq. Both speak the same API. */
+function endpoint(env: AiEnv) {
+  if (env.XAI_API_KEY) return { url: 'https://api.x.ai/v1/chat/completions', key: env.XAI_API_KEY, model: env.XAI_MODEL || 'grok-3-mini' };
+  return { url: GROQ_URL, key: env.GROQ_API_KEY, model: env.GROQ_MODEL || DEFAULT_MODEL };
 }
 
 interface Item {
@@ -99,12 +107,13 @@ async function groq(env: AiEnv, system: string, user: string, maxTokens: number)
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
-    const res = await fetch(GROQ_URL, {
+    const ep = endpoint(env);
+    const res = await fetch(ep.url, {
       method: 'POST',
       signal: controller.signal,
-      headers: { 'content-type': 'application/json', authorization: `Bearer ${env.GROQ_API_KEY}` },
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${ep.key}` },
       body: JSON.stringify({
-        model: env.GROQ_MODEL || DEFAULT_MODEL,
+        model: ep.model,
         temperature: 0.2,
         max_tokens: maxTokens,
         response_format: { type: 'json_object' },
@@ -137,7 +146,7 @@ function guardItems(asked: Item[], content: string) {
 export async function handleAi(body: unknown, env: AiEnv): Promise<AiResult> {
   const req = parse(body);
   if (!req) return { status: 400, json: { error: 'bad-request' } };
-  if (!env.GROQ_API_KEY) return { status: 503, json: { error: 'not-configured' } };
+  if (!env.GROQ_API_KEY && !env.XAI_API_KEY) return { status: 503, json: { error: 'not-configured' } };
 
   try {
     if (req.task === 'intent') {

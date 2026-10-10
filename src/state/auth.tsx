@@ -87,6 +87,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus('signedOut');
     writeJson(CACHE_KEY, null);
     writeJson(PENDING_KEY, null);
+    writeJson('voyage.chatConversation', null);
+    try {
+      sessionStorage.removeItem('voyage.chat');
+    } catch {
+      /* storage blocked */
+    }
     settingsRef.current.update({ signedIn: false });
   }, []);
 

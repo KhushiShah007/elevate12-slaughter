@@ -11,6 +11,7 @@ import { live } from './routes/live';
 import { flights } from './routes/flights';
 import { hotels } from './routes/hotels';
 import { documents } from './routes/documents';
+import { assistant } from './routes/assistant';
 import { handleAi } from '../api/_ai';
 
 // The Voyage API. Runs inside `npm run dev` (Vite middleware) and on Vercel (api/index.ts).
@@ -64,13 +65,16 @@ app.route('/', hotels);
 app.use('/documents/*', rateLimit('documents', 60, 60_000));
 app.use('/files/*', rateLimit('files', 120, 60_000));
 app.route('/', documents);
+app.use('/assistant/chat', rateLimit('chat', 20, 60_000));
+app.use('/assistant/parse-booking', rateLimit('parse', 10, 60_000));
+app.route('/', assistant);
 
 // The traveller's trips, drafts and offline changes.
 app.use('/sync/*', rateLimit('sync', 300, 60_000));
 app.use('/trips/*', rateLimit('trips', 120, 60_000));
 app.route('/', trips);
 
-// AI wording, translation and intent (Groq today; Grok/xAI in Phase 11).
+// AI wording, translation and intent (short, guarded tasks).
 app.post('/ai', rateLimit('ai', 30, 60_000), async (c) => {
   let body: unknown = null;
   try {
@@ -78,6 +82,6 @@ app.post('/ai', rateLimit('ai', 30, 60_000), async (c) => {
   } catch {
     /* handled as a bad request */
   }
-  const out = await handleAi(body, { GROQ_API_KEY: process.env.GROQ_API_KEY, GROQ_MODEL: process.env.GROQ_MODEL });
+  const out = await handleAi(body, { GROQ_API_KEY: process.env.GROQ_API_KEY, GROQ_MODEL: process.env.GROQ_MODEL, XAI_API_KEY: process.env.XAI_API_KEY, XAI_MODEL: process.env.XAI_MODEL });
   return c.json(out.json as object, out.status as 200);
 });
