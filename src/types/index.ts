@@ -78,6 +78,9 @@ export interface TravelDocument {
   pages: number;
   offline: boolean;
   hasFile?: boolean; // a real PDF is stored on this phone (scans)
+  /** Stored (encrypted) on the account; opened through a short-lived link. */
+  remote?: boolean;
+  mime?: string;
   rev?: number;
 }
 

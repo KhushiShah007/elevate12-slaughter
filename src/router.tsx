@@ -26,6 +26,7 @@ import Assistant from './screens/assistant/Assistant';
 import Wallet from './screens/wallet/Wallet';
 import DocumentViewer from './screens/wallet/DocumentViewer';
 import ScanToPdf from './screens/wallet/ScanToPdf';
+import AddDocument from './screens/wallet/AddDocument';
 import Me from './screens/me/Me';
 import FamilyPickup from './screens/share/FamilyPickup';
 import JudgeMode from './screens/judge/JudgeMode';
@@ -75,6 +76,7 @@ export const router = createBrowserRouter([
       { path: '/assistant', element: <Assistant /> },
       { path: '/wallet', element: <Wallet /> },
       { path: '/wallet/scan', element: <ScanToPdf /> },
+      { path: '/wallet/add', element: <AddDocument /> },
       { path: '/wallet/:docId', element: <DocumentViewer /> },
       { path: '/me', element: <Me /> },
       { path: '*', element: <NotFound /> },

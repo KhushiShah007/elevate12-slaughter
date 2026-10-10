@@ -24,6 +24,14 @@ email/SMS provider is connected the code is shown on screen.
 
 Local test account (dev database only): mobile `9820011111`, password `voyage-test-pass`.
 
+## Documents
+
+Uploads (PDF, JPEG, PNG, WebP up to 4 MB; type checked from the file bytes) are
+encrypted with AES-256-GCM and stored in Postgres. They open through HMAC-signed
+links that expire after 5 minutes. ID numbers are validated (Aadhaar checksum,
+PAN and passport formats) and only a masked form such as `XXXX XXXX 1234` is kept.
+"Available offline" keeps a copy on the phone. Scans can be backed up to the account.
+
 ## Data: live vs fallback
 
 | Area | Source today | Licence |

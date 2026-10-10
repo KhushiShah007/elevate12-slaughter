@@ -10,6 +10,7 @@ import { trips } from './routes/trips';
 import { live } from './routes/live';
 import { flights } from './routes/flights';
 import { hotels } from './routes/hotels';
+import { documents } from './routes/documents';
 import { handleAi } from '../api/_ai';
 
 // The Voyage API. Runs inside `npm run dev` (Vite middleware) and on Vercel (api/index.ts).
@@ -60,6 +61,9 @@ app.use('/flights/*', rateLimit('flights', 30, 60_000));
 app.route('/', flights);
 app.use('/hotels/*', rateLimit('hotels', 30, 60_000));
 app.route('/', hotels);
+app.use('/documents/*', rateLimit('documents', 60, 60_000));
+app.use('/files/*', rateLimit('files', 120, 60_000));
+app.route('/', documents);
 
 // The traveller's trips, drafts and offline changes.
 app.use('/sync/*', rateLimit('sync', 300, 60_000));

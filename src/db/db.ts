@@ -23,9 +23,9 @@ import type {
 
 /** A scanned document's PDF and page images. Kept only on this phone (never synced). */
 export interface StoredFile {
-  id: string; // docId:pdf or docId:p0, docId:p1, ...
+  id: string; // docId:pdf, docId:p0, docId:p1, … or docId:original (offline copy of an account document)
   docId: string;
-  kind: 'pdf' | 'page';
+  kind: 'pdf' | 'page' | 'original';
   index: number;
   blob: Blob;
 }

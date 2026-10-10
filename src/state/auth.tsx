@@ -3,6 +3,7 @@ import { api, ApiError, type Me } from '../api/client';
 import { db } from '../db/db';
 import { pullFromServer, replay } from '../db/syncQueue';
 import { resetDemo } from '../db/seed';
+import { syncRemoteDocuments } from '../db/repos/documents';
 import { useSettings } from './settings';
 
 // Who is signed in. The server session (httpOnly cookie) is the truth; a copy of the
@@ -68,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Send changes made offline, then bring down the account's trips and records.
     void replay()
       .then(pullFromServer)
+      .then(syncRemoteDocuments)
       .catch(() => undefined);
   }, []);
 

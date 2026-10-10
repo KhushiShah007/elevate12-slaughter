@@ -7,6 +7,7 @@ never in chat) and in Vercel → Project → Settings → Environment Variables.
 | Key | What it unlocks | Without it | Where to get it | Cost |
 |---|---|---|---|---|
 | `DATABASE_URL` | Shared cloud Postgres (needed on Vercel) | Local embedded Postgres (PGlite) | supabase.com or neon.tech → project → connection string (use the pooled one) | Free tier |
+| `DOCS_ENCRYPTION_KEY` | Encrypts uploaded documents, signs 5-minute view links | Dev key in `.data/`; **uploads refused in production** | Generate locally (see `.env.example`). Back it up: without it documents cannot be decrypted | — |
 | `GOOGLE_CLIENT_ID` / `_SECRET` | "Continue with Google" | Email + password only | console.cloud.google.com → Credentials → OAuth client | Free |
 | `XAI_API_KEY` | Grok assistant | Groq if set, else rule-based answers | console.x.ai | Paid, small |
 | `GROQ_API_KEY` | Groq assistant / translation | Rule-based answers | console.groq.com | Free tier |

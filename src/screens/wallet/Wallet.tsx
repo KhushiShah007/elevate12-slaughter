@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ScanLine, Search } from 'lucide-react';
+import { FileUp, ScanLine, Search } from 'lucide-react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { listDocuments, setDocumentOffline } from '../../db/repos/documents';
 import { PageHeader } from '../../components/layout/PageHeader';
@@ -24,7 +24,7 @@ export default function Wallet() {
 
   return (
     <div>
-      <PageHeader title={t('wallet.title')} sub={t('wallet.offlineCount', { n: offlineCount, total: documents.length })} right={<SampleTag />} />
+      <PageHeader title={t('wallet.title')} sub={t('wallet.offlineCount', { n: offlineCount, total: documents.length })} right={documents.some((d) => !d.remote && !d.hasFile) ? <SampleTag /> : undefined} />
       <div className="px-gutter">
         <label className="flex min-h-tap items-center gap-2 rounded-pill border border-line bg-paper px-4 focus-within:border-ink">
           <Search size={18} className="text-muted" />
@@ -43,6 +43,16 @@ export default function Wallet() {
           <span>
             <span className="block font-display text-lg leading-tight text-ink">{t('wallet.scan')}</span>
             <span className="text-xs text-espresso">{t('wallet.scanSub')}</span>
+          </span>
+        </Link>
+
+        <Link to="/wallet/add" className="mt-3 flex min-h-[4rem] items-center gap-3 rounded-lg border border-ink/5 bg-mint px-4 shadow-card">
+          <span className="grid h-10 w-10 place-items-center rounded-full bg-paper/70">
+            <FileUp size={20} className="text-ink" />
+          </span>
+          <span>
+            <span className="block font-display text-lg leading-tight text-ink">Add a document</span>
+            <span className="text-xs text-espresso">Passport, ID, visa or ticket · encrypted on your account</span>
           </span>
         </Link>
 

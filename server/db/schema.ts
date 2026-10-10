@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import {
   boolean,
+  customType,
   date,
   index,
   integer,
@@ -14,6 +15,11 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
+
+const bytea = customType<{ data: Buffer; driverData: Buffer | Uint8Array }>({
+  dataType: () => 'bytea',
+  fromDriver: (v) => Buffer.from(v),
+});
 
 // One Postgres schema for local dev (PGlite) and production (Supabase / Neon).
 // Data that comes from outside carries source, license and fetched_at.
@@ -319,7 +325,12 @@ export const verificationDocuments = pgTable('verification_documents', {
   userId: uuid('user_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
-  docType: text('doc_type').notNull(), // passport | aadhaar | driving_license | visa | other
+  docType: text('doc_type').notNull(), // passport | visa | boarding-pass | insurance | hotel | id | other
+  idType: text('id_type'), // for docType id: aadhaar | pan | driving_licence | voter | other
+  title: text('title').notNull().default('Document'),
+  holder: text('holder'),
+  tripId: text('trip_id'),
+  expiresOn: date('expires_on'),
   storagePath: text('storage_path').notNull(),
   mime: text('mime').notNull(),
   sizeBytes: integer('size_bytes').notNull(),
@@ -328,6 +339,16 @@ export const verificationDocuments = pgTable('verification_documents', {
   extracted: jsonb('extracted').$type<Record<string, unknown>>(),
   createdAt: created(),
   updatedAt: updated(),
+});
+
+/** The encrypted file behind a document (AES-256-GCM). Only the server can read it. */
+export const documentBlobs = pgTable('document_blobs', {
+  docId: uuid('doc_id')
+    .primaryKey()
+    .references(() => verificationDocuments.id, { onDelete: 'cascade' }),
+  iv: bytea('iv').notNull(),
+  tag: bytea('tag').notNull(),
+  data: bytea('data').notNull(),
 });
 
 export const chatConversations = pgTable('chat_conversations', {
