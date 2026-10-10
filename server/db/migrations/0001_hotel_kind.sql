@@ -1,0 +1,1 @@
+ALTER TABLE "hotels_cache" ADD COLUMN "kind" text;

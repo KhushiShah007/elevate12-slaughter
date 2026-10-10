@@ -1,13 +1,14 @@
 import { BedDouble, MapPin, MoonStar } from 'lucide-react';
 import { ModuleFrame } from './ModuleFrame';
 import { TicketCard } from '../../components/cards/TicketCard';
+import { HotelFinder } from '../../components/stay/HotelFinder';
 import { day, inr } from '../../utils/format';
 
 export default function Accommodation() {
   return (
     <ModuleFrame module="accommodation" title="Accommodation">
-      {({ accommodations }) => (
-        <div className="space-y-4">
+      {({ trip, accommodations, bookings }) => (
+        <div className="space-y-4 pb-8">
           {accommodations.map((a, i) => (
             <TicketCard
               key={a.id}
@@ -43,9 +44,12 @@ export default function Accommodation() {
                   </p>
                 </div>
               </div>
-              <p className="mt-3 rounded-sm bg-paper/60 px-3 py-2 text-xs text-espresso">{a.note}</p>
+              {a.note && <p className="mt-3 rounded-sm bg-paper/60 px-3 py-2 text-xs text-espresso">{a.note}</p>}
             </TicketCard>
           ))}
+          <div className={accommodations.length ? 'pt-4' : ''}>
+            <HotelFinder trip={trip} saved={bookings} />
+          </div>
         </div>
       )}
     </ModuleFrame>

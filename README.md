@@ -31,7 +31,7 @@ Local test account (dev database only): mobile `9820011111`, password `voyage-te
 | Airports, airlines, routes | OpenFlights (3,141 airports, 65k routes) | ODbL |
 | Destinations (53) | Curated list + Wikipedia summaries | CC BY-SA |
 | Destination photos | Wikimedia Commons, stored in `public/img` (works offline); authors on the Credits screen | per image |
-| Hotels, attractions, restaurants | OpenStreetMap; hotel prices are **estimates** | ODbL |
+| Hotels, attractions, restaurants | OpenStreetMap. Hotel search is **live** from Amadeus when keyed; otherwise OSM hotels with a price **range estimated** from the hotel class and local costs. Airbnb: link out only (no public API; no scraping). | ODbL |
 | Weather | **Live**: Open-Meteo (no key), cached 30 min | CC BY 4.0 |
 | Exchange rates | **Live**: Frankfurter/ECB, ExchangeRate-API for others; cached 6 h | free use |
 | Flights | **Live** from Amadeus when `AMADEUS_*` keys are set; otherwise airlines on the route from OpenFlights (2014 data, retired airlines removed) with duration and fare **estimated** from distance, labelled "Indicative". Booking is a link to Google Flights. | ODbL |

@@ -207,6 +207,7 @@ export const hotelsCache = pgTable(
   {
     ...placeColumns(),
     provider: text('provider').notNull(),
+    kind: text('kind'), // hotel | hostel | guest_house | apartment | resort …
     stars: real('stars'),
     pricePerNightInr: integer('price_per_night_inr'),
     priceIsEstimate: boolean('price_is_estimate').notNull().default(true),

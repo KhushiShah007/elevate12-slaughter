@@ -109,13 +109,17 @@ export async function seedAll(db: Db, log: Log = console.log) {
     });
     const known = (p: Place) => ids.has(p.destinationSlug);
 
-    await inChunks(places.hotels.filter(known), 300, (chunk) =>
+    // A hotel near two destinations appears twice in the data: keep its first one.
+    const firstOf = new Set<string>();
+    const hotels = places.hotels.filter((p) => known(p) && !firstOf.has(p.externalId) && firstOf.add(p.externalId));
+    await inChunks(hotels, 300, (chunk) =>
       db
         .insert(s.hotelsCache)
         .values(
           chunk.map((p) => ({
             ...common(p),
             provider: 'openstreetmap',
+            kind: (p.kind as string | null) ?? null,
             stars: p.stars as number | null,
             pricePerNightInr: p.pricePerNightInr as number,
             priceIsEstimate: true,
@@ -123,7 +127,7 @@ export async function seedAll(db: Db, log: Log = console.log) {
             address: p.address as string | null,
           })),
         )
-        .onConflictDoNothing(),
+        .onConflictDoUpdate({ target: [s.hotelsCache.provider, s.hotelsCache.externalId], set: { kind: sql`excluded.kind`, stars: sql`excluded.stars` } }),
     );
     await inChunks(places.attractions.filter(known), 300, (chunk) =>
       db
