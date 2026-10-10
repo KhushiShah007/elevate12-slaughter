@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Luggage, Plus, Stamp, Wifi, WifiOff } from 'lucide-react';
-import { useNextFlight, useTrips, sampleUser, journeySteps } from '../../hooks/useTrip';
+import { useNextFlight, useTrips, useTraveller, journeySteps } from '../../hooks/useTrip';
 import { useOnline } from '../../hooks/useOnline';
 import { fadeUp, stagger } from '../../design/motion';
 import { BoardingPassCard } from '../../components/flight/BoardingPassCard';
@@ -12,6 +12,7 @@ import { clock, day, greeting } from '../../utils/format';
 
 export default function Home() {
   const online = useOnline();
+  const traveller = useTraveller();
   const { trip, leg, onward, risk, lastSynced } = useNextFlight();
   const { existing, completed } = useTrips();
 
@@ -32,7 +33,7 @@ export default function Home() {
         </div>
         <h1 className="mt-4 text-[2.25rem] leading-[1.1]">
           {greeting()},<br />
-          <span className="italic">{sampleUser.name}</span>
+          <span className="italic">{traveller.name}</span>
         </h1>
         <p className="mt-2 text-sm text-espresso">
           {trip.title} starts {day(trip.startDate, { weekday: 'long', day: 'numeric', month: 'short' })}. Leave home by{' '}

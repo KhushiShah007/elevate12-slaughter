@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { PassportOpen } from '../../components/motion/PassportOpen';
 import { StampThump } from '../../components/motion/StampThump';
 import { PillButton } from '../../components/ui/PillButton';
+import { useSettings } from '../../state/settings';
 
 export default function Splash() {
   const navigate = useNavigate();
+  const { signedIn } = useSettings();
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-10 px-gutter py-12">
       <PassportOpen>
@@ -20,8 +22,8 @@ export default function Splash() {
       </PassportOpen>
 
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.6 }} className="w-full">
-        <PillButton full onClick={() => navigate('/login')}>
-          Begin your journey
+        <PillButton full onClick={() => navigate(signedIn ? '/home' : '/welcome')}>
+          {signedIn ? 'Continue' : 'Begin your journey'}
         </PillButton>
       </motion.div>
     </div>

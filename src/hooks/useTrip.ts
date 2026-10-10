@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import * as sample from '../data/sampleTrips';
 import { documents } from '../data/sampleDocuments';
 import { connectionRisk, minutesBetween } from '../engines/connectionRisk';
+import { useSettings } from '../state/settings';
 
 // Goal 1: selectors over bundled sample data. Goal 2 moves these to src/db (Dexie)
 // with the same shapes, so screens do not change.
@@ -55,3 +56,9 @@ export const sampleUser = sample.sampleUser;
 export const journeySteps = sample.journeySteps;
 export const completedMemories = sample.completedMemories;
 export const familyPickup = sample.familyPickup;
+
+/** The signed-in traveller's display details, falling back to the sample traveller. */
+export function useTraveller() {
+  const { profile } = useSettings();
+  return { name: profile?.name ?? sample.sampleUser.name, contact: profile?.contact ?? sample.sampleUser.phoneOrEmail };
+}

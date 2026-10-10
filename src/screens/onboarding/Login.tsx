@@ -1,49 +1,58 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Mail, Phone } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Lock } from 'lucide-react';
 import { OnboardingFrame } from './OnboardingFrame';
-import { Segmented } from '../../components/ui/Segmented';
+import { ContactField, isValidContact, type ContactMode } from './ContactField';
+import type { AuthFlowState } from './SignUp';
 import { Input } from '../../components/ui/Input';
 import { PillButton } from '../../components/ui/PillButton';
+import { useSettings } from '../../state/settings';
 
 export default function Login() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<'phone' | 'email'>('phone');
-  const [value, setValue] = useState('');
+  const { update, profile } = useSettings();
+  const [mode, setMode] = useState<ContactMode>('phone');
+  const [contact, setContact] = useState('');
+  const [password, setPassword] = useState('');
+  const validContact = isValidContact(mode, contact);
+
+  // Demo: the password is not checked against a server. Production uses Supabase Auth or Firebase Auth.
+  const logIn = () => {
+    update({ signedIn: true, profile: profile ?? { name: 'Riya', contact: contact.trim() } });
+    navigate('/home', { replace: true });
+  };
 
   return (
     <OnboardingFrame
-      step="Step 1 of 3"
-      title="Welcome aboard"
-      sub="Sign in with your phone or email. We will send you a one-time code."
+      title="Welcome back"
+      sub="Log in with your phone or email and password."
       footer={
         <>
-          <PillButton full disabled={!value.trim()} onClick={() => navigate('/otp')}>
-            Send code
+          <PillButton full disabled={!validContact || password.length < 8} onClick={logIn}>
+            Log in
           </PillButton>
-          <p className="mt-3 text-center text-xs text-muted">
-            This prototype uses a demo sign-in. The real app would use Supabase Auth or Firebase Auth.
+          <PillButton
+            full
+            variant="ghost"
+            className="mt-3"
+            disabled={!validContact}
+            onClick={() => navigate('/otp', { state: { flow: 'login', contact: contact.trim() } satisfies AuthFlowState })}
+          >
+            Use a one-time code instead
+          </PillButton>
+          <p className="mt-4 text-center text-sm text-espresso">
+            New to Voyage?{' '}
+            <Link to="/signup" replace className="font-semibold text-ink underline underline-offset-4">
+              Create an account
+            </Link>
           </p>
+          <p className="mt-3 text-center text-xs text-muted">Demo sign-in: the password is not checked. The real app would use Supabase Auth or Firebase Auth.</p>
         </>
       }
     >
-      <Segmented
-        value={mode}
-        onChange={(m) => {
-          setMode(m);
-          setValue('');
-        }}
-        options={[
-          { value: 'phone', label: 'Phone' },
-          { value: 'email', label: 'Email' },
-        ]}
-      />
-      <div className="mt-6">
-        {mode === 'phone' ? (
-          <Input label="Mobile number" icon={<Phone size={18} />} type="tel" inputMode="tel" placeholder="+91 98200 00000" value={value} onChange={(e) => setValue(e.target.value)} />
-        ) : (
-          <Input label="Email" icon={<Mail size={18} />} type="email" placeholder="you@example.com" value={value} onChange={(e) => setValue(e.target.value)} />
-        )}
+      <div className="space-y-5">
+        <ContactField mode={mode} onMode={setMode} value={contact} onChange={setContact} />
+        <Input label="Password" icon={<Lock size={18} />} type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
       </div>
     </OnboardingFrame>
   );

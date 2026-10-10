@@ -1,6 +1,8 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { AppShell, BareShell } from './components/layout/AppShell';
 import Splash from './screens/onboarding/Splash';
+import Welcome from './screens/onboarding/Welcome';
+import SignUp from './screens/onboarding/SignUp';
 import Login from './screens/onboarding/Login';
 import Otp from './screens/onboarding/Otp';
 import SetPassword from './screens/onboarding/SetPassword';
@@ -35,6 +37,8 @@ export const router = createBrowserRouter([
     element: <BareShell />,
     children: [
       { path: '/', element: <Splash /> },
+      { path: '/welcome', element: <Welcome /> },
+      { path: '/signup', element: <SignUp /> },
       { path: '/login', element: <Login /> },
       { path: '/otp', element: <Otp /> },
       { path: '/set-password', element: <SetPassword /> },

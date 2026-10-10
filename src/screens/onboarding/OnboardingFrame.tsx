@@ -5,7 +5,7 @@ import { Chip } from '../../components/ui/Chip';
 
 /** Shared layout for sign-in steps: back, a step count, the "Demo sign-in" label. */
 export function OnboardingFrame({ step, title, sub, children, footer }: {
-  step: string;
+  step?: string;
   title: string;
   sub?: string;
   children: ReactNode;
@@ -22,8 +22,8 @@ export function OnboardingFrame({ step, title, sub, children, footer }: {
           Demo sign-in
         </Chip>
       </div>
-      <p className="mt-6 text-xs font-semibold uppercase tracking-widest text-muted">{step}</p>
-      <h1 className="mt-2 text-[2.25rem] leading-[1.1]">{title}</h1>
+      {step && <p className="mt-6 text-xs font-semibold uppercase tracking-widest text-muted">{step}</p>}
+      <h1 className={`text-[2.25rem] leading-[1.1] ${step ? 'mt-2' : 'mt-6'}`}>{title}</h1>
       {sub && <p className="mt-2 text-sm leading-relaxed text-espresso">{sub}</p>}
       <div className="mt-8 flex-1">{children}</div>
       <div className="pt-6">{footer}</div>

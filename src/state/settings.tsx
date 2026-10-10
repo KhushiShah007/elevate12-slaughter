@@ -8,6 +8,7 @@ interface Settings {
   language: Language;
   persona: Partial<Record<keyof TravellerPreferences, string>> | null; // raw quiz answers
   signedIn: boolean;
+  profile: { name: string; contact: string } | null; // demo account on this device
 }
 
 interface SettingsApi extends Settings {
@@ -16,7 +17,7 @@ interface SettingsApi extends Settings {
 }
 
 const KEY = 'voyage.settings';
-const defaults: Settings = { seniorMode: false, language: 'en', persona: null, signedIn: false };
+const defaults: Settings = { seniorMode: false, language: 'en', persona: null, signedIn: false, profile: null };
 
 function load(): Settings {
   try {

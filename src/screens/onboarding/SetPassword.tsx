@@ -1,17 +1,21 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Lock } from 'lucide-react';
 import { OnboardingFrame } from './OnboardingFrame';
 import { Input } from '../../components/ui/Input';
 import { PillButton } from '../../components/ui/PillButton';
 import { useSettings } from '../../state/settings';
+import type { AuthFlowState } from './SignUp';
 
 export default function SetPassword() {
   const navigate = useNavigate();
   const { update } = useSettings();
   const [pw, setPw] = useState('');
   const [pw2, setPw2] = useState('');
+  const state = useLocation().state as AuthFlowState | null;
   const ok = pw.length >= 8 && pw === pw2;
+  if (!state?.name) return <Navigate to="/signup" replace />;
+  const { name, contact } = state;
 
   return (
     <OnboardingFrame
@@ -23,8 +27,9 @@ export default function SetPassword() {
           full
           disabled={!ok}
           onClick={() => {
-            update({ signedIn: true });
-            navigate('/quiz');
+            // Demo: the password is never stored. Production hands it to the auth provider.
+            update({ signedIn: true, profile: { name, contact } });
+            navigate('/quiz', { replace: true });
           }}
         >
           Save and continue

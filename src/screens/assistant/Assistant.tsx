@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { ArrowUp, ArrowUpRight, Mic } from 'lucide-react';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { Chip } from '../../components/ui/Chip';
+import { useTraveller } from '../../hooks/useTrip';
 
 interface Msg {
   from: 'me' | 'voyage';
@@ -33,8 +34,9 @@ const suggestions: { text: string; reply: Msg }[] = [
 ];
 
 export default function Assistant() {
+  const { name } = useTraveller();
   const [msgs, setMsgs] = useState<Msg[]>([
-    { from: 'voyage', text: 'Namaste Riya! Ask me anything about your trip, in English, Hindi or Hinglish.' },
+    { from: 'voyage', text: `Namaste ${name}! Ask me anything about your trip, in English, Hindi or Hinglish.` },
   ]);
   const [text, setText] = useState('');
   const end = useRef<HTMLDivElement>(null);

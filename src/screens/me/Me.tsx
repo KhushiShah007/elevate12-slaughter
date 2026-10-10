@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronRight, Languages, LogOut, RotateCcw, Sparkles, Type } from 'lucide-react';
 import { useSettings, type Language } from '../../state/settings';
 import { usePoints } from '../../hooks/usePoints';
-import { sampleUser } from '../../hooks/useTrip';
+import { useTraveller } from '../../hooks/useTrip';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { StampCard } from '../../components/cards/StampCard';
 import { Toggle } from '../../components/ui/Toggle';
@@ -22,16 +22,17 @@ export default function Me() {
   const navigate = useNavigate();
   const s = useSettings();
   const points = usePoints();
+  const traveller = useTraveller();
 
   return (
     <div>
       <PageHeader title="Me" />
       <div className="space-y-6 px-gutter">
         <div className="flex items-center gap-4 rounded-lg border border-line bg-paper p-4 shadow-card">
-          <span className="grid h-16 w-16 place-items-center rounded-full bg-peach font-display text-2xl text-ink">{sampleUser.name[0]}</span>
+          <span className="grid h-16 w-16 place-items-center rounded-full bg-peach font-display text-2xl text-ink">{traveller.name[0]?.toUpperCase()}</span>
           <div className="min-w-0 flex-1">
-            <p className="font-display text-2xl text-ink">{sampleUser.name}</p>
-            <p className="truncate text-sm text-muted">{sampleUser.phoneOrEmail}</p>
+            <p className="font-display text-2xl text-ink">{traveller.name}</p>
+            <p className="truncate text-sm text-muted">{traveller.contact}</p>
           </div>
           <Chip tone="warn" dot>
             Demo
@@ -89,7 +90,7 @@ export default function Me() {
           <button
             onClick={() => {
               s.reset();
-              navigate('/');
+              navigate('/welcome', { replace: true });
             }}
             className="flex min-h-[3.5rem] w-full items-center gap-3 px-4 text-bad"
           >
