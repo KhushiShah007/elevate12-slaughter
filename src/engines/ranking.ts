@@ -39,6 +39,8 @@ export interface RankContext {
   originalArrival: Iso;
   firstStay?: Accommodation;
   transport: TransportBooking[];
+  /** From the traveller's persona; falls back to RANK_RULES.valueOfHourInr. */
+  valueOfHourInr?: number;
 }
 
 /** Every rupee an option really costs: new spend, prepaid value lost, and meals while waiting. */
@@ -112,7 +114,7 @@ export function rankOptions(candidates: RecoveryCandidate[], ctx: RankContext): 
     const fewSeats = candidate.seats !== undefined && candidate.seats <= RANK_RULES.fewSeats;
     const score =
       cost.total +
-      (cost.timeLostMin / 60) * RANK_RULES.valueOfHourInr +
+      (cost.timeLostMin / 60) * (ctx.valueOfHourInr ?? RANK_RULES.valueOfHourInr) +
       (fewSeats ? RANK_RULES.fewSeatsPenaltyInr : 0) +
       (candidate.risk ? RANK_RULES.riskPenaltyInr : 0);
     return { candidate, ...cost, score, fewSeats };

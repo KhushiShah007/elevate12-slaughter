@@ -12,6 +12,7 @@ import { recheckWithProvider } from '../../db/mockProvider';
 import { useOnline } from '../../hooks/useOnline';
 import { useReworded } from '../../hooks/useReworded';
 import { useTranslated } from '../../hooks/useTranslated';
+import { usePersona } from '../../hooks/usePersona';
 import { fadeUp } from '../../design/motion';
 import { inr } from '../../utils/format';
 import { OptionCard } from './OptionCard';
@@ -35,6 +36,7 @@ export function RecoveryOptions({ bundle, type, fixKey }: { bundle: TripBundle; 
   const [error, setError] = useState<string | null>(null);
 
   const tripId = bundle.trip.id;
+  const valueOfHourInr = usePersona()?.persona.valueOfHourInr;
   const candidates = useMemo(() => recoveryCandidates.filter((c) => c.tripId === tripId && c.appliesTo.includes(type)), [tripId, type]);
   // undefined while loading; null when nothing has been chosen for this disruption yet.
   const already = useLiveQuery(() => getChosenRecovery(tripId, fixKey), [tripId, fixKey]);
@@ -44,8 +46,9 @@ export function RecoveryOptions({ bundle, type, fixKey }: { bundle: TripBundle; 
       originalArrival: bundle.flights[bundle.flights.length - 1]?.arrive ?? bundle.trip.startDate,
       firstStay: bundle.accommodations[0],
       transport: bundle.transport,
+      valueOfHourInr, // a saver ranks cheap options higher, a "treat" persona the fast ones
     }),
-    [bundle],
+    [bundle, valueOfHourInr],
   );
 
   // Ranked with every recheck applied so far; sold-out options drop out of the ranking.

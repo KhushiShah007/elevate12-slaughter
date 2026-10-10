@@ -162,10 +162,10 @@ export const transport: TransportBooking[] = [
 ];
 
 export const experiences: Experience[] = [
-  { id: 'e1', tripId: 't-japan', title: 'Tea ceremony in Uji', area: 'Uji, Kyoto', duration: '2 h', amount: 6200, tag: 'Slow & cultural' },
-  { id: 'e2', tripId: 't-japan', title: 'Fushimi Inari at dawn', area: 'Fushimi, Kyoto', duration: '3 h', amount: 0, tag: 'Free · early start' },
-  { id: 'e3', tripId: 't-japan', title: 'teamLab Planets', area: 'Toyosu, Tokyo', duration: '2 h', amount: 2900, tag: 'Book ahead' },
-  { id: 'e4', tripId: 't-japan', title: 'Nara deer park day trip', area: 'Nara', duration: 'Half day', amount: 1100, tag: 'Easy walking' },
+  { id: 'e1', tripId: 't-japan', title: 'Tea ceremony in Uji', area: 'Uji, Kyoto', duration: '2 h', amount: 6200, tag: 'Slow & cultural', interests: ['culture', 'food'] },
+  { id: 'e2', tripId: 't-japan', title: 'Fushimi Inari at dawn', area: 'Fushimi, Kyoto', duration: '3 h', amount: 0, tag: 'Free · early start', interests: ['culture', 'nature'] },
+  { id: 'e3', tripId: 't-japan', title: 'teamLab Planets', area: 'Toyosu, Tokyo', duration: '2 h', amount: 2900, tag: 'Book ahead', interests: ['culture', 'shopping'] },
+  { id: 'e4', tripId: 't-japan', title: 'Nara deer park day trip', area: 'Nara', duration: 'Half day', amount: 1100, tag: 'Easy walking', interests: ['nature'] },
 ];
 
 export const restaurants: Restaurant[] = [

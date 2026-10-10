@@ -9,6 +9,8 @@ import { StampCard } from '../../components/cards/StampCard';
 import { Toggle } from '../../components/ui/Toggle';
 import { Chip } from '../../components/ui/Chip';
 import { StorageNote, SyncStatus } from '../../components/layout/SyncStatus';
+import { PersonaEffects, PersonaStamp } from '../../components/persona/PersonaCard';
+import { usePersona } from '../../hooks/usePersona';
 import { num } from '../../utils/format';
 
 export default function Me() {
@@ -17,7 +19,8 @@ export default function Me() {
   const { t } = useT();
   const points = usePoints();
   const traveller = useTraveller();
-  if (!traveller || !points) return null;
+  const persona = usePersona();
+  if (!traveller || !points || !persona) return null;
 
   return (
     <div>
@@ -35,17 +38,18 @@ export default function Me() {
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          <StampCard pastel="mint" tilt={-2}>
-            <span className="text-3xl">☕</span>
-            <p className="mt-1 font-display text-base leading-tight text-ink">Slow Explorer</p>
-            <p className="text-[0.625rem] uppercase tracking-widest text-espresso">{t('me.persona')}</p>
-          </StampCard>
+          <PersonaStamp persona={persona.persona} size="sm" className="" />
           <StampCard pastel="butter" tilt={2}>
             <Sparkles size={26} className="text-ink" />
             <p className="mt-1 font-display text-2xl leading-tight text-ink">{num(points.total)}</p>
             <p className="text-[0.625rem] uppercase tracking-widest text-espresso">{t('me.points')}</p>
           </StampCard>
         </div>
+
+        <section className="rounded-lg border border-line bg-paper p-4">
+          <h2 className="mb-3 text-lg">{t('quiz.whatChanges')}</h2>
+          <PersonaEffects persona={persona.persona} />
+        </section>
 
         <section>
           <h2 className="mb-2 text-lg">{t('me.sync')}</h2>

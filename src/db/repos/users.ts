@@ -28,10 +28,10 @@ export async function getPreferences() {
   return user ? ((await db.preferences.get(user.id)) ?? null) : null;
 }
 
-export async function savePreferences(answers: PreferencesRecord['answers']) {
+export async function savePreferences(answers: PreferencesRecord['answers'], notes: PreferencesRecord['notes'] = {}) {
   const user = await getCurrentUser();
   if (!user) return;
   const existing = await db.preferences.get(user.id);
-  const record: PreferencesRecord = { userId: user.id, answers, updatedAt: new Date().toISOString(), rev: existing?.rev };
+  const record: PreferencesRecord = { userId: user.id, answers, notes, updatedAt: new Date().toISOString(), rev: existing?.rev };
   await writeAndQueue('preferences', user.id, record, 'Travel persona answers');
 }

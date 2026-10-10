@@ -105,6 +105,7 @@ export interface Experience {
   duration: string;
   amount: number;
   tag: string;
+  interests?: string[]; // culture | food | nature | shopping, for persona matching
 }
 
 export interface Restaurant {
@@ -162,7 +163,8 @@ export interface TravellerPreferences {
 /** Saved quiz answers for a user; feeds persona and itinerary. */
 export interface PreferencesRecord {
   userId: string;
-  answers: Partial<Record<keyof TravellerPreferences, string>>;
+  answers: Partial<Record<keyof TravellerPreferences, string>>; // option value, or 'other'
+  notes?: Partial<Record<keyof TravellerPreferences, string>>; // what the traveller typed for 'other'
   updatedAt: Iso;
   rev?: number;
 }
