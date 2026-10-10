@@ -9,3 +9,14 @@ dev-dist
 
 # Local database (PGlite) and data pipeline downloads
 .data
+
+# Secrets and environment files (only .env.example is committed)
+.env
+.env.*
+!.env.example
+# Build output, uploads, dumps
+.next
+build
+uploads/
+*.dump
+*.sql.gz
