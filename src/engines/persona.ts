@@ -142,3 +142,20 @@ export function orderRestaurants<T extends { veg: boolean }>(items: T[], persona
   if (!persona.vegFirst) return items;
   return items.map((item, index) => ({ item, index })).sort((a, b) => Number(b.item.veg) - Number(a.item.veg) || a.index - b.index).map((x) => x.item);
 }
+
+/** Destination tags (from the destination catalogue) that suit each persona. */
+const destinationTags: Record<PersonaId, string[]> = {
+  family: ['family'],
+  slow: ['beach', 'spiritual', 'nature'],
+  foodie: ['foodie'],
+  culture: ['culture', 'spiritual'],
+  nature: ['nature', 'adventure'],
+  planner: ['culture', 'shopping'],
+  saver: ['budget'],
+  easy: ['luxury', 'beach', 'honeymoon'],
+};
+
+/** How well a destination suits the persona: number of matching tags (0 = no match). */
+export function destinationFit(personaTags: string[], persona: Persona): number {
+  return destinationTags[persona.id].filter((t) => personaTags.includes(t)).length;
+}

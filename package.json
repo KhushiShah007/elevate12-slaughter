@@ -12,7 +12,8 @@
     "db:generate": "drizzle-kit generate",
     "pipeline:openflights": "tsx data-pipeline/openflights.ts",
     "pipeline:destinations": "tsx data-pipeline/destinations.ts",
-    "pipeline:places": "tsx data-pipeline/osm-places.ts"
+    "pipeline:places": "tsx data-pipeline/osm-places.ts",
+    "pipeline:images": "tsx data-pipeline/images.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.2.14",

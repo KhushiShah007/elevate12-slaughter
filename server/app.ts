@@ -7,6 +7,7 @@ import { errorBody, rateLimit } from './http';
 import { catalog } from './routes/catalog';
 import { auth } from './routes/auth';
 import { trips } from './routes/trips';
+import { live } from './routes/live';
 import { handleAi } from '../api/_ai';
 
 // The Voyage API. Runs inside `npm run dev` (Vite middleware) and on Vercel (api/index.ts).
@@ -45,6 +46,8 @@ app.get('/health', async (c) => {
 
 app.use('/destinations/*', rateLimit('catalog', 120, 60_000));
 app.use('/airports', rateLimit('catalog', 120, 60_000));
+app.use('/fx', rateLimit('catalog', 120, 60_000));
+app.route('/', live); // before catalog, so /destinations/:slug/weather is matched
 app.route('/', catalog);
 
 // Accounts. Tight limit on anything that checks a password or a code.

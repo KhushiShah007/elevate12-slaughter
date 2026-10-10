@@ -39,6 +39,8 @@ export const hinglish: Messages = {
   'home.comingUp': '{n} aane wali',
   'home.newTrip': 'Nayi trip',
   'home.newTripSub': 'Plan karo ya booking paste karo',
+  'home.explore': 'Explore',
+  'home.exploreSub': '53 places, photos ke saath',
   'home.completedTrips': 'Poori hui trips',
   'home.stamps': '{n} stamps jama',
   'home.openWorkspace': '{trip} kholo',

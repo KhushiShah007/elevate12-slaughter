@@ -30,6 +30,9 @@ import Me from './screens/me/Me';
 import FamilyPickup from './screens/share/FamilyPickup';
 import JudgeMode from './screens/judge/JudgeMode';
 import NotFound from './screens/NotFound';
+import Credits from './screens/Credits';
+import Destinations from './screens/destinations/Destinations';
+import DestinationDetail from './screens/destinations/DestinationDetail';
 
 export const router = createBrowserRouter([
   {
@@ -45,6 +48,7 @@ export const router = createBrowserRouter([
       { path: '/quiz', element: <PersonaQuiz /> },
       { path: '/share/:token', element: <FamilyPickup /> },
       { path: '/judge', element: <JudgeMode /> },
+      { path: '/credits', element: <Credits /> },
     ],
   },
   {
@@ -66,6 +70,8 @@ export const router = createBrowserRouter([
       { path: '/trips/:tripId/restaurants', element: <Restaurants /> },
       { path: '/trips/:tripId/active', element: <ActiveTrip /> },
       { path: '/trips/:tripId/disruption/:type', element: <Disruption /> },
+      { path: '/destinations', element: <Destinations /> },
+      { path: '/destinations/:slug', element: <DestinationDetail /> },
       { path: '/assistant', element: <Assistant /> },
       { path: '/wallet', element: <Wallet /> },
       { path: '/wallet/scan', element: <ScanToPdf /> },

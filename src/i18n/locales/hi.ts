@@ -39,6 +39,8 @@ export const hi: Messages = {
   'home.comingUp': '{n} आने वाली',
   'home.newTrip': 'नई यात्रा',
   'home.newTripSub': 'योजना बनाएँ या बुकिंग पेस्ट करें',
+  'home.explore': 'घूमने की जगहें',
+  'home.exploreSub': 'फ़ोटो के साथ 53 जगहें',
   'home.completedTrips': 'पूरी हुई यात्राएँ',
   'home.stamps': '{n} स्टैम्प जमा',
   'home.openWorkspace': '{trip} खोलें',

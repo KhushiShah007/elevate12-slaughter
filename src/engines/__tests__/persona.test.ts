@@ -67,3 +67,12 @@ describe('reshaping suggestions', () => {
     expect(order(6000)[1]).toBe('c-jl740'); // time is precious: the fastest new ticket climbs
   });
 });
+
+describe('destination fit', () => {
+  it('matches destinations to the persona', async () => {
+    const { derivePersona, destinationFit } = await import('../persona');
+    const family = derivePersona({ mix: 'family' });
+    expect(destinationFit(['family', 'beach'], family)).toBe(1);
+    expect(destinationFit(['adventure'], family)).toBe(0);
+  });
+});

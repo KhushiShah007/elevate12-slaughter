@@ -73,3 +73,18 @@ describe('API foundation', () => {
     expect((await get('/nope')).status).toBe(404);
   });
 });
+
+describe('live data', () => {
+  it('validates currency codes and unknown places without calling out', async () => {
+    const bad = await get('/fx?to=rupee');
+    expect(bad.status).toBe(400);
+    const inr = await get('/fx?to=INR');
+    expect(inr.body).toMatchObject({ rate: 1 });
+    expect((await get('/destinations/atlantis/weather')).status).toBe(404);
+  });
+
+  it('tells the app which currency each destination uses', async () => {
+    expect(((await get('/destinations/tokyo')).body.destination as { currency: string }).currency).toBe('JPY');
+    expect(((await get('/destinations/goa')).body.destination as { currency: string }).currency).toBe('INR');
+  });
+});

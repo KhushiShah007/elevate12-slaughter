@@ -1,0 +1,525 @@
+{
+ "destinations": {
+  "delhi": {
+   "src": "/img/dest/delhi.jpg",
+   "credit": "Marcin Białek · Wikimedia Commons",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Jama_Masjid_2011.jpg",
+   "name": "Delhi",
+   "country": "India",
+   "featured": true
+  },
+  "agra": {
+   "src": "/img/dest/agra.jpg",
+   "credit": "Yann (talk) · Wikimedia Commons",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Taj_Mahal,_Agra,_India.jpg",
+   "name": "Agra",
+   "country": "India",
+   "featured": false
+  },
+  "jaipur": {
+   "src": "/img/dest/jaipur.jpg",
+   "credit": "Chainwit. · Wikimedia Commons",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:East_facade_Hawa_Mahal_Jaipur_from_ground_level_(July_2022)_-_img_01.jpg",
+   "name": "Jaipur",
+   "country": "India",
+   "featured": true
+  },
+  "udaipur": {
+   "src": "/img/dest/udaipur.jpg",
+   "credit": "Geri from Biel/Bienne, Schweiz · Wikimedia Commons",
+   "license": "CC BY-SA 2.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Evening_view,_City_Palace,_Udaipur.jpg",
+   "name": "Udaipur",
+   "country": "India",
+   "featured": true
+  },
+  "jodhpur": {
+   "src": "/img/dest/jodhpur.jpg",
+   "credit": "Sanhitasinha · Wikimedia Commons",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Mehrangarh_Fort_sanhita.jpg",
+   "name": "Jodhpur",
+   "country": "India",
+   "featured": false
+  },
+  "jaisalmer": {
+   "src": "/img/dest/jaisalmer.jpg",
+   "credit": "Adrian Sulc · Wikimedia Commons",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Jaisalmer_Fort.jpg",
+   "name": "Jaisalmer",
+   "country": "India",
+   "featured": false
+  },
+  "varanasi": {
+   "src": "/img/dest/varanasi.jpg",
+   "credit": "Vyacheslav Argenberg · Wikimedia Commons",
+   "license": "CC BY 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Varanasi,_India,_Ghats,_Cremation_ceremony_in_progress.jpg",
+   "name": "Varanasi",
+   "country": "India",
+   "featured": true
+  },
+  "rishikesh": {
+   "src": "/img/dest/rishikesh.jpg",
+   "credit": "VK1983 · Wikimedia Commons",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Trayambakeshwar_Temple_VK.jpg",
+   "name": "Rishikesh",
+   "country": "India",
+   "featured": false
+  },
+  "amritsar": {
+   "src": "/img/dest/amritsar.jpg",
+   "credit": "Shubhashish · Wikimedia Commons",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Golden_Temple_Amritsar_Gurudwara_(cropped).jpg",
+   "name": "Amritsar",
+   "country": "India",
+   "featured": false
+  },
+  "shimla": {
+   "src": "/img/dest/shimla.jpg",
+   "credit": "Navneet Sharma · Wikimedia Commons",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Landscape_of_Shimla_,_Himachal_Pradesh.jpg",
+   "name": "Shimla",
+   "country": "India",
+   "featured": false
+  },
+  "manali": {
+   "src": "/img/dest/manali.jpg",
+   "credit": "Neerajsinghazm · Wikimedia Commons",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Manali_City.jpg",
+   "name": "Manali",
+   "country": "India",
+   "featured": true
+  },
+  "leh": {
+   "src": "/img/dest/leh.jpg",
+   "credit": "Anirvan Shukla · Wikimedia Commons",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Leh_City_seen_from_Shanti_Stupa.JPG",
+   "name": "Leh",
+   "country": "India",
+   "featured": true
+  },
+  "srinagar": {
+   "src": "/img/dest/srinagar.jpg",
+   "credit": "Abdars · Wikimedia Commons",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Red_and_Yellow_Tulips.JPG",
+   "name": "Srinagar",
+   "country": "India",
+   "featured": false
+  },
+  "mumbai": {
+   "src": "/img/dest/mumbai.jpg",
+   "credit": "Rutiknatekar · Wikimedia Commons",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Mumbai_Bandra-Worli_Sea_Link.jpg",
+   "name": "Mumbai",
+   "country": "India",
+   "featured": false
+  },
+  "goa": {
+   "src": "/img/dest/goa.jpg",
+   "credit": "Sam 8393 · Wikimedia Commons",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:BeachFun.jpg",
+   "name": "Goa",
+   "country": "India",
+   "featured": true
+  },
+  "pune": {
+   "src": "/img/dest/pune.jpg",
+   "credit": "Ujjawal.Gayakwad · Wikimedia Commons",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Pune_West_skyline_-_March_2017.jpg",
+   "name": "Pune",
+   "country": "India",
+   "featured": false
+  },
+  "ahmedabad": {
+   "src": "/img/dest/ahmedabad.jpg",
+   "credit": "Tarun802 · Wikimedia Commons",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Sabarmati_riverside.jpg",
+   "name": "Ahmedabad",
+   "country": "India",
+   "featured": false
+  },
+  "bengaluru": {
+   "src": "/img/dest/bengaluru.jpg",
+   "credit": "Gpkp · Wikimedia Commons",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:View_from_Visvesvaraya_Industrial_and_Technological_Museum_(2025)_02.jpg",
+   "name": "Bengaluru",
+   "country": "India",
+   "featured": false
+  },
+  "mysuru": {
+   "src": "/img/dest/mysuru.jpg",
+   "credit": "Rithwik · Wikimedia Commons",
+   "license": "Public domain",
+   "page": "https://commons.wikimedia.org/wiki/File:Chamundeshwari_Temple_Mysore.jpg",
+   "name": "Mysuru",
+   "country": "India",
+   "featured": false
+  },
+  "hampi": {
+   "src": "/img/dest/hampi.jpg",
+   "credit": "iMahesh · Wikimedia Commons",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Wide_angle_of_Galigopuram_of_Virupaksha_Temple,_Hampi_(04)_(cropped).jpg",
+   "name": "Hampi",
+   "country": "India",
+   "featured": false
+  },
+  "kochi": {
+   "src": "/img/dest/kochi.jpg",
+   "credit": "Fsquares (The Ibrahims) · Wikimedia Commons",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Kochi_Skyline.jpg",
+   "name": "Kochi",
+   "country": "India",
+   "featured": true
+  },
+  "munnar": {
+   "src": "/img/dest/munnar.jpg",
+   "credit": "Kondephy · Wikimedia Commons",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Munnar_Overview.jpg",
+   "name": "Munnar",
+   "country": "India",
+   "featured": false
+  },
+  "alleppey": {
+   "src": "/img/dest/alleppey.jpg",
+   "credit": "Augustus Binu/ facebook · Wikimedia Commons",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Alappuzha_Boat_Beauty_W.jpg",
+   "name": "Alleppey",
+   "country": "India",
+   "featured": false
+  },
+  "chennai": {
+   "src": "/img/dest/chennai.jpg",
+   "credit": "jamal haider from india · Wikimedia Commons",
+   "license": "CC BY-SA 2.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Chennai_Central.jpg",
+   "name": "Chennai",
+   "country": "India",
+   "featured": false
+  },
+  "puducherry": {
+   "src": "/img/dest/puducherry.jpg",
+   "credit": "Karthik Easvur · Wikimedia Commons",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Pondicherry-Rock_beach_aerial_view.jpg",
+   "name": "Puducherry",
+   "country": "India",
+   "featured": false
+  },
+  "ooty": {
+   "src": "/img/dest/ooty.jpg",
+   "credit": "Vinayaraj · Wikimedia Commons",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Ooty_lake.jpg",
+   "name": "Ooty",
+   "country": "India",
+   "featured": false
+  },
+  "hyderabad": {
+   "src": "/img/dest/hyderabad.jpg",
+   "credit": "iMahesh · Wikimedia Commons",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Aerial_view_of_Durgam_cheruvu_and_Hitech_CIty.jpg",
+   "name": "Hyderabad",
+   "country": "India",
+   "featured": false
+  },
+  "kolkata": {
+   "src": "/img/dest/kolkata.jpg",
+   "credit": "NalGup20 · Wikimedia Commons",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Kolkata_maidan.jpg",
+   "name": "Kolkata",
+   "country": "India",
+   "featured": false
+  },
+  "darjeeling": {
+   "src": "/img/dest/darjeeling.jpg",
+   "credit": "Arne Hückelheim 2010-09-21 12:41:53 This is a cropped in which the glare has been lessened · Wikimedia Commons",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:DarjeelingTrainFruitshop_(2).jpg",
+   "name": "Darjeeling",
+   "country": "India",
+   "featured": false
+  },
+  "gangtok": {
+   "src": "/img/dest/gangtok.jpg",
+   "credit": "Ashinpt at enwiki · Wikimedia Commons",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Kangch-Goechala.jpg",
+   "name": "Gangtok",
+   "country": "India",
+   "featured": false
+  },
+  "shillong": {
+   "src": "/img/dest/shillong.jpg",
+   "credit": "Prasanta Kr Dutta · Wikimedia Commons",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Elephant_Falls_II,_Shillong.jpg",
+   "name": "Shillong",
+   "country": "India",
+   "featured": false
+  },
+  "andaman": {
+   "src": "/img/dest/andaman.jpg",
+   "credit": "Harvinder Chandigarh · Wikimedia Commons",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Radha_Nagar_beach,_Havelock_Island,_Andamn,_India-_Sun_set_view.jpg",
+   "name": "Andaman Islands",
+   "country": "India",
+   "featured": true
+  },
+  "dubai": {
+   "src": "/img/dest/dubai.jpg",
+   "credit": "Tim Reckmann from Hamm, Deutschland · Wikimedia Commons",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Dubai_Skyline_mit_Burj_Khalifa_(cropped).jpg",
+   "name": "Dubai",
+   "country": "United Arab Emirates",
+   "featured": true
+  },
+  "singapore": {
+   "src": "/img/dest/singapore.jpg",
+   "credit": "Shiny Things. · Wikimedia Commons",
+   "license": "CC BY 2.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Supertree_Grove,_Gardens_by_the_Bay,_Singapore_-_20120712-02.jpg",
+   "name": "Singapore",
+   "country": "Singapore",
+   "featured": true
+  },
+  "bangkok": {
+   "src": "/img/dest/bangkok.jpg",
+   "credit": "Ninara from Helsinki, Finland · Wikimedia Commons",
+   "license": "CC BY 2.0",
+   "page": "https://commons.wikimedia.org/wiki/File:4Y1A1150_Bangkok_(33536339665).jpg",
+   "name": "Bangkok",
+   "country": "Thailand",
+   "featured": true
+  },
+  "phuket": {
+   "src": "/img/dest/phuket.jpg",
+   "credit": "Bennypc · Wikimedia Commons",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Phuket_Aerial.jpg",
+   "name": "Phuket",
+   "country": "Thailand",
+   "featured": false
+  },
+  "bali": {
+   "src": "/img/dest/bali.jpg",
+   "credit": "Unknown author · Wikimedia Commons",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Bali_panorama.jpg",
+   "name": "Bali",
+   "country": "Indonesia",
+   "featured": true
+  },
+  "kuala-lumpur": {
+   "src": "/img/dest/kuala-lumpur.jpg",
+   "credit": "Renek78 · Wikimedia Commons",
+   "license": "CC0",
+   "page": "https://commons.wikimedia.org/wiki/File:Bukit_Bintang_junction_in_2024_2.jpg",
+   "name": "Kuala Lumpur",
+   "country": "Malaysia",
+   "featured": false
+  },
+  "hanoi": {
+   "src": "/img/dest/hanoi.jpg",
+   "credit": "Quangnlnhe182394 · Wikimedia Commons",
+   "license": "CC0",
+   "page": "https://commons.wikimedia.org/wiki/File:Hanoi_skyline_with_Ba_Vi_Mountain.jpg",
+   "name": "Hanoi",
+   "country": "Vietnam",
+   "featured": false
+  },
+  "maldives": {
+   "src": "/img/dest/maldives.jpg",
+   "credit": "Taj Hotels, Resorts and Palaces · Wikimedia Commons",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rehendi_Suite_Deck_(Service).jpg",
+   "name": "Maldives",
+   "country": "Maldives",
+   "featured": true
+  },
+  "kathmandu": {
+   "src": "/img/dest/kathmandu.jpg",
+   "credit": "Gerd Eichmann · Wikimedia Commons",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Kathmandu-Durbar_Square-06-Mahavishnu-Kuh-Vishnu-Pratapamalla-Jagannath-2007-gje.jpg",
+   "name": "Kathmandu",
+   "country": "Nepal",
+   "featured": false
+  },
+  "colombo": {
+   "src": "/img/dest/colombo.png",
+   "credit": "Gihanud2001 · Wikimedia Commons",
+   "license": "CC0",
+   "page": "https://commons.wikimedia.org/wiki/File:Colombo_city_skyline_at_night.png",
+   "name": "Colombo",
+   "country": "Sri Lanka",
+   "featured": false
+  },
+  "tokyo": {
+   "src": "/img/dest/tokyo.jpg",
+   "credit": "Morio · Wikimedia Commons",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Skyscrapers_of_Shinjuku_2009_January.jpg",
+   "name": "Tokyo",
+   "country": "Japan",
+   "featured": true
+  },
+  "kyoto": {
+   "src": "/img/dest/kyoto.jpg",
+   "credit": "Nina R from Africa · Wikimedia Commons",
+   "license": "CC BY 2.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Kyoto,_Japan_(49667780482).jpg",
+   "name": "Kyoto",
+   "country": "Japan",
+   "featured": true
+  },
+  "seoul": {
+   "src": "/img/dest/seoul.jpg",
+   "credit": "Eunmi Park · Wikimedia Commons",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:%EC%A4%91%ED%99%94%EC%A0%84%EC%9D%98_%EB%82%AE.jpg",
+   "name": "Seoul",
+   "country": "South Korea",
+   "featured": false
+  },
+  "hong-kong": {
+   "src": "/img/dest/hong-kong.jpg",
+   "credit": "Diego Delso · Wikimedia Commons",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Vista_del_Puerto_de_Victoria_desde_Sky100,_Hong_Kong,_2013-08-09,_DD_10.JPG",
+   "name": "Hong Kong",
+   "country": "Hong Kong",
+   "featured": false
+  },
+  "istanbul": {
+   "src": "/img/dest/istanbul.jpg",
+   "credit": "Hunanuk · Wikimedia Commons",
+   "license": "CC0",
+   "page": "https://commons.wikimedia.org/wiki/File:Historical_peninsula_and_modern_skyline_of_Istanbul.jpg",
+   "name": "Istanbul",
+   "country": "Türkiye",
+   "featured": false
+  },
+  "paris": {
+   "src": "/img/dest/paris.jpg",
+   "credit": "Yann Caradec from Paris, France · Wikimedia Commons",
+   "license": "CC BY-SA 2.0",
+   "page": "https://commons.wikimedia.org/wiki/File:La_Tour_Eiffel_vue_de_la_Tour_Saint-Jacques,_Paris_ao%C3%BBt_2014_(2).jpg",
+   "name": "Paris",
+   "country": "France",
+   "featured": true
+  },
+  "london": {
+   "src": "/img/dest/london.jpg",
+   "credit": "Ilya Grigorik · Wikimedia Commons",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:London_Skyline_(125508655).jpeg",
+   "name": "London",
+   "country": "United Kingdom",
+   "featured": false
+  },
+  "rome": {
+   "src": "/img/dest/rome.jpg",
+   "credit": "Diliff · Wikimedia Commons",
+   "license": "CC BY 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Trevi_Fountain,_Rome,_Italy_2_-_May_2007.jpg",
+   "name": "Rome",
+   "country": "Italy",
+   "featured": false
+  },
+  "zurich": {
+   "src": "/img/dest/zurich.jpg",
+   "credit": "Thomas Wolf, www.foto-tw.de · Wikimedia Commons",
+   "license": "CC BY-SA 3.0 de",
+   "page": "https://commons.wikimedia.org/wiki/File:Altstadt_Z%C3%BCrich_2015.jpg",
+   "name": "Zurich",
+   "country": "Switzerland",
+   "featured": false
+  },
+  "new-york": {
+   "src": "/img/dest/new-york.jpg",
+   "credit": "Dllu · Wikimedia Commons",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:View_of_Empire_State_Building_from_Rockefeller_Center_New_York_City_dllu_(cropped).jpg",
+   "name": "New York",
+   "country": "United States",
+   "featured": false
+  },
+  "sydney": {
+   "src": "/img/dest/sydney.jpg",
+   "credit": "Benh LIEU SONG (Flickr) · Wikimedia Commons",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Sydney_Opera_House_and_Harbour_Bridge_Dusk_(2)_2019-06-21.jpg",
+   "name": "Sydney",
+   "country": "Australia",
+   "featured": false
+  }
+ },
+ "memories": {
+  "amer-fort": {
+   "src": "/img/memories/amer-fort.jpg",
+   "credit": "Jakub Hałun · Wikimedia Commons",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:20191219_Fort_Amber,_Amer,_Jaipur_0955_9481.jpg"
+  },
+  "kachori": {
+   "src": "/img/memories/kachori.jpg",
+   "credit": "Jaipuriamanasi · Wikimedia Commons",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rajasthani_Raj_Kachori.jpg"
+  },
+  "hawa-mahal": {
+   "src": "/img/memories/hawa-mahal.jpg",
+   "credit": "Chainwit. · Wikimedia Commons",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:East_facade_Hawa_Mahal_Jaipur_from_ground_level_(July_2022)_-_img_01.jpg"
+  },
+  "marina-bay": {
+   "src": "/img/memories/marina-bay.jpg",
+   "credit": "Bijay Chaurasia · Wikimedia Commons",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Marina_Bay_Singapore-3499.jpg"
+  },
+  "gardens-by-the-bay": {
+   "src": "/img/memories/gardens-by-the-bay.jpg",
+   "credit": "Shiny Things. · Wikimedia Commons",
+   "license": "CC BY 2.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Supertree_Grove,_Gardens_by_the_Bay,_Singapore_-_20120712-02.jpg"
+  },
+  "fishing-nets": {
+   "src": "/img/memories/fishing-nets.jpg",
+   "credit": "This Photo was taken by Timothy A. Gonsalves. Feel free to use my photos, but please mention me as the author. I would much appreciate if you send me an email tagooty@yahoo.com or write on my talk page, for my information. Please contact me before commercial use. Please do not upload an edited image here without consulting me. I would like to make corrections only at my own source to ensure that the changes improve the image and are preserved.Otherwise you may upload an edited image with a new name. Please use one of the templates derivative or extract. · Wikimedia Commons",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Chinese_Fishing_Net_Raising_Birds_Sunrise_Ashtamudi_Kollam_Mar22_A7C_01784.jpg"
+  },
+  "backwaters": {
+   "src": "/img/memories/backwaters.jpg",
+   "credit": "Augustus Binu : flickr · Wikimedia Commons",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:House_Boat_DSW.jpg"
+  }
+ }
+}

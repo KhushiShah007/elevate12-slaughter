@@ -156,7 +156,8 @@ export interface CompletedTripMemory {
   stampCity: string;
   stampCode: string;
   stampDate: Iso;
-  memories: { caption: string; pastel: 'peach' | 'lavender' | 'mint' | 'butter' | 'sky' | 'rose' }[];
+  /** photo: key into the bundled photo set (src/data/photos.json). */
+  memories: { caption: string; pastel: 'peach' | 'lavender' | 'mint' | 'butter' | 'sky' | 'rose'; photo?: string }[];
 }
 
 export interface TravellerPreferences {

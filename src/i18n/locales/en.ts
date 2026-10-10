@@ -41,6 +41,8 @@ export const en = {
   'home.comingUp': '{n} coming up',
   'home.newTrip': 'New trip',
   'home.newTripSub': 'Plan or paste a booking',
+  'home.explore': 'Explore',
+  'home.exploreSub': '53 places with photos',
   'home.completedTrips': 'Completed trips',
   'home.stamps': '{n} stamps collected',
   'home.openWorkspace': 'Open {trip} workspace',

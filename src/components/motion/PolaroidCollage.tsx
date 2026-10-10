@@ -1,8 +1,9 @@
 import { motion } from 'framer-motion';
-import { collagePlaces, type CollagePlace } from '../../data/collagePlaces';
+import { collagePlaces } from '../../data/photos';
 import { Polaroid } from '../cards/Polaroid';
 
 const COLUMNS = 3;
+type CollagePlace = ReturnType<typeof collagePlaces>[number];
 
 function Column({ places, duration, offset }: { places: CollagePlace[]; duration: number; offset: number }) {
   // The list is doubled so the strip can loop seamlessly by moving up exactly half its height.
@@ -22,7 +23,7 @@ function Column({ places, duration, offset }: { places: CollagePlace[]; duration
             sub={p.country}
             tilt={((i * 7) % 9) - 4}
             className="w-[92%]"
-            icon={<span className="text-[2.75rem] leading-none">{p.emoji}</span>}
+            image={{ src: p.src, alt: '' }}
           />
         ))}
       </motion.div>
@@ -30,9 +31,10 @@ function Column({ places, duration, offset }: { places: CollagePlace[]; duration
   );
 }
 
-/** Background wall of polaroids from around the world, drifting slowly upward. */
+/** Background wall of real destination photos (Wikimedia Commons), drifting slowly upward. */
 export function PolaroidCollage() {
-  const columns = Array.from({ length: COLUMNS }, (_, c) => collagePlaces.filter((_, i) => i % COLUMNS === c));
+  const places = collagePlaces(21);
+  const columns = Array.from({ length: COLUMNS }, (_, c) => places.filter((_, i) => i % COLUMNS === c));
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 flex gap-3 overflow-hidden px-3">
       {columns.map((places, c) => (

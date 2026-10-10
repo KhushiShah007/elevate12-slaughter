@@ -62,6 +62,15 @@ export default defineConfig(({ mode }) => {
         workbox: {
           // Precache the whole app shell (JS, CSS, HTML, fonts, icons).
           globPatterns: ['**/*.{js,css,html,woff2,svg,png,webmanifest}'],
+          // Photos are cached as they are viewed, not all up front.
+          globIgnores: ['img/**'],
+          runtimeCaching: [
+            {
+              urlPattern: ({ url }) => url.pathname.startsWith('/img/') || url.hostname === 'upload.wikimedia.org',
+              handler: 'CacheFirst',
+              options: { cacheName: 'voyage-photos', expiration: { maxEntries: 300, maxAgeSeconds: 60 * 60 * 24 * 60 }, cacheableResponse: { statuses: [0, 200] } },
+            },
+          ],
           // Any in-app URL opened offline gets the shell; the router takes it from there.
           navigateFallback: '/index.html',
           navigateFallbackDenylist: [/^\/api\//],

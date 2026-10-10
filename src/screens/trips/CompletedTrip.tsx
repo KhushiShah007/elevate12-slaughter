@@ -7,6 +7,7 @@ import { Polaroid } from '../../components/cards/Polaroid';
 import { SampleTag } from '../../components/ui/Chip';
 import { day, inr, range } from '../../utils/format';
 import { trueCost } from '../../engines/trueCost';
+import { memoryPhoto } from '../../data/photos';
 import NotFound from '../NotFound';
 
 export default function CompletedTrip() {
@@ -19,7 +20,7 @@ export default function CompletedTrip() {
 
   return (
     <div>
-      <PageHeader back="/trips?tab=completed" title={trip.title} sub={range(trip.startDate, trip.endDate)} right={<SampleTag />} />
+      <PageHeader back="/trips?tab=completed" title={trip.title} sub={range(trip.startDate, trip.endDate)} right={trip.sample ? <SampleTag /> : undefined} />
       <div className="px-gutter">
         {memory && (
           <div className="flex items-center gap-4 rounded-lg border border-line bg-paper p-4 shadow-card">
@@ -34,7 +35,14 @@ export default function CompletedTrip() {
         <h2 className="mb-3 mt-8 text-xl">Memories</h2>
         <div className="no-scrollbar -mx-gutter flex gap-4 overflow-x-auto px-gutter pb-4 pt-2">
           {memory?.memories.map((m, n) => (
-            <Polaroid key={m.caption} pastel={m.pastel} caption={m.caption} tilt={n % 2 ? 2 : -2} icon={<ImageIcon size={32} />} />
+            <Polaroid
+              key={m.caption}
+              pastel={m.pastel}
+              caption={m.caption}
+              tilt={n % 2 ? 2 : -2}
+              icon={<ImageIcon size={32} />}
+              image={memoryPhoto(m.photo) ? { src: memoryPhoto(m.photo)!.src, alt: m.caption } : undefined}
+            />
           ))}
         </div>
 

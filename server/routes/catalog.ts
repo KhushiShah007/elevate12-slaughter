@@ -3,6 +3,7 @@ import { and, asc, desc, eq, ilike, or, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { getDb, schema as s } from '../db/client';
 import { AppError, parse } from '../http';
+import { currencyFor } from './live';
 
 // Read-only reference data: destinations (with places) and airports.
 
@@ -53,11 +54,14 @@ catalog.get('/destinations/:slug', async (c) => {
   const [destination] = await db.select().from(s.destinations).where(eq(s.destinations.slug, slug)).limit(1);
   if (!destination) throw new AppError(404, 'not_found', 'We could not find that destination.');
   const [attractions, restaurants, hotels] = await Promise.all([
-    db.select().from(s.attractions).where(eq(s.attractions.destinationId, destination.id)).orderBy(asc(s.attractions.name)),
-    db.select().from(s.restaurants).where(eq(s.restaurants.destinationId, destination.id)).orderBy(asc(s.restaurants.name)),
+    // Seed order is best first (the pipeline ranks by how much is known about each place).
+    db.select().from(s.attractions).where(eq(s.attractions.destinationId, destination.id)).orderBy(asc(s.attractions.id)),
+    db.select().from(s.restaurants).where(eq(s.restaurants.destinationId, destination.id)).orderBy(asc(s.restaurants.id)),
     db.select().from(s.hotelsCache).where(eq(s.hotelsCache.destinationId, destination.id)).orderBy(desc(sql`coalesce(${s.hotelsCache.stars}, 0)`)),
   ]);
-  return c.json({ destination, attractions, restaurants, hotels });
+  // Chains repeat (five Starbucks): keep the first of each name.
+  const unique = <T extends { name: string }>(rows: T[]) => rows.filter((r, i) => rows.findIndex((x) => x.name.toLowerCase() === r.name.toLowerCase()) === i);
+  return c.json({ destination: { ...destination, currency: currencyFor(destination.country) }, attractions: unique(attractions), restaurants: unique(restaurants), hotels: unique(hotels) });
 });
 
 catalog.get('/airports', async (c) => {

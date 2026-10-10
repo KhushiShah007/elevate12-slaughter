@@ -214,9 +214,9 @@ export const completedMemories: CompletedTripMemory[] = [
     stampCode: 'JAI',
     stampDate: '2026-03-06',
     memories: [
-      { caption: 'Nani at Amer Fort', pastel: 'peach' },
-      { caption: 'Pyaaz kachori, 8 am', pastel: 'butter' },
-      { caption: 'Hawa Mahal at dusk', pastel: 'rose' },
+      { caption: 'Nani at Amer Fort', pastel: 'peach', photo: 'amer-fort' },
+      { caption: 'Pyaaz kachori, 8 am', pastel: 'butter', photo: 'kachori' },
+      { caption: 'Hawa Mahal at dusk', pastel: 'rose', photo: 'hawa-mahal' },
     ],
   },
   {
@@ -225,8 +225,8 @@ export const completedMemories: CompletedTripMemory[] = [
     stampCode: 'SIN',
     stampDate: '2025-12-29',
     memories: [
-      { caption: 'Fireworks at Marina Bay', pastel: 'lavender' },
-      { caption: 'Gardens by the Bay', pastel: 'mint' },
+      { caption: 'Fireworks at Marina Bay', pastel: 'lavender', photo: 'marina-bay' },
+      { caption: 'Gardens by the Bay', pastel: 'mint', photo: 'gardens-by-the-bay' },
     ],
   },
   {
@@ -235,8 +235,8 @@ export const completedMemories: CompletedTripMemory[] = [
     stampCode: 'COK',
     stampDate: '2025-07-11',
     memories: [
-      { caption: 'Chinese fishing nets', pastel: 'sky' },
-      { caption: 'Rain on the backwaters', pastel: 'mint' },
+      { caption: 'Chinese fishing nets', pastel: 'sky', photo: 'fishing-nets' },
+      { caption: 'Rain on the backwaters', pastel: 'mint', photo: 'backwaters' },
     ],
   },
 ];

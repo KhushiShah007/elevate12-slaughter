@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { PolaroidCollage } from '../../components/motion/PolaroidCollage';
 import { PillButton } from '../../components/ui/PillButton';
-import { Chip } from '../../components/ui/Chip';
+import { destinationCount } from '../../data/photos';
 import { fadeUp, stagger } from '../../design/motion';
 
 export default function Welcome() {
@@ -26,7 +26,7 @@ export default function Welcome() {
         className="absolute inset-x-0 bottom-0 px-gutter pb-[max(env(safe-area-inset-bottom),1.5rem)]"
       >
         <motion.p variants={fadeUp} className="text-xs font-semibold uppercase tracking-[0.3em] text-muted">
-          21 places · 1 calm companion
+          {destinationCount} places · 1 calm companion
         </motion.p>
         <motion.h1 variants={fadeUp} className="mt-2 text-[2.5rem] leading-[1.05]">
           Every trip,
@@ -46,11 +46,12 @@ export default function Welcome() {
           </PillButton>
         </motion.div>
 
-        <motion.div variants={fadeUp} className="mt-4 flex justify-center">
-          <Chip tone="warn" dot>
-            Demo sign-in · no real account is created
-          </Chip>
-        </motion.div>
+        <motion.p variants={fadeUp} className="mt-4 text-center text-[0.6875rem] text-muted">
+          Photos from Wikimedia Commons.{' '}
+          <button onClick={() => navigate('/credits')} className="min-h-tap underline underline-offset-4">
+            Credits
+          </button>
+        </motion.p>
       </motion.div>
     </div>
   );

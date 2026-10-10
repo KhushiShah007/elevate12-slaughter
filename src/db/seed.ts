@@ -3,7 +3,7 @@ import * as sample from '../data/sampleTrips';
 import { documents } from '../data/sampleDocuments';
 
 // Bump when the bundled sample data changes, so devices reseed.
-export const DATA_VERSION = '8';
+export const DATA_VERSION = '9';
 
 async function seed() {
   await db.transaction('rw', db.tables, async () => {

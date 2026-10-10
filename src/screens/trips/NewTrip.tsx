@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { CalendarDays, ClipboardPaste, IndianRupee, MapPin, PlaneTakeoff, UsersRound } from 'lucide-react';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { Segmented } from '../../components/ui/Segmented';
@@ -29,6 +29,12 @@ export default function NewTrip() {
   const blank = useMemo<DraftData>(() => ({ title: '', from: me?.homeCity ?? '', to: '', startDate: '', endDate: '', travellers: 1, budgetInr: '' }), [me?.homeCity]);
   const draft = useTripDraft(blank);
   const d = draft.data;
+  // Arrived from a destination page: fill in where to.
+  const preset = (useLocation().state as { to?: string } | null)?.to;
+  useEffect(() => {
+    if (preset && !d.to) draft.update({ to: preset });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preset]);
   const [showErrors, setShowErrors] = useState(false);
   const [busy, setBusy] = useState(false);
 

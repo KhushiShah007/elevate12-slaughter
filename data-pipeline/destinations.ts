@@ -44,6 +44,12 @@ function commonsFileName(url: string): string | null {
   return decodeURIComponent(thumb >= 0 ? parts[thumb + 3] : parts[parts.length - 1]);
 }
 
+/** Thumbnail URL for an original Commons file (…/commons/a/ab/F.jpg → …/commons/thumb/a/ab/F.jpg/500px-F.jpg). */
+function thumbOf(original: string, width: number) {
+  const m = original.match(/^(https:\/\/upload\.wikimedia\.org\/wikipedia\/commons)\/(\w\/\w\w)\/([^/]+)$/);
+  return m ? `${m[1]}/thumb/${m[2]}/${m[3]}/${width}px-${m[3]}` : original;
+}
+
 async function pickFile(title: string, summary: Summary): Promise<string | null> {
   const lead = summary.originalimage ? commonsFileName(summary.originalimage.source) : null;
   if (lead && !UNSUITABLE.test(lead)) return lead;
@@ -93,7 +99,7 @@ async function main() {
       const big = (ii.thumburl ?? ii.url).split('?')[0].replace('//thumb.wikimedia.org/', '//upload.wikimedia.org/');
       info.set(name.replace(/ /g, '_'), {
         url: big,
-        thumb: big.replace(/\/\d+px-/, '/500px-'),
+        thumb: big.includes('/thumb/') ? big.replace(/\/\d+px-/, '/500px-') : thumbOf(big, 500),
         credit: `${stripHtml(ii.extmetadata?.Artist?.value ?? 'Unknown author')} · Wikimedia Commons`,
         license: stripHtml(license),
         page: ii.descriptionurl,
