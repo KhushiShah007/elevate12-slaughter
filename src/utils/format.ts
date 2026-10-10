@@ -8,8 +8,8 @@ export const num = (n: number) => numFmt.format(n);
 export const clock = (iso: string) => iso.slice(11, 16);
 
 /** "Wed, 14 Oct" from the date part of an ISO string, independent of device time zone. */
-export function day(iso: string, opts: Intl.DateTimeFormatOptions = { weekday: 'short', day: 'numeric', month: 'short' }) {
-  return new Date(`${iso.slice(0, 10)}T12:00:00Z`).toLocaleDateString('en-GB', { ...opts, timeZone: 'UTC' });
+export function day(iso: string, opts: Intl.DateTimeFormatOptions = { weekday: 'short', day: 'numeric', month: 'short' }, locale = 'en-GB') {
+  return new Date(`${iso.slice(0, 10)}T12:00:00Z`).toLocaleDateString(locale, { ...opts, timeZone: 'UTC' });
 }
 
 export function range(startIso: string, endIso: string) {
@@ -22,10 +22,11 @@ export function duration(min: number) {
   return h ? `${h} h${m ? ` ${m} m` : ''}` : `${m} m`;
 }
 
-export function greeting(hour = new Date().getHours()) {
-  if (hour < 12) return 'Good morning';
-  if (hour < 17) return 'Good afternoon';
-  return 'Good evening';
+/** Which greeting fits the time of day (an i18n key). */
+export function greetingKey(hour = new Date().getHours()) {
+  if (hour < 12) return 'home.morning' as const;
+  if (hour < 17) return 'home.afternoon' as const;
+  return 'home.evening' as const;
 }
 
 /** Device-local time for timestamps the app itself recorded (e.g. last sync). */

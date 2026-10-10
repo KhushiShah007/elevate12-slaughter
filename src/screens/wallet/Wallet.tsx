@@ -6,9 +6,11 @@ import { listDocuments, setDocumentOffline } from '../../db/repos/documents';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { DocRow } from '../../components/documents/DocRow';
 import { SampleTag } from '../../components/ui/Chip';
+import { useT } from '../../i18n';
 
 export default function Wallet() {
   const [q, setQ] = useState('');
+  const { t } = useT();
   const documents = useLiveQuery(listDocuments);
   // Goal 6 swaps this simple filter for Fuse.js fuzzy search.
 
@@ -22,14 +24,14 @@ export default function Wallet() {
 
   return (
     <div>
-      <PageHeader title="Wallet" sub={`${offlineCount} of ${documents.length} documents available offline`} right={<SampleTag />} />
+      <PageHeader title={t('wallet.title')} sub={t('wallet.offlineCount', { n: offlineCount, total: documents.length })} right={<SampleTag />} />
       <div className="px-gutter">
         <label className="flex min-h-tap items-center gap-2 rounded-pill border border-line bg-paper px-4 focus-within:border-ink">
           <Search size={18} className="text-muted" />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search passport, visa, PNR…"
+            placeholder={t('wallet.search')}
             className="min-h-tap w-full bg-transparent text-base outline-none placeholder:text-muted/70"
           />
         </label>
@@ -39,8 +41,8 @@ export default function Wallet() {
             <ScanLine size={20} className="text-ink" />
           </span>
           <span>
-            <span className="block font-display text-lg leading-tight text-ink">Scan to PDF</span>
-            <span className="text-xs text-espresso">Paper ticket, visa or ID</span>
+            <span className="block font-display text-lg leading-tight text-ink">{t('wallet.scan')}</span>
+            <span className="text-xs text-espresso">{t('wallet.scanSub')}</span>
           </span>
         </Link>
 
@@ -49,7 +51,7 @@ export default function Wallet() {
             <DocRow key={d.id} doc={d} onToggleOffline={(v) => void setDocumentOffline(d.id, v)} />
           ))}
         </ul>
-        {!list.length && <p className="mt-6 text-center text-sm text-muted">No documents match “{q}”.</p>}
+        {!list.length && <p className="mt-6 text-center text-sm text-muted">{t('wallet.noMatch', { q })}</p>}
       </div>
     </div>
   );

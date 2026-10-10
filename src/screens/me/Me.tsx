@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, Languages, LogOut, RotateCcw, Sparkles, Type } from 'lucide-react';
-import { useSettings, type Language } from '../../state/settings';
+import { useSettings } from '../../state/settings';
+import { LANGUAGES, useT } from '../../i18n';
 import { usePoints } from '../../hooks/usePoints';
 import { useTraveller } from '../../hooks/useTrip';
 import { PageHeader } from '../../components/layout/PageHeader';
@@ -10,25 +11,17 @@ import { Chip } from '../../components/ui/Chip';
 import { StorageNote, SyncStatus } from '../../components/layout/SyncStatus';
 import { num } from '../../utils/format';
 
-const languages: { value: Language; label: string }[] = [
-  { value: 'en', label: 'English' },
-  { value: 'hi', label: 'हिन्दी' },
-  { value: 'hinglish', label: 'Hinglish' },
-  { value: 'mr', label: 'मराठी' },
-  { value: 'ta', label: 'தமிழ்' },
-  { value: 'bn', label: 'বাংলা' },
-];
-
 export default function Me() {
   const navigate = useNavigate();
   const s = useSettings();
+  const { t } = useT();
   const points = usePoints();
   const traveller = useTraveller();
   if (!traveller || !points) return null;
 
   return (
     <div>
-      <PageHeader title="Me" />
+      <PageHeader title={t('me.title')} />
       <div className="space-y-6 px-gutter">
         <div className="flex items-center gap-4 rounded-lg border border-line bg-paper p-4 shadow-card">
           <span className="grid h-16 w-16 place-items-center rounded-full bg-peach font-display text-2xl text-ink">{traveller.name[0]?.toUpperCase()}</span>
@@ -45,37 +38,38 @@ export default function Me() {
           <StampCard pastel="mint" tilt={-2}>
             <span className="text-3xl">☕</span>
             <p className="mt-1 font-display text-base leading-tight text-ink">Slow Explorer</p>
-            <p className="text-[0.625rem] uppercase tracking-widest text-espresso">Persona</p>
+            <p className="text-[0.625rem] uppercase tracking-widest text-espresso">{t('me.persona')}</p>
           </StampCard>
           <StampCard pastel="butter" tilt={2}>
             <Sparkles size={26} className="text-ink" />
             <p className="mt-1 font-display text-2xl leading-tight text-ink">{num(points.total)}</p>
-            <p className="text-[0.625rem] uppercase tracking-widest text-espresso">Points</p>
+            <p className="text-[0.625rem] uppercase tracking-widest text-espresso">{t('me.points')}</p>
           </StampCard>
         </div>
 
         <section>
-          <h2 className="mb-2 text-lg">Sync</h2>
+          <h2 className="mb-2 text-lg">{t('me.sync')}</h2>
           <SyncStatus />
           <StorageNote />
         </section>
 
         <section className="rounded-lg border border-line bg-paper p-4">
           <h2 className="flex items-center gap-2 text-lg">
-            <Languages size={18} /> Language
+            <Languages size={18} /> {t('me.language')}
           </h2>
           <div className="mt-3 grid grid-cols-3 gap-2">
-            {languages.map((l) => (
+            {LANGUAGES.map((l) => (
               <button
-                key={l.value}
-                onClick={() => s.update({ language: l.value })}
-                className={`min-h-tap rounded-pill border text-sm ${s.language === l.value ? 'border-ink bg-ink text-ivory' : 'border-line bg-ivory text-ink'}`}
+                key={l.code}
+                onClick={() => s.update({ language: l.code })}
+                lang={l.htmlLang}
+                className={`min-h-tap rounded-pill border text-sm ${s.language === l.code ? 'border-ink bg-ink text-ivory' : 'border-line bg-ivory text-ink'}`}
               >
-                {l.label}
+                {l.native}
               </button>
             ))}
           </div>
-          <p className="mt-2 text-xs text-muted">Translations arrive with the language build. The app stays in English for now.</p>
+          <p className="mt-2 text-xs text-muted">{t('me.languageNote')}</p>
         </section>
 
         <section className="divide-y divide-line rounded-lg border border-line bg-paper">
@@ -83,15 +77,15 @@ export default function Me() {
             <span className="flex items-center gap-3 text-ink">
               <Type size={18} />
               <span>
-                <span className="block font-medium">Senior mode</span>
-                <span className="block text-xs text-muted">Bigger text and buttons</span>
+                <span className="block font-medium">{t('me.senior')}</span>
+                <span className="block text-xs text-muted">{t('me.seniorSub')}</span>
               </span>
             </span>
-            <Toggle checked={s.seniorMode} onChange={(v) => s.update({ seniorMode: v })} label="Senior mode" />
+            <Toggle checked={s.seniorMode} onChange={(v) => s.update({ seniorMode: v })} label={t('me.senior')} />
           </div>
           <button onClick={() => navigate('/quiz')} className="flex min-h-[3.5rem] w-full items-center justify-between px-4 text-ink">
             <span className="flex items-center gap-3">
-              <RotateCcw size={18} /> Retake persona quiz
+              <RotateCcw size={18} /> {t('me.retakeQuiz')}
             </span>
             <ChevronRight size={18} className="text-muted" />
           </button>
@@ -102,7 +96,7 @@ export default function Me() {
             }}
             className="flex min-h-[3.5rem] w-full items-center gap-3 px-4 text-bad"
           >
-            <LogOut size={18} /> Sign out (demo)
+            <LogOut size={18} /> {t('me.signOut')}
           </button>
         </section>
       </div>

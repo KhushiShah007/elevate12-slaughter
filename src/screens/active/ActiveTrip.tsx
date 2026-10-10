@@ -7,11 +7,18 @@ import { PageHeader } from '../../components/layout/PageHeader';
 import { JourneyTimeline } from '../../components/journey/JourneyTimeline';
 import { EmergencyButtons } from '../../components/journey/EmergencyButtons';
 import { Chip } from '../../components/ui/Chip';
+import { useT } from '../../i18n';
+import { useTranslated } from '../../hooks/useTranslated';
 import NotFound from '../NotFound';
 
 export default function ActiveTrip() {
   const { tripId } = useParams();
   const data = useTrip(tripId);
+  const { t } = useT();
+  const { tr } = useTranslated((data?.steps ?? []).flatMap((st) => [
+    { id: `${st.id}.label`, text: st.label },
+    { id: `${st.id}.hint`, text: st.hint },
+  ]));
   if (data === undefined) return null;
   if (!data) return <NotFound />;
   // Progress is saved on the device, so it survives reloads and works offline.
@@ -25,11 +32,11 @@ export default function ActiveTrip() {
     <div>
       <PageHeader
         back={`/trips/${trip.id}`}
-        title="On the way"
+        title={t('active.title')}
         sub={`${trip.title} · ${[flights[0]?.fromCode, ...flights.map((f) => f.toCode)].join(' → ')}`}
         right={
           <Chip tone="ok" dot>
-            Trip live
+            {t('active.live')}
           </Chip>
         }
       />
@@ -48,15 +55,17 @@ export default function ActiveTrip() {
 
             {moved && (
               <p className="mb-4 rounded-md border border-warn/40 bg-butter px-3 py-2 text-sm text-ink">
-                Your flight moved earlier, so every step below is {event.minutes} min earlier too.
+                {t('active.movedEarlier', { n: event.minutes })}
               </p>
             )}
-            <JourneyTimeline steps={steps} done={done} onDone={(id) => void markStepDone(trip.id, id)} />
-            <p className="mt-3 text-xs text-muted">We cannot detect where you are. Tap Done after each step so your family stays updated.</p>
+            <JourneyTimeline
+              steps={steps.map((st) => ({ ...st, label: tr(`${st.id}.label`, st.label), hint: tr(`${st.id}.hint`, st.hint) }))}
+              done={done} onDone={(id) => void markStepDone(trip.id, id)} />
+            <p className="mt-3 text-xs text-muted">{t('active.cannotDetect')}</p>
           </>
         ) : (
           <p className="rounded-lg border border-line bg-paper p-4 text-sm leading-relaxed text-espresso">
-            No airport timeline for this trip yet. It appears here once the flight times and your leave-home plan are set.
+            {t('active.noTimeline')}
           </p>
         )}
 
@@ -65,11 +74,11 @@ export default function ActiveTrip() {
             to={`/share/${trip.id}`}
             className="mt-5 flex min-h-tap items-center justify-between rounded-pill border border-line bg-paper px-5 text-sm font-medium text-ink"
           >
-            Family pickup link <Share2 size={18} />
+            {t('active.familyLink')} <Share2 size={18} />
           </Link>
         )}
 
-        <h2 className="mb-3 mt-8 text-xl">Something wrong?</h2>
+        <h2 className="mb-3 mt-8 text-xl">{t('active.somethingWrong')}</h2>
         <EmergencyButtons tripId={trip.id} hasConnection={flights.length > 1} />
       </div>
     </div>

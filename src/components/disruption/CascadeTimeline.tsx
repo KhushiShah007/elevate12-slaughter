@@ -3,6 +3,8 @@ import { AlertTriangle, BedDouble, Car, Clock, Coffee, Plane, Users } from 'luci
 import type { CascadeEffect, CascadeResult, RiskLevel } from '../../types';
 import { fadeUp, stagger } from '../../design/motion';
 import { RedRipple } from './RedRipple';
+import { useT, type MessageKey } from '../../i18n';
+import { useTranslated } from '../../hooks/useTranslated';
 
 const icons: Record<CascadeEffect['icon'], typeof Plane> = {
   plane: Plane,
@@ -19,10 +21,20 @@ const ring: Record<RiskLevel, string> = {
   bad: 'border-bad/50 bg-bad/10',
 };
 
-const levelWord: Record<RiskLevel, string> = { ok: 'Fine', warn: 'Affected', bad: 'Breaks' };
+const levelWord: Record<RiskLevel, MessageKey> = { ok: 'level.ok', warn: 'level.warn', bad: 'level.bad' };
 
 /** What the trigger breaks, one knock-on effect at a time. */
 export function CascadeTimeline({ d }: { d: CascadeResult }) {
+  const { t } = useT();
+  // Engine sentences are built in English; translated when online, cached after.
+  const { tr, inEnglish } = useTranslated([
+    { id: 'headline', text: d.headline },
+    { id: 'trigger', text: d.trigger },
+    ...d.effects.flatMap((e) => [
+      { id: `${e.id}.label`, text: e.label },
+      { id: `${e.id}.detail`, text: e.detail },
+    ]),
+  ]);
   const breaks = !!d.brokenAt || d.effects.some((e) => e.level === 'bad');
   const tight = !breaks && d.effects.some((e) => e.level === 'warn');
   return (
@@ -38,33 +50,34 @@ export function CascadeTimeline({ d }: { d: CascadeResult }) {
           </span>
         )}
         <div className="min-w-0">
-          <p className="font-display text-xl leading-tight text-ink">{d.headline}</p>
-          <p className="text-sm text-muted">{d.trigger}</p>
+          <p className="font-display text-xl leading-tight text-ink">{tr('headline', d.headline)}</p>
+          <p className="text-sm text-muted">{tr('trigger', d.trigger)}</p>
         </div>
       </div>
 
       {d.effects.length > 0 && (
-      <motion.ol variants={stagger(0.25)} initial="hidden" animate="show" className="ml-[1.3rem] mt-4 border-l-2 border-dashed border-line pl-5">
-        {d.effects.map((e) => {
-          const Icon = icons[e.icon];
-          return (
-            <motion.li key={e.id} variants={fadeUp} className="relative pb-3 last:pb-0">
-              <span className="absolute -left-[1.85rem] top-3 h-3 w-3 rounded-full border-2 border-paper bg-line" />
-              <div className={`flex items-start gap-3 rounded-md border p-3 ${ring[e.level]}`}>
-                <Icon size={18} className="mt-0.5 shrink-0 text-ink" />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-semibold text-ink">{e.label}</p>
-                    <span className="text-[0.625rem] font-bold uppercase tracking-widest text-espresso">{levelWord[e.level]}</span>
+        <motion.ol variants={stagger(0.25)} initial="hidden" animate="show" className="ml-[1.3rem] mt-4 border-l-2 border-dashed border-line pl-5">
+          {d.effects.map((e) => {
+            const Icon = icons[e.icon];
+            return (
+              <motion.li key={e.id} variants={fadeUp} className="relative pb-3 last:pb-0">
+                <span className="absolute -left-[1.85rem] top-3 h-3 w-3 rounded-full border-2 border-paper bg-line" />
+                <div className={`flex items-start gap-3 rounded-md border p-3 ${ring[e.level]}`}>
+                  <Icon size={18} className="mt-0.5 shrink-0 text-ink" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold text-ink">{tr(`${e.id}.label`, e.label)}</p>
+                      <span className="text-[0.625rem] font-bold uppercase tracking-widest text-espresso">{t(levelWord[e.level])}</span>
+                    </div>
+                    <p className="text-sm text-espresso">{tr(`${e.id}.detail`, e.detail)}</p>
                   </div>
-                  <p className="text-sm text-espresso">{e.detail}</p>
                 </div>
-              </div>
-            </motion.li>
-          );
-        })}
-      </motion.ol>
+              </motion.li>
+            );
+          })}
+        </motion.ol>
       )}
+      {inEnglish && <p className="mt-3 text-xs text-muted">{t('common.detailsInEnglish')}</p>}
     </div>
   );
 }

@@ -1,21 +1,25 @@
 import { NavLink } from 'react-router-dom';
 import { Home, Luggage, MessageCircleHeart, User, Wallet } from 'lucide-react';
+import { useT } from '../../i18n';
 
 const tabs = [
-  { to: '/home', label: 'Home', icon: Home },
-  { to: '/trips', label: 'Trips', icon: Luggage },
-  { to: '/assistant', label: 'Assistant', icon: MessageCircleHeart, centre: true },
-  { to: '/wallet', label: 'Wallet', icon: Wallet },
-  { to: '/me', label: 'Me', icon: User },
-];
+  { to: '/home', label: 'nav.home', icon: Home },
+  { to: '/trips', label: 'nav.trips', icon: Luggage },
+  { to: '/assistant', label: 'nav.assistant', icon: MessageCircleHeart, centre: true },
+  { to: '/wallet', label: 'nav.wallet', icon: Wallet },
+  { to: '/me', label: 'nav.me', icon: User },
+] as const;
 
 export function BottomNav() {
+  const { t } = useT();
   return (
     <nav className="fixed bottom-0 left-1/2 z-40 w-full max-w-app -translate-x-1/2 px-3 pb-[max(env(safe-area-inset-bottom),0.75rem)]">
       <div className="grid h-nav grid-cols-5 items-center rounded-xl border border-line bg-paper/95 shadow-lift backdrop-blur">
-        {tabs.map(({ to, label, icon: Icon, centre }) =>
-          centre ? (
-            <NavLink key={to} to={to} className="flex flex-col items-center" aria-label={label}>
+        {tabs.map(({ to, label: key, icon: Icon, ...rest }) => {
+          const label = t(key);
+          const centre = 'centre' in rest;
+          return centre ? (
+            <NavLink key={to} to={to} className="flex min-w-0 flex-col items-center" aria-label={label}>
               {({ isActive }) => (
                 <>
                   <span
@@ -23,23 +27,23 @@ export function BottomNav() {
                   >
                     <Icon size={26} />
                   </span>
-                  <span className="mt-0.5 text-[0.6875rem] font-medium text-ink">{label}</span>
+                  <span className="mt-0.5 block w-full truncate px-0.5 text-center text-[0.6875rem] font-medium text-ink">{label}</span>
                 </>
               )}
             </NavLink>
           ) : (
-            <NavLink key={to} to={to} className="flex min-h-tap flex-col items-center justify-center gap-1">
+            <NavLink key={to} to={to} className="flex min-h-tap min-w-0 flex-col items-center justify-center gap-1" aria-label={label}>
               {({ isActive }) => (
                 <>
                   <span className={`grid h-8 w-12 place-items-center rounded-pill transition ${isActive ? 'bg-sand' : ''}`}>
                     <Icon size={20} className={isActive ? 'text-ink' : 'text-muted'} />
                   </span>
-                  <span className={`text-[0.6875rem] ${isActive ? 'font-semibold text-ink' : 'text-muted'}`}>{label}</span>
+                  <span className={`block w-full truncate px-0.5 text-center text-[0.6875rem] ${isActive ? 'font-semibold text-ink' : 'text-muted'}`}>{label}</span>
                 </>
               )}
             </NavLink>
-          ),
-        )}
+          );
+        })}
       </div>
     </nav>
   );

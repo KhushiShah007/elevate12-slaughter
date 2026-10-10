@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { RiskLevel } from '../../types';
+import { useT } from '../../i18n';
 
 type Tone = 'neutral' | RiskLevel;
 
@@ -21,7 +22,7 @@ export function Chip({ tone = 'neutral', icon, dot, children, className = '' }: 
   const t = tones[tone];
   return (
     <span
-      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-pill border px-2.5 py-1 text-[0.6875rem] font-semibold uppercase tracking-wide text-espresso ${t.box} ${className}`}
+      className={`inline-flex max-w-full items-center gap-1.5 rounded-pill text-left leading-tight border px-2.5 py-1 text-[0.6875rem] font-semibold uppercase tracking-wide text-espresso ${t.box} ${className}`}
     >
       {dot && <span className={`h-1.5 w-1.5 rounded-full ${t.dot}`} />}
       {icon}
@@ -31,5 +32,6 @@ export function Chip({ tone = 'neutral', icon, dot, children, className = '' }: 
 }
 
 export function SampleTag() {
-  return <Chip>Sample data</Chip>;
+  const { t } = useT();
+  return <Chip>{t('common.sampleData')}</Chip>;
 }

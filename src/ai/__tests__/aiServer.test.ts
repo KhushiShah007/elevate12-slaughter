@@ -14,8 +14,14 @@ describe('AI number guard', () => {
 describe('AI handler', () => {
   it('rejects unknown tasks and oversized input before calling anyone', async () => {
     expect((await handleAi({ task: 'chat', items: [] }, { GROQ_API_KEY: 'x' })).status).toBe(400);
-    const big = { task: 'reword', items: Array.from({ length: 9 }, (_, i) => ({ id: `o${i}`, text: 'x' })) };
+    const big = { task: 'reword', items: Array.from({ length: 21 }, (_, i) => ({ id: `o${i}`, text: 'x' })) };
     expect((await handleAi(big, { GROQ_API_KEY: 'x' })).status).toBe(400);
+  });
+  it('only translates into supported languages and checks intent input', async () => {
+    const key = { GROQ_API_KEY: 'x' };
+    expect((await handleAi({ task: 'translate', lang: 'Klingon', items: [{ id: 'a', text: 'Hi' }] }, key)).status).toBe(400);
+    expect((await handleAi({ task: 'intent', text: '' }, key)).status).toBe(400);
+    expect((await handleAi({ task: 'intent', text: 'x'.repeat(401) }, key)).status).toBe(400);
   });
   it('says when no key is configured, so the app uses its own wording', async () => {
     const out = await handleAi({ task: 'reword', items: [{ id: 'o1', text: 'Free.' }] }, {});

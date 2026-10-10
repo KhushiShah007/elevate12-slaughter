@@ -9,17 +9,18 @@ import { Tile } from '../../components/ui/Tile';
 import { PillButton } from '../../components/ui/PillButton';
 import { SampleTag } from '../../components/ui/Chip';
 import { range } from '../../utils/format';
+import { useT } from '../../i18n';
 import NotFound from '../NotFound';
 
 export const modules = [
-  { key: 'flights', title: 'Flights', Icon: Plane },
-  { key: 'documents', title: 'Documents', Icon: FileText },
-  { key: 'transportation', title: 'Transportation', Icon: Car },
-  { key: 'accommodation', title: 'Accommodation', Icon: BedDouble },
-  { key: 'budget', title: 'Budget', Icon: Wallet2 },
-  { key: 'experiences', title: 'Experiences', Icon: Sparkles },
-  { key: 'itinerary', title: 'Itinerary', Icon: CalendarRange },
-  { key: 'restaurants', title: 'Restaurants & Cafes', Icon: UtensilsCrossed },
+  { key: 'flights', title: 'module.flights', Icon: Plane },
+  { key: 'documents', title: 'module.documents', Icon: FileText },
+  { key: 'transportation', title: 'module.transportation', Icon: Car },
+  { key: 'accommodation', title: 'module.accommodation', Icon: BedDouble },
+  { key: 'budget', title: 'module.budget', Icon: Wallet2 },
+  { key: 'experiences', title: 'module.experiences', Icon: Sparkles },
+  { key: 'itinerary', title: 'module.itinerary', Icon: CalendarRange },
+  { key: 'restaurants', title: 'module.restaurants', Icon: UtensilsCrossed },
 ] as const;
 
 export type ModuleKey = (typeof modules)[number]['key'];
@@ -27,6 +28,7 @@ export type ModuleKey = (typeof modules)[number]['key'];
 export default function TripWorkspace() {
   const { tripId } = useParams();
   const navigate = useNavigate();
+  const { t } = useT();
   const data = useTrip(tripId);
   if (data === undefined) return null;
   if (!data) return <NotFound />;
@@ -58,16 +60,16 @@ export default function TripWorkspace() {
       <motion.div variants={stagger(0.04)} initial="hidden" animate="show" className="grid grid-cols-2 gap-3 px-gutter">
         {modules.map(({ key, title, Icon }) => (
           <motion.div key={key} variants={fadeUp}>
-            <Tile to={`/trips/${trip.id}/${key}`} pastel={modulePastel[key]} icon={<Icon size={20} />} title={title} sub={counts[key]} />
+            <Tile to={`/trips/${trip.id}/${key}`} pastel={modulePastel[key]} icon={<Icon size={20} />} title={t(title)} sub={counts[key]} />
           </motion.div>
         ))}
       </motion.div>
 
       <div className="px-gutter pt-6">
         <PillButton full icon={<Plane size={18} />} onClick={() => navigate(`/trips/${trip.id}/active`)}>
-          Start trip
+          {t('workspace.startTrip')}
         </PillButton>
-        <p className="mt-2 text-center text-xs text-muted">Turns on the airport timeline and emergency help.</p>
+        <p className="mt-2 text-center text-xs text-muted">{t('workspace.startTripSub')}</p>
       </div>
     </div>
   );

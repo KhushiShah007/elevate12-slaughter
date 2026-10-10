@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { SourceChip } from './SourceChip';
+import { useT } from '../../i18n';
 
 /** Screen title row: optional back button, title, and the ON-DEVICE / CLOUD chip. */
 export function PageHeader({ title, sub, back, source = 'device', right }: {
@@ -12,6 +13,7 @@ export function PageHeader({ title, sub, back, source = 'device', right }: {
   right?: ReactNode;
 }) {
   const navigate = useNavigate();
+  const { t } = useT();
   return (
     <div className="px-gutter pb-4 pt-2">
       <div className="mb-1 flex min-h-tap items-center justify-between gap-2">
@@ -20,7 +22,7 @@ export function PageHeader({ title, sub, back, source = 'device', right }: {
             onClick={() => (typeof back === 'string' ? navigate(back) : navigate(-1))}
             className="-ml-3 flex min-h-tap items-center gap-0.5 rounded-pill pl-1.5 pr-3 text-sm font-medium text-espresso hover:bg-sand/60"
           >
-            <ChevronLeft size={20} /> Back
+            <ChevronLeft size={20} /> {t('common.back')}
           </button>
         ) : (
           <span />

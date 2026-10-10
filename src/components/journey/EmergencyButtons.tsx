@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { AlarmClockMinus, Clock4, Coffee, PlaneLanding, Shuffle } from 'lucide-react';
 import { pastelBg, type Pastel } from '../../design/tokens';
 import type { DisruptionType } from '../../types';
-import { disruptionLabels } from '../../data/sampleDisruptions';
+import { useT } from '../../i18n';
 
 const buttons: { type: DisruptionType; pastel: Pastel; Icon: typeof Clock4 }[] = [
   { type: 'delay', pastel: 'rose', Icon: Clock4 },
@@ -14,6 +14,7 @@ const buttons: { type: DisruptionType; pastel: Pastel; Icon: typeof Clock4 }[] =
 
 /** The big "something's wrong" buttons. Connection help only shows on trips with a connection. */
 export function EmergencyButtons({ tripId, hasConnection }: { tripId: string; hasConnection: boolean }) {
+  const { t } = useT();
   const shown = buttons.filter((b) => hasConnection || (b.type !== 'connecting' && b.type !== 'layover'));
   return (
     <div className="grid grid-cols-2 gap-3">
@@ -28,7 +29,7 @@ export function EmergencyButtons({ tripId, hasConnection }: { tripId: string; ha
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-paper/70 text-ink">
             <Icon size={20} />
           </span>
-          <span className="font-display text-base leading-tight text-ink">{disruptionLabels[type]}</span>
+          <span className="font-display text-base leading-tight text-ink">{t(`disruption.${type}`)}</span>
         </Link>
       ))}
     </div>

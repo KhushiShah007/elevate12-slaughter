@@ -2,6 +2,7 @@ import { Check } from 'lucide-react';
 import type { JourneyStep } from '../../types';
 import { PillButton } from '../ui/PillButton';
 import { StampThump } from '../motion/StampThump';
+import { useT } from '../../i18n';
 
 /** Vertical airport timeline. Each step is confirmed by hand: we cannot sense it. */
 export function JourneyTimeline({ steps, done, onDone }: {
@@ -10,6 +11,7 @@ export function JourneyTimeline({ steps, done, onDone }: {
   onDone: (id: string) => void;
 }) {
   const current = steps.find((s) => !done.has(s.id))?.id;
+  const { t } = useT();
 
   return (
     <ol className="relative">
@@ -39,10 +41,10 @@ export function JourneyTimeline({ steps, done, onDone }: {
                 <p className="truncate text-xs text-muted">{s.hint}</p>
               </div>
               {isDone ? (
-                <StampThump label="Done" size="sm" />
+                <StampThump label={t('active.done')} size="sm" />
               ) : isCurrent ? (
                 <PillButton small onClick={() => onDone(s.id)}>
-                  Done
+                  {t('active.done')}
                 </PillButton>
               ) : null}
             </div>

@@ -4,11 +4,13 @@ import { TopBar } from './TopBar';
 import { BottomNav } from './BottomNav';
 import { useOnline } from '../../hooks/useOnline';
 import { WifiOff } from 'lucide-react';
+import { useT } from '../../i18n';
 
 /** Phone-width column with the top bar (points pill) and bottom nav. */
 export function AppShell() {
   const { pathname } = useLocation();
   const online = useOnline();
+  const { t } = useT();
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
@@ -19,7 +21,7 @@ export function AppShell() {
       {!online && (
         <div role="status" className="sticky top-12 z-20 mx-gutter mb-1 flex items-center gap-2 rounded-pill border border-warn/40 bg-butter px-3 py-1.5 text-xs text-ink">
           <WifiOff size={14} className="shrink-0" />
-          Offline. Everything on this phone still works; changes sync later.
+          {t('common.offlineBanner')}
         </div>
       )}
       <main>

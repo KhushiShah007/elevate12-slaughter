@@ -2,11 +2,12 @@ import { Minus, Plus } from 'lucide-react';
 import type { FlightStatus } from '../../types';
 import { span } from '../../engines/time';
 import { Chip } from '../ui/Chip';
+import { useT, type MessageKey } from '../../i18n';
 
-const sourceLabel: Record<FlightStatus['source'], string> = {
-  sample: 'Sample schedule',
-  reported: 'Reported by you',
-  simulated: 'Simulated in Judge Mode',
+const sourceLabel: Record<FlightStatus['source'], MessageKey> = {
+  sample: 'source.sample',
+  reported: 'source.reported',
+  simulated: 'source.simulated',
 };
 
 /** "How late is it?" Change the minutes and the whole cascade below recomputes. */
@@ -20,14 +21,15 @@ export function StatusControl({ question, flightNo, minutes, source, presets, on
   onClear: () => void;
 }) {
   const step = 15;
+  const { t } = useT();
   return (
     <div className="rounded-lg border border-line bg-paper p-4 shadow-card">
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm font-medium text-espresso">
           {question} <span className="font-semibold text-ink">{flightNo}</span>
         </p>
         <Chip tone={source === 'sample' ? 'neutral' : 'warn'} dot>
-          {sourceLabel[source]}
+          {t(sourceLabel[source])}
         </Chip>
       </div>
 
@@ -41,7 +43,7 @@ export function StatusControl({ question, flightNo, minutes, source, presets, on
           <Minus size={20} />
         </button>
         <p className="font-display text-[2.5rem] leading-none tabular-nums text-ink" aria-live="polite">
-          {minutes ? span(minutes) : 'On time'}
+          {minutes ? span(minutes) : t('statusCtl.onTime')}
         </p>
         <button
           onClick={() => onChange(minutes + step)}
@@ -64,7 +66,7 @@ export function StatusControl({ question, flightNo, minutes, source, presets, on
         ))}
         {minutes > 0 && (
           <button onClick={onClear} className="min-h-[2.5rem] px-2 text-sm text-espresso underline underline-offset-4">
-            Back on time
+            {t('statusCtl.backOnTime')}
           </button>
         )}
       </div>

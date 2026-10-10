@@ -4,26 +4,29 @@ import type { CostKind, OptionTag, RankedOption } from '../../engines/ranking';
 import { span } from '../../engines/time';
 import { inr } from '../../utils/format';
 import { Chip } from '../ui/Chip';
+import { useT, type MessageKey } from '../../i18n';
 
-const tagChip: Record<OptionTag, { label: string; tone: 'ok' | 'warn' | 'bad' | 'neutral' }> = {
-  cheapest: { label: 'Cheapest', tone: 'ok' },
-  fastest: { label: 'Fastest', tone: 'ok' },
-  'few-seats': { label: 'Few seats', tone: 'warn' },
-  risky: { label: 'Risky', tone: 'bad' },
-  'loses-day': { label: 'Loses a day', tone: 'warn' },
+const tagChip: Record<OptionTag, { label: MessageKey; tone: 'ok' | 'warn' | 'bad' | 'neutral' }> = {
+  cheapest: { label: 'tag.cheapest', tone: 'ok' },
+  fastest: { label: 'tag.fastest', tone: 'ok' },
+  'few-seats': { label: 'tag.fewSeats', tone: 'warn' },
+  risky: { label: 'tag.risky', tone: 'bad' },
+  'loses-day': { label: 'tag.losesDay', tone: 'warn' },
 };
 
-const kindLabel: Record<CostKind, string> = { new: 'You pay', lost: 'Prepaid, lost', estimate: 'Estimate' };
+const kindLabel: Record<CostKind, MessageKey> = { new: 'options.youPay', lost: 'options.prepaidLost', estimate: 'options.estimate' };
 
 /** One ranked recovery option: true cost, time lost, a one-line reason, and the cost breakdown. */
-export function OptionCard({ option, why, selected, soldOut, onSelect }: {
+export function OptionCard({ option, title, why, selected, soldOut, onSelect }: {
   option: RankedOption;
+  title?: string;
   why: string;
   selected: boolean;
   soldOut?: boolean;
   onSelect: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const { t } = useT();
   const { rank, candidate, total, timeLostMin, tags, lines } = option;
 
   return (
@@ -40,20 +43,20 @@ export function OptionCard({ option, why, selected, soldOut, onSelect }: {
             {rank}
           </span>
           <div className="min-w-0 flex-1">
-            {rank === 1 && !soldOut && <p className="mb-0.5 text-[0.625rem] font-bold uppercase tracking-widest text-ok">Best for you</p>}
-            <p className="font-display text-lg leading-snug text-ink">{candidate.title}</p>
+            {rank === 1 && !soldOut && <p className="mb-0.5 text-[0.625rem] font-bold uppercase tracking-widest text-ok">{t('options.best')}</p>}
+            <p className="font-display text-lg leading-snug text-ink">{title ?? candidate.title}</p>
             <p className="text-xs text-muted">{candidate.provider}</p>
 
             <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
               <span className="flex items-center gap-1 text-ink">
                 <IndianRupee size={14} />
-                <span className="font-semibold">{total ? inr(total).replace('₹', '') : 'Free'}</span>
-                <span className="text-muted">true cost</span>
+                <span className="font-semibold">{total ? inr(total).replace('₹', '') : t('options.free')}</span>
+                <span className="text-muted">{t('options.trueCost')}</span>
               </span>
               <span className="flex items-center gap-1 text-ink">
                 <Clock size={14} />
-                <span className="font-semibold">{timeLostMin ? span(timeLostMin) : 'No delay'}</span>
-                {timeLostMin > 0 && <span className="text-muted">lost</span>}
+                <span className="font-semibold">{timeLostMin ? span(timeLostMin) : t('options.noDelay')}</span>
+                {timeLostMin > 0 && <span className="text-muted">{t('options.lost')}</span>}
               </span>
             </div>
 
@@ -61,12 +64,12 @@ export function OptionCard({ option, why, selected, soldOut, onSelect }: {
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {soldOut && (
                   <Chip tone="bad" dot>
-                    Sold out
+                    {t('tag.soldOut')}
                   </Chip>
                 )}
-                {tags.map((t) => (
-                  <Chip key={t} tone={tagChip[t].tone} dot>
-                    {tagChip[t].label}
+                {tags.map((tag) => (
+                  <Chip key={tag} tone={tagChip[tag].tone} dot>
+                    {t(tagChip[tag].label)}
                   </Chip>
                 ))}
               </div>
@@ -84,7 +87,7 @@ export function OptionCard({ option, why, selected, soldOut, onSelect }: {
             aria-expanded={open}
             className="flex min-h-[2.75rem] w-full items-center justify-between text-sm font-medium text-espresso"
           >
-            What's in the true cost
+            {t('options.inTrueCost')}
             <ChevronDown size={16} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
           </button>
           {open && (
@@ -93,13 +96,13 @@ export function OptionCard({ option, why, selected, soldOut, onSelect }: {
                 <li key={l.label} className="flex items-start justify-between gap-3 text-sm">
                   <span className="min-w-0">
                     <span className="text-ink">{l.label}</span>
-                    <span className="block text-[0.625rem] font-semibold uppercase tracking-widest text-muted">{kindLabel[l.kind]}</span>
+                    <span className="block text-[0.625rem] font-semibold uppercase tracking-widest text-muted">{t(kindLabel[l.kind])}</span>
                   </span>
                   <span className="shrink-0 tabular-nums text-ink">{inr(l.amount)}</span>
                 </li>
               ))}
               <li className="flex justify-between border-t border-line pt-1.5 text-sm font-semibold text-ink">
-                <span>True cost</span>
+                <span>{t('options.trueCost')}</span>
                 <span className="tabular-nums">{inr(total)}</span>
               </li>
             </ul>

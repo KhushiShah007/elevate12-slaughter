@@ -33,9 +33,13 @@ export const colors = {
 export type ColorName = keyof typeof colors;
 export type Pastel = 'peach' | 'lavender' | 'mint' | 'butter' | 'sky' | 'rose';
 
+// Indian scripts fall back per character to fonts the phone already has (works offline):
+// Noto on Android, built-in Indian fonts on iPhone, Nirmala UI on Windows.
+const indicFallbacks = ['Noto Sans Devanagari', 'Noto Sans Tamil', 'Noto Sans Bengali', 'Kohinoor Devanagari', 'Tamil Sangam MN', 'Bangla Sangam MN', 'Nirmala UI'];
+
 export const fonts = {
-  display: ['Fraunces', 'Georgia', 'serif'],
-  body: ['Inter', 'system-ui', 'sans-serif'],
+  display: ['Fraunces', ...indicFallbacks, 'Georgia', 'serif'],
+  body: ['Inter', ...indicFallbacks, 'system-ui', 'sans-serif'],
 } as const;
 
 export const radii = {

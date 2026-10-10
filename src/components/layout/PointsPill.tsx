@@ -6,10 +6,12 @@ import { LOYALTY_RATE } from '../../engines/loyalty';
 import { inr, num } from '../../utils/format';
 import { Sheet } from '../ui/Sheet';
 import { Chip } from '../ui/Chip';
+import { useT } from '../../i18n';
 
 /** Loyalty points, top-right on every in-app screen. Tap for the breakdown. */
 export function PointsPill() {
   const points = usePoints();
+  const { t } = useT();
   const [open, setOpen] = useState(false);
   if (!points) return <span className="min-h-tap" />;
   const { total, spend, entries } = points;
@@ -32,7 +34,7 @@ export function PointsPill() {
           <span className="h-2 w-2 rounded-full border border-ink/30 bg-ivory" />
           <Sparkles size={14} className="text-espresso" />
           <span className="text-sm font-semibold tabular-nums text-ink">{num(total)}</span>
-          <span className="text-xs text-espresso">pts</span>
+          <span className="text-xs text-espresso">{t('common.pts')}</span>
         </motion.span>
       </button>
 
@@ -40,7 +42,7 @@ export function PointsPill() {
         <div className="rounded-lg border border-line bg-butter p-5">
           <p className="text-sm text-espresso">You have</p>
           <p className="font-display text-5xl text-ink">
-            {num(total)} <span className="text-2xl">pts</span>
+            {num(total)} <span className="text-2xl">{t('common.pts')}</span>
           </p>
           <p className="mt-2 text-sm text-espresso">
             {Math.round(LOYALTY_RATE * 100)}% of {inr(spend)} booked through Voyage
