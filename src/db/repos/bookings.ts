@@ -1,5 +1,5 @@
 import { db } from '../db';
-import { writeAndQueue } from '../syncQueue';
+import { removeAndQueue, writeAndQueue } from '../syncQueue';
 import type { Booking } from '../../types';
 
 export const listBookings = () => db.bookings.toArray();
@@ -27,4 +27,24 @@ export async function confirmRecovery(tripId: string, title: string, newSpend: n
   };
   await writeAndQueue('bookings', booking.id, booking, `Recovery chosen: ${title}`);
   return booking;
+}
+
+/** Save a flight or hotel option to the trip, to compare and book later. Not paid, so no points. */
+export async function saveOption(tripId: string, kind: Booking['kind'], title: string, amount: number, details: Booking['details']) {
+  const booking: Booking = {
+    id: `opt-${crypto.randomUUID()}`,
+    tripId,
+    kind,
+    title,
+    amount,
+    status: 'suggested',
+    bookedViaApp: false,
+    details,
+  };
+  await writeAndQueue('bookings', booking.id, booking, `Saved option: ${title}`);
+  return booking;
+}
+
+export async function removeOption(booking: Booking) {
+  await removeAndQueue('bookings', booking.id, `Removed option: ${booking.title}`);
 }

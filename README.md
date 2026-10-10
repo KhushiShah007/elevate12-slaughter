@@ -34,7 +34,7 @@ Local test account (dev database only): mobile `9820011111`, password `voyage-te
 | Hotels, attractions, restaurants | OpenStreetMap; hotel prices are **estimates** | ODbL |
 | Weather | **Live**: Open-Meteo (no key), cached 30 min | CC BY 4.0 |
 | Exchange rates | **Live**: Frankfurter/ECB, ExchangeRate-API for others; cached 6 h | free use |
-| Flight prices | Not live yet (Phase 7, Amadeus) | — |
+| Flights | **Live** from Amadeus when `AMADEUS_*` keys are set; otherwise airlines on the route from OpenFlights (2014 data, retired airlines removed) with duration and fare **estimated** from distance, labelled "Indicative". Booking is a link to Google Flights. | ODbL |
 
 Refresh the open data with `npm run pipeline:openflights`,
 `pipeline:destinations`, `pipeline:places`, `pipeline:images` (slow and polite; cached in `.data/raw`).

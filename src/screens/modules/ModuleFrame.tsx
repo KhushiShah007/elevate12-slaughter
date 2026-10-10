@@ -28,7 +28,7 @@ export function ModuleFrame({ module, title, sub, source = 'device', children }:
     <div className="relative">
       <div className={`absolute inset-x-0 top-0 -z-0 h-44 rounded-b-xl opacity-60 ${pastelBg[modulePastel[module]]}`} />
       <div className="relative">
-        <PageHeader back={`/trips/${data.trip.id}`} title={lang === 'en' ? title : t(`module.${module}`)} sub={lang === 'en' ? (sub ?? data.trip.title) : data.trip.title} source={source} right={<SampleTag />} />
+        <PageHeader back={`/trips/${data.trip.id}`} title={lang === 'en' ? title : t(`module.${module}`)} sub={lang === 'en' ? (sub ?? data.trip.title) : data.trip.title} source={source} right={data.trip.sample ? <SampleTag /> : undefined} />
         <div className="px-gutter">{children(data)}</div>
       </div>
     </div>
