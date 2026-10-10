@@ -28,6 +28,7 @@ export default function TripWorkspace() {
   const { tripId } = useParams();
   const navigate = useNavigate();
   const data = useTrip(tripId);
+  if (data === undefined) return null;
   if (!data) return <NotFound />;
   const { trip } = data;
 

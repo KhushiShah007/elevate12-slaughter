@@ -12,6 +12,7 @@ import { PillButton } from '../../components/ui/PillButton';
 import { Chip, SampleTag } from '../../components/ui/Chip';
 import { StampThump } from '../../components/motion/StampThump';
 import { fadeUp } from '../../design/motion';
+import { confirmRecovery } from '../../db/repos/bookings';
 import NotFound from '../NotFound';
 
 type Stage = 'choose' | 'rechecked' | 'confirmed';
@@ -83,7 +84,14 @@ function DisruptionView() {
                 <PillButton variant="ghost" onClick={() => setStage('choose')}>
                   Back
                 </PillButton>
-                <PillButton onClick={() => setStage('confirmed')}>Confirm this option</PillButton>
+                <PillButton
+                  onClick={async () => {
+                    await confirmRecovery(tripId!, option);
+                    setStage('confirmed');
+                  }}
+                >
+                  Confirm this option
+                </PillButton>
               </div>
             </motion.section>
           )}
@@ -99,7 +107,7 @@ function DisruptionView() {
               <StampThump label="Chosen" sub="simulated" tone="ok" size="lg" />
               <p className="mt-4 font-display text-xl text-ink">{option.title}</p>
               <p className="mt-2 text-sm leading-relaxed text-espresso">
-                Simulated confirmation. No real booking was changed: there is no provider confirmation in this prototype.
+                Saved on this phone as a simulated booking. No real booking was changed: there is no provider confirmation in this prototype.
               </p>
               <PillButton full className="mt-5" onClick={() => navigate(`/trips/${tripId}/active`)}>
                 Back to my trip

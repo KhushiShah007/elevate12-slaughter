@@ -1,64 +1,42 @@
-import { useMemo } from 'react';
-import * as sample from '../data/sampleTrips';
-import { documents } from '../data/sampleDocuments';
-import { connectionRisk, minutesBetween } from '../engines/connectionRisk';
-import { useSettings } from '../state/settings';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from '../db/db';
+import { getNextFlight, getTripBundle } from '../db/repos/trips';
+import { getCurrentUser, getPreferences } from '../db/repos/users';
 
-// Goal 1: selectors over bundled sample data. Goal 2 moves these to src/db (Dexie)
-// with the same shapes, so screens do not change.
-
-const byTrip = <T extends { tripId: string | null }>(rows: T[], tripId: string) =>
-  rows.filter((r) => r.tripId === tripId);
+// Live views over the on-device database. Each returns `undefined` while loading
+// (a few milliseconds), and re-renders on its own whenever the data changes.
 
 export function useTrips() {
-  return {
-    existing: sample.trips.filter((t) => t.status !== 'completed'),
-    completed: sample.trips.filter((t) => t.status === 'completed'),
-  };
-}
-
-export function useTrip(tripId: string | undefined) {
-  return useMemo(() => {
-    const trip = sample.trips.find((t) => t.id === tripId);
-    if (!trip) return null;
-    const id = trip.id;
+  return useLiveQuery(async () => {
+    const all = await db.trips.toArray();
+    const byStart = (a: { startDate: string }, b: { startDate: string }) => a.startDate.localeCompare(b.startDate);
     return {
-      trip,
-      flights: byTrip(sample.flights, id),
-      bookings: byTrip(sample.bookings, id),
-      accommodations: byTrip(sample.accommodations, id),
-      transport: byTrip(sample.transport, id),
-      experiences: byTrip(sample.experiences, id),
-      restaurants: byTrip(sample.restaurants, id),
-      days: byTrip(sample.itineraryDays, id),
-      items: byTrip(sample.itineraryItems, id),
-      expenses: byTrip(sample.expenses, id),
-      documents: byTrip(documents, id),
-      memory: sample.completedMemories.find((m) => m.tripId === id) ?? null,
+      existing: all.filter((t) => t.status !== 'completed').sort(byStart),
+      completed: all.filter((t) => t.status === 'completed').sort(byStart).reverse(),
     };
-  }, [tripId]);
+  });
 }
 
-/** The next flight leg and the risk on its onward connection. */
+/** One trip and everything it owns, or null if it does not exist. */
+export function useTrip(tripId: string | undefined) {
+  return useLiveQuery(() => (tripId ? getTripBundle(tripId) : null), [tripId]);
+}
+
 export function useNextFlight() {
-  return useMemo(() => {
-    const next = sample.trips.find((t) => t.status === 'upcoming')!;
-    const legs = byTrip(sample.flights, next.id);
-    const [leg, onward] = legs;
-    const delay = sample.flightStatus.flightId === leg.id ? sample.flightStatus.delayMin : 0;
-    const layover = onward ? minutesBetween(leg.arrive, onward.depart) : null;
-    const risk = layover === null ? 'ok' : connectionRisk(layover, delay);
-    return { trip: next, leg, onward, layover, delay, risk, lastSynced: sample.flightStatus.lastSynced } as const;
-  }, []);
+  return useLiveQuery(getNextFlight);
 }
 
-export const sampleUser = sample.sampleUser;
-export const journeySteps = sample.journeySteps;
-export const completedMemories = sample.completedMemories;
-export const familyPickup = sample.familyPickup;
+export function useMemories() {
+  return useLiveQuery(() => db.memories.toArray());
+}
 
-/** The signed-in traveller's display details, falling back to the sample traveller. */
 export function useTraveller() {
-  const { profile } = useSettings();
-  return { name: profile?.name ?? sample.sampleUser.name, contact: profile?.contact ?? sample.sampleUser.phoneOrEmail };
+  return useLiveQuery(async () => {
+    const user = await getCurrentUser();
+    return { name: user?.name ?? 'Traveller', contact: user?.phoneOrEmail ?? '' };
+  });
+}
+
+export function usePreferences() {
+  return useLiveQuery(getPreferences);
 }

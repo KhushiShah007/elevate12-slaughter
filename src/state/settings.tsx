@@ -1,14 +1,12 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import type { TravellerPreferences } from '../types';
 
 export type Language = 'en' | 'hi' | 'hinglish' | 'mr' | 'ta' | 'bn';
 
+// Per-device preferences only. Account, trips and persona live in Dexie (src/db).
 interface Settings {
   seniorMode: boolean;
   language: Language;
-  persona: Partial<Record<keyof TravellerPreferences, string>> | null; // raw quiz answers
   signedIn: boolean;
-  profile: { name: string; contact: string } | null; // demo account on this device
 }
 
 interface SettingsApi extends Settings {
@@ -17,7 +15,7 @@ interface SettingsApi extends Settings {
 }
 
 const KEY = 'voyage.settings';
-const defaults: Settings = { seniorMode: false, language: 'en', persona: null, signedIn: false, profile: null };
+const defaults: Settings = { seniorMode: false, language: 'en', signedIn: false };
 
 function load(): Settings {
   try {

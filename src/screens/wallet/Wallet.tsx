@@ -1,21 +1,24 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ScanLine, Search } from 'lucide-react';
-import { documents } from '../../data/sampleDocuments';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { listDocuments, setDocumentOffline } from '../../db/repos/documents';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { DocRow } from '../../components/documents/DocRow';
 import { SampleTag } from '../../components/ui/Chip';
 
 export default function Wallet() {
   const [q, setQ] = useState('');
-  // Prototype: offline switches live in memory. Goal 2 saves them; Goal 6 adds Fuse.js search.
-  const [offline, setOffline] = useState<Record<string, boolean>>({});
+  const documents = useLiveQuery(listDocuments);
+  // Goal 6 swaps this simple filter for Fuse.js fuzzy search.
 
   const list = useMemo(() => {
     const s = q.trim().toLowerCase();
-    return s ? documents.filter((d) => `${d.title} ${d.ref} ${d.kind}`.toLowerCase().includes(s)) : documents;
-  }, [q]);
-  const offlineCount = documents.filter((d) => offline[d.id] ?? d.offline).length;
+    const all = documents ?? [];
+    return s ? all.filter((d) => `${d.title} ${d.ref} ${d.kind}`.toLowerCase().includes(s)) : all;
+  }, [q, documents]);
+  if (!documents) return null;
+  const offlineCount = documents.filter((d) => d.offline).length;
 
   return (
     <div>
@@ -43,7 +46,7 @@ export default function Wallet() {
 
         <ul className="mt-5 space-y-3">
           {list.map((d) => (
-            <DocRow key={d.id} doc={{ ...d, offline: offline[d.id] ?? d.offline }} onToggleOffline={(v) => setOffline((o) => ({ ...o, [d.id]: v }))} />
+            <DocRow key={d.id} doc={d} onToggleOffline={(v) => void setDocumentOffline(d.id, v)} />
           ))}
         </ul>
         {!list.length && <p className="mt-6 text-center text-sm text-muted">No documents match “{q}”.</p>}

@@ -51,6 +51,8 @@ export interface Booking {
   amount: number; // INR
   status: 'confirmed' | 'suggested';
   bookedViaApp: boolean;
+  simulated?: boolean; // prototype: confirmed without a real provider
+  rev?: number;
 }
 
 export type DocumentKind = 'passport' | 'visa' | 'boarding-pass' | 'insurance' | 'hotel' | 'id' | 'other';
@@ -65,6 +67,7 @@ export interface TravelDocument {
   expires?: Iso;
   pages: number;
   offline: boolean;
+  rev?: number;
 }
 
 export interface Accommodation {
@@ -153,8 +156,17 @@ export interface TravellerPreferences {
   mix: string;
 }
 
+/** Saved quiz answers for a user; feeds persona and itinerary. */
+export interface PreferencesRecord {
+  userId: string;
+  answers: Partial<Record<keyof TravellerPreferences, string>>;
+  updatedAt: Iso;
+  rev?: number;
+}
+
 export interface JourneyStep {
   id: string;
+  tripId: string;
   label: string;
   hint: string;
   at: string;
@@ -193,4 +205,47 @@ export interface LoyaltyEntry {
   title: string;
   amount: number;
   points: number;
+  simulated: boolean;
+}
+
+/** A step the traveller confirmed by hand on the airport timeline. */
+export interface JourneyProgress {
+  id: string; // tripId:stepId
+  tripId: string;
+  stepId: string;
+  doneAt: Iso;
+  rev?: number;
+}
+
+/** Cached flight status. Always shown with its lastSynced time. */
+export interface FlightStatus {
+  flightId: string;
+  tripId: string;
+  delayMin: number;
+  lastSynced: Iso;
+}
+
+export interface FamilyPickup {
+  tripId: string;
+  pickerName: string;
+  leaveHomeAt: string;
+  meetPoint: string;
+}
+
+export type SyncTable = 'bookings' | 'documents' | 'journeyProgress' | 'preferences' | 'users';
+
+/** One offline change waiting to reach the server. */
+export interface SyncEntry {
+  seq?: number;
+  key: string; // idempotency key: the server applies each key at most once
+  table: SyncTable;
+  recordId: string;
+  op: 'put' | 'delete';
+  payload: unknown;
+  baseRev: number; // server revision this change was made on top of
+  createdAt: Iso;
+  status: 'pending' | 'conflict' | 'done';
+  serverPayload?: unknown; // the other version, when status is 'conflict'
+  serverRev?: number;
+  label: string; // human description for the conflict sheet
 }

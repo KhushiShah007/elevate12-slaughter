@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { Download, QrCode } from 'lucide-react';
-import { documents } from '../../data/sampleDocuments';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { getDocument } from '../../db/repos/documents';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { PillButton } from '../../components/ui/PillButton';
 import { Chip, SampleTag } from '../../components/ui/Chip';
@@ -9,7 +10,8 @@ import NotFound from '../NotFound';
 
 export default function DocumentViewer() {
   const { docId } = useParams();
-  const doc = documents.find((d) => d.id === docId);
+  const doc = useLiveQuery(async () => (docId ? ((await getDocument(docId)) ?? null) : null), [docId]);
+  if (doc === undefined) return null;
   if (!doc) return <NotFound />;
 
   return (

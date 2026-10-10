@@ -19,6 +19,7 @@ export function loyaltyEntries(bookings: Booking[]): LoyaltyEntry[] {
     title: b.title,
     amount: b.amount,
     points: pointsFor(b.amount),
+    simulated: b.simulated ?? false,
   }));
 }
 

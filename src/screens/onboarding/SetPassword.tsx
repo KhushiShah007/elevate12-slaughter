@@ -5,6 +5,7 @@ import { OnboardingFrame } from './OnboardingFrame';
 import { Input } from '../../components/ui/Input';
 import { PillButton } from '../../components/ui/PillButton';
 import { useSettings } from '../../state/settings';
+import { signUpUser } from '../../db/repos/users';
 import type { AuthFlowState } from './SignUp';
 
 export default function SetPassword() {
@@ -26,9 +27,10 @@ export default function SetPassword() {
         <PillButton
           full
           disabled={!ok}
-          onClick={() => {
+          onClick={async () => {
             // Demo: the password is never stored. Production hands it to the auth provider.
-            update({ signedIn: true, profile: { name, contact } });
+            await signUpUser(name, contact);
+            update({ signedIn: true });
             navigate('/quiz', { replace: true });
           }}
         >

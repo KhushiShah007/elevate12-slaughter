@@ -7,18 +7,20 @@ import type { AuthFlowState } from './SignUp';
 import { Input } from '../../components/ui/Input';
 import { PillButton } from '../../components/ui/PillButton';
 import { useSettings } from '../../state/settings';
+import { logInUser } from '../../db/repos/users';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { update, profile } = useSettings();
+  const { update } = useSettings();
   const [mode, setMode] = useState<ContactMode>('phone');
   const [contact, setContact] = useState('');
   const [password, setPassword] = useState('');
   const validContact = isValidContact(mode, contact);
 
   // Demo: the password is not checked against a server. Production uses Supabase Auth or Firebase Auth.
-  const logIn = () => {
-    update({ signedIn: true, profile: profile ?? { name: 'Riya', contact: contact.trim() } });
+  const logIn = async () => {
+    await logInUser(contact.trim());
+    update({ signedIn: true });
     navigate('/home', { replace: true });
   };
 
@@ -28,7 +30,7 @@ export default function Login() {
       sub="Log in with your phone or email and password."
       footer={
         <>
-          <PillButton full disabled={!validContact || password.length < 8} onClick={logIn}>
+          <PillButton full disabled={!validContact || password.length < 8} onClick={() => void logIn()}>
             Log in
           </PillButton>
           <PillButton

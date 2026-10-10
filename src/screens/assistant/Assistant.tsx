@@ -34,7 +34,7 @@ const suggestions: { text: string; reply: Msg }[] = [
 ];
 
 export default function Assistant() {
-  const { name } = useTraveller();
+  const name = useTraveller()?.name ?? 'there';
   const [msgs, setMsgs] = useState<Msg[]>([
     { from: 'voyage', text: `Namaste ${name}! Ask me anything about your trip, in English, Hindi or Hinglish.` },
   ]);

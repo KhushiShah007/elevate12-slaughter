@@ -4,6 +4,8 @@ import type {
   Accommodation,
   Booking,
   CompletedTripMemory,
+  FamilyPickup,
+  FlightStatus,
   Expense,
   Experience,
   Flight,
@@ -128,7 +130,7 @@ export const flights: Flight[] = [
 ];
 
 // Live status is simulated in the prototype.
-export const flightStatus = { flightId: 'f1', delayMin: 0, lastSynced: '2026-10-10T18:05:00+05:30' };
+export const flightStatuses: FlightStatus[] = [{ flightId: 'f1', tripId: 't-japan', delayMin: 0, lastSynced: '2026-10-10T18:05:00+05:30' }];
 
 export const bookings: Booking[] = [
   { id: 'b1', tripId: 't-japan', kind: 'flight', title: 'AI 865 + AI 306 (2 adults)', amount: 68400, status: 'confirmed', bookedViaApp: true },
@@ -236,19 +238,19 @@ export const completedMemories: CompletedTripMemory[] = [
 ];
 
 export const journeySteps: JourneyStep[] = [
-  { id: 's1', label: 'Leave home', hint: 'Cab CAB-22918 arrives 03:40', at: '03:30' },
-  { id: 's2', label: 'Reach airport', hint: 'BOM Terminal 2, Gate 8 entry', at: '04:20' },
-  { id: 's3', label: 'Check-in', hint: 'Air India counters, row D', at: '04:30' },
-  { id: 's4', label: 'Bag drop', hint: '2 bags · 23 kg each', at: '04:45' },
-  { id: 's5', label: 'Security', hint: 'Keep laptop and liquids out', at: '05:00' },
-  { id: 's6', label: 'Gate', hint: 'Gate 42B · 12 min walk', at: '05:30' },
-  { id: 's7', label: 'Boarding', hint: 'Zone 3 · seat 14A', at: '05:40' },
+  { id: 's1', tripId: 't-japan', label: 'Leave home', hint: 'Cab CAB-22918 arrives 03:40', at: '03:30' },
+  { id: 's2', tripId: 't-japan', label: 'Reach airport', hint: 'BOM Terminal 2, Gate 8 entry', at: '04:20' },
+  { id: 's3', tripId: 't-japan', label: 'Check-in', hint: 'Air India counters, row D', at: '04:30' },
+  { id: 's4', tripId: 't-japan', label: 'Bag drop', hint: '2 bags · 23 kg each', at: '04:45' },
+  { id: 's5', tripId: 't-japan', label: 'Security', hint: 'Keep laptop and liquids out', at: '05:00' },
+  { id: 's6', tripId: 't-japan', label: 'Gate', hint: 'Gate 42B · 12 min walk', at: '05:30' },
+  { id: 's7', tripId: 't-japan', label: 'Boarding', hint: 'Zone 3 · seat 14A', at: '05:40' },
 ];
 
 // Family pickup at the destination. Goal 3 computes leaveHomeAt from the live arrival.
-export const familyPickup = {
+export const familyPickups: FamilyPickup[] = [{
   tripId: 't-japan',
   pickerName: 'Meera',
   leaveHomeAt: '22:15',
   meetPoint: 'Narita Terminal 2 · Arrivals Gate B',
-};
+}];

@@ -3,13 +3,14 @@ import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { OnboardingFrame } from './OnboardingFrame';
 import { PillButton } from '../../components/ui/PillButton';
 import { useSettings } from '../../state/settings';
+import { logInUser } from '../../db/repos/users';
 import type { AuthFlowState } from './SignUp';
 
 const DEMO_CODE = '123456';
 
 export default function Otp() {
   const navigate = useNavigate();
-  const { update, profile } = useSettings();
+  const { update } = useSettings();
   const state = useLocation().state as AuthFlowState | null;
   const [digits, setDigits] = useState<string[]>(Array(6).fill(''));
   const [error, setError] = useState(false);
@@ -27,10 +28,11 @@ export default function Otp() {
   if (!state) return <Navigate to="/welcome" replace />;
   const signup = state.flow === 'signup';
 
-  const verify = () => {
+  const verify = async () => {
     if (digits.join('') !== DEMO_CODE) return setError(true);
     if (signup) return navigate('/set-password', { state });
-    update({ signedIn: true, profile: profile ?? { name: 'Riya', contact: state.contact } });
+    await logInUser(state.contact);
+    update({ signedIn: true });
     navigate('/home', { replace: true });
   };
 
@@ -40,7 +42,7 @@ export default function Otp() {
       title="Enter the code"
       sub={`We sent a 6-digit code to ${state.contact}. In this demo the code is always 123456.`}
       footer={
-        <PillButton full disabled={digits.some((d) => !d)} onClick={verify}>
+        <PillButton full disabled={digits.some((d) => !d)} onClick={() => void verify()}>
           Verify
         </PillButton>
       }

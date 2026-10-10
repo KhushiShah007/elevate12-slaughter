@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeft } from 'lucide-react';
 import { quizQuestions } from '../../data/quizQuestions';
-import { useSettings } from '../../state/settings';
+import { savePreferences } from '../../db/repos/users';
 import { PillButton } from '../../components/ui/PillButton';
 import { StampCard } from '../../components/cards/StampCard';
 import { StampThump } from '../../components/motion/StampThump';
@@ -13,7 +13,6 @@ type Answers = Partial<Record<keyof TravellerPreferences, string>>;
 
 export default function PersonaQuiz() {
   const navigate = useNavigate();
-  const { update } = useSettings();
   const [i, setI] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
   const done = i >= quizQuestions.length;
@@ -45,8 +44,8 @@ export default function PersonaQuiz() {
         <div className="mt-auto w-full pt-8">
           <PillButton
             full
-            onClick={() => {
-              update({ persona: answers });
+            onClick={async () => {
+              await savePreferences(answers);
               navigate('/home');
             }}
           >

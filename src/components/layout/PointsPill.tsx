@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 import { usePoints } from '../../hooks/usePoints';
 import { LOYALTY_RATE } from '../../engines/loyalty';
@@ -8,8 +9,10 @@ import { Chip } from '../ui/Chip';
 
 /** Loyalty points, top-right on every in-app screen. Tap for the breakdown. */
 export function PointsPill() {
-  const { total, spend, entries } = usePoints();
+  const points = usePoints();
   const [open, setOpen] = useState(false);
+  if (!points) return <span className="min-h-tap" />;
+  const { total, spend, entries } = points;
 
   return (
     <>
@@ -18,12 +21,19 @@ export function PointsPill() {
         aria-label={`${total} loyalty points. Show breakdown`}
         className="flex min-h-tap items-center"
       >
-        <span className="flex items-center gap-1.5 rounded-pill rounded-l-md border border-ink/10 bg-butter py-1.5 pl-2 pr-3 shadow-card">
+        {/* Keyed on the total, so a new booking makes the pill thump. */}
+        <motion.span
+          key={total}
+          initial={{ scale: 1.25, rotate: -4 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: 'spring', stiffness: 500, damping: 15 }}
+          className="flex items-center gap-1.5 rounded-pill rounded-l-md border border-ink/10 bg-butter py-1.5 pl-2 pr-3 shadow-card"
+        >
           <span className="h-2 w-2 rounded-full border border-ink/30 bg-ivory" />
           <Sparkles size={14} className="text-espresso" />
           <span className="text-sm font-semibold tabular-nums text-ink">{num(total)}</span>
           <span className="text-xs text-espresso">pts</span>
-        </span>
+        </motion.span>
       </button>
 
       <Sheet open={open} onClose={() => setOpen(false)} title="Voyage points">
@@ -43,7 +53,10 @@ export function PointsPill() {
             <li key={e.bookingId} className="flex items-center justify-between gap-3 px-4 py-3">
               <span className="min-w-0">
                 <span className="block truncate text-sm font-medium text-ink">{e.title}</span>
-                <span className="text-xs text-muted">{inr(e.amount)}</span>
+                <span className="text-xs text-muted">
+                  {inr(e.amount)}
+                  {e.simulated && ' · simulated'}
+                </span>
               </span>
               <span className="shrink-0 text-sm font-semibold tabular-nums text-ink">+{num(e.points)}</span>
             </li>

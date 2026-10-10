@@ -1,8 +1,10 @@
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, RotateCcw, Zap } from 'lucide-react';
+import { ChevronLeft, GitCompareArrows, RotateCcw, Zap } from 'lucide-react';
 import { judgeScenarios } from '../../data/judgeScenarios';
 import { PillButton } from '../../components/ui/PillButton';
 import { Chip } from '../../components/ui/Chip';
+import { resetDemo } from '../../db/seed';
+import { stageSyncConflict } from '../../db/repos/demo';
 
 /** Hidden demo panel (long-press the logo). Fires sample disasters for judges. */
 export default function JudgeMode() {
@@ -39,7 +41,32 @@ export default function JudgeMode() {
         ))}
       </div>
 
-      <PillButton full variant="ghost" className="mt-8" icon={<RotateCcw size={18} />} onClick={() => navigate('/home')}>
+      <button
+        onClick={async () => {
+          await stageSyncConflict();
+          navigate('/home');
+        }}
+        className="mt-3 flex min-h-[4.5rem] w-full items-center gap-4 rounded-lg border border-line bg-lavender px-4 text-left shadow-card active:scale-[0.98]"
+      >
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-paper/70 text-ink">
+          <GitCompareArrows size={20} />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-display text-lg leading-tight text-ink">Sync conflict</span>
+          <span className="block text-sm text-espresso">Same document edited on two devices</span>
+        </span>
+      </button>
+
+      <PillButton
+        full
+        variant="ghost"
+        className="mt-8"
+        icon={<RotateCcw size={18} />}
+        onClick={async () => {
+          await resetDemo();
+          navigate('/home');
+        }}
+      >
         Reset demo
       </PillButton>
     </div>

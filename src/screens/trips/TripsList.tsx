@@ -1,6 +1,6 @@
 import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Plus, Users } from 'lucide-react';
-import { useTrips, completedMemories } from '../../hooks/useTrip';
+import { useMemories, useTrips } from '../../hooks/useTrip';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { Segmented } from '../../components/ui/Segmented';
 import { TicketCard } from '../../components/cards/TicketCard';
@@ -14,7 +14,10 @@ const stampPastels: Pastel[] = ['peach', 'lavender', 'mint', 'sky', 'rose', 'but
 export default function TripsList() {
   const [params, setParams] = useSearchParams();
   const tab = params.get('tab') === 'completed' ? 'completed' : 'existing';
-  const { existing, completed } = useTrips();
+  const trips = useTrips();
+  const memories = useMemories();
+  if (!trips || !memories) return null;
+  const { existing, completed } = trips;
 
   return (
     <div>
@@ -66,7 +69,7 @@ export default function TripsList() {
             <p className="mt-5 text-sm text-muted">Your stamp collection. Tap a stamp for memories and spend.</p>
             <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-6">
               {completed.map((t, n) => {
-                const m = completedMemories.find((c) => c.tripId === t.id);
+                const m = memories.find((c) => c.tripId === t.id);
                 return (
                   <Link key={t.id} to={`/trips/${t.id}/memories`}>
                     <StampCard pastel={stampPastels[n % stampPastels.length]} tilt={n % 2 ? 2.5 : -2}>

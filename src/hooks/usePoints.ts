@@ -1,9 +1,8 @@
-import { useMemo } from 'react';
-import { bookings } from '../data/sampleTrips';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { listBookings } from '../db/repos/bookings';
 import { loyaltySummary } from '../engines/loyalty';
 
-// Goal 1 reads bundled sample bookings. Goal 2 swaps this for a live Dexie query,
-// so the pill updates the moment a booking is confirmed.
+/** Live loyalty points: updates the moment a booking is confirmed. */
 export function usePoints() {
-  return useMemo(() => loyaltySummary(bookings), []);
+  return useLiveQuery(async () => loyaltySummary(await listBookings()));
 }

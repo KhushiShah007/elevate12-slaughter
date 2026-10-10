@@ -7,6 +7,7 @@ import { PageHeader } from '../../components/layout/PageHeader';
 import { StampCard } from '../../components/cards/StampCard';
 import { Toggle } from '../../components/ui/Toggle';
 import { Chip } from '../../components/ui/Chip';
+import { SyncStatus } from '../../components/layout/SyncStatus';
 import { num } from '../../utils/format';
 
 const languages: { value: Language; label: string }[] = [
@@ -23,6 +24,7 @@ export default function Me() {
   const s = useSettings();
   const points = usePoints();
   const traveller = useTraveller();
+  if (!traveller || !points) return null;
 
   return (
     <div>
@@ -51,6 +53,11 @@ export default function Me() {
             <p className="text-[0.625rem] uppercase tracking-widest text-espresso">Points</p>
           </StampCard>
         </div>
+
+        <section>
+          <h2 className="mb-2 text-lg">Sync</h2>
+          <SyncStatus />
+        </section>
 
         <section className="rounded-lg border border-line bg-paper p-4">
           <h2 className="flex items-center gap-2 text-lg">

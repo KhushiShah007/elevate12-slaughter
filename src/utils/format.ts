@@ -27,3 +27,6 @@ export function greeting(hour = new Date().getHours()) {
   if (hour < 17) return 'Good afternoon';
   return 'Good evening';
 }
+
+/** Device-local time for timestamps the app itself recorded (e.g. last sync). */
+export const localTime = (iso: string) => new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });

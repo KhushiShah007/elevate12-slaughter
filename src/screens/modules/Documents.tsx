@@ -1,20 +1,17 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ScanLine } from 'lucide-react';
 import { ModuleFrame } from './ModuleFrame';
 import { DocRow } from '../../components/documents/DocRow';
+import { setDocumentOffline } from '../../db/repos/documents';
 
 export default function Documents() {
-  // Prototype: offline switches live in memory. Goal 2 saves them in Dexie.
-  const [offline, setOffline] = useState<Record<string, boolean>>({});
-
   return (
     <ModuleFrame module="documents" title="Documents" sub="Only this trip's documents. Passport and ID live in Wallet.">
       {({ documents }) => (
         <>
           <ul className="space-y-3">
             {documents.map((d) => (
-              <DocRow key={d.id} doc={{ ...d, offline: offline[d.id] ?? d.offline }} onToggleOffline={(v) => setOffline((o) => ({ ...o, [d.id]: v }))} />
+              <DocRow key={d.id} doc={d} onToggleOffline={(v) => void setDocumentOffline(d.id, v)} />
             ))}
           </ul>
           <Link
