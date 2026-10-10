@@ -27,7 +27,9 @@ export function loyaltyEntries(bookings: Booking[]): LoyaltyEntry[] {
 export function loyaltySummary(bookings: Booking[]) {
   const entries = loyaltyEntries(bookings);
   const spend = entries.reduce((sum, e) => sum + e.amount, 0);
-  return { entries, spend, total: pointsFor(spend) };
+  // Points already spent on bookings come off the balance.
+  const used = bookings.reduce((sum, b) => sum + (b.pointsUsed ?? 0), 0);
+  return { entries, spend, used, total: Math.max(0, pointsFor(spend) - used) };
 }
 
 // ---------- Using points ----------

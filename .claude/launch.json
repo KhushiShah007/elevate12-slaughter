@@ -22,6 +22,15 @@
         "--strictPort"
       ],
       "port": 4173
+    },
+    {
+      "name": "voyage-qa",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev:qa"
+      ],
+      "port": 5174
     }
   ]
 }

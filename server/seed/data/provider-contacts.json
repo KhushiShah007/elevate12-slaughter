@@ -1,0 +1,17 @@
+[
+  { "provider": "indigo", "name": "IndiGo", "kind": "airline", "supportUrl": "https://www.goindigo.in/" },
+  { "provider": "air india", "name": "Air India", "kind": "airline", "supportUrl": "https://www.airindia.com/" },
+  { "provider": "spicejet", "name": "SpiceJet", "kind": "airline", "supportUrl": "https://www.spicejet.com/" },
+  { "provider": "akasa air", "name": "Akasa Air", "kind": "airline", "supportUrl": "https://www.akasaair.com/" },
+  { "provider": "air india express", "name": "Air India Express", "kind": "airline", "supportUrl": "https://www.airindiaexpress.com/" },
+  { "provider": "emirates", "name": "Emirates", "kind": "airline", "supportUrl": "https://www.emirates.com/" },
+  { "provider": "singapore airlines", "name": "Singapore Airlines", "kind": "airline", "supportUrl": "https://www.singaporeair.com/" },
+  { "provider": "booking.com", "name": "Booking.com", "kind": "ota", "supportUrl": "https://secure.booking.com/help.html" },
+  { "provider": "makemytrip", "name": "MakeMyTrip", "kind": "ota", "supportUrl": "https://www.makemytrip.com/" },
+  { "provider": "goibibo", "name": "Goibibo", "kind": "ota", "supportUrl": "https://www.goibibo.com/" },
+  { "provider": "cleartrip", "name": "Cleartrip", "kind": "ota", "supportUrl": "https://www.cleartrip.com/" },
+  { "provider": "agoda", "name": "Agoda", "kind": "ota", "supportUrl": "https://www.agoda.com/" },
+  { "provider": "airbnb", "name": "Airbnb", "kind": "ota", "supportUrl": "https://www.airbnb.co.in/help" },
+  { "provider": "irctc", "name": "IRCTC", "kind": "rail", "supportUrl": "https://www.irctc.co.in/" },
+  { "provider": "uber", "name": "Uber", "kind": "ride", "supportUrl": "https://help.uber.com/" }
+]

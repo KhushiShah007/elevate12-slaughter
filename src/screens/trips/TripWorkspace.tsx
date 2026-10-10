@@ -10,7 +10,8 @@ import { PageHeader } from '../../components/layout/PageHeader';
 import { Tile } from '../../components/ui/Tile';
 import { PillButton } from '../../components/ui/PillButton';
 import { SampleTag } from '../../components/ui/Chip';
-import { range } from '../../utils/format';
+import { inr, range } from '../../utils/format';
+import { Link } from 'react-router-dom';
 import { useT } from '../../i18n';
 import NotFound from '../NotFound';
 
@@ -69,6 +70,30 @@ export default function TripWorkspace() {
           </motion.div>
         ))}
       </motion.div>
+
+      {(() => {
+        const booked = data.bookings.filter((b) => b.status === 'confirmed' || b.status === 'cancelled');
+        return booked.length ? (
+          <section className="px-gutter pt-6">
+            <h2 className="mb-2 text-xl">Bookings</h2>
+            <ul className="divide-y divide-line rounded-md border border-line bg-paper">
+              {booked.map((b) => (
+                <li key={b.id}>
+                  <Link to={`/trips/${trip.id}/bookings/${b.id}`} className="flex min-h-tap items-center justify-between gap-3 px-4 py-3 text-sm">
+                    <span className="min-w-0">
+                      <span className="block truncate font-medium text-ink">{b.title}</span>
+                      <span className="block text-xs text-muted">
+                        {inr(b.amount)} · {b.status === 'cancelled' ? `cancelled${b.refundInr ? `, ${inr(b.refundInr)} back` : ''}` : b.bookedViaApp ? 'booked in Voyage' : 'booked elsewhere'}
+                      </span>
+                    </span>
+                    <span className="shrink-0 text-xs font-medium text-ink underline underline-offset-4">{b.status === 'cancelled' ? 'Details' : 'Manage'}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null;
+      })()}
 
       <div className="px-gutter pt-6">
         {data.flights.length > 0 ? (

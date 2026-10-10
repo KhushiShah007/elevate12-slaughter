@@ -92,6 +92,7 @@ export async function seedAll(db: Db, log: Log = console.log) {
     }
     log(`destinations: ${dests.length}`);
     log(`cost index: ${await refreshCostIndex(db)} rows`);
+    log(`provider contacts: ${await seedProviderContacts(db)}`);
   }
 
   // Places from OpenStreetMap (hotels, attractions, restaurants).
@@ -149,6 +150,19 @@ export async function seedAll(db: Db, log: Log = console.log) {
   }
 }
 
+/** Provider support pages (official sites). Emails are left empty unless verified. */
+export async function seedProviderContacts(db: Db) {
+  const rows = await readJson<{ provider: string; name: string; kind: string; supportUrl: string }[]>('provider-contacts.json');
+  if (!rows) return 0;
+  for (const r of rows) {
+    await db
+      .insert(s.providerContacts)
+      .values({ ...r, email: null, phone: null, verified: false, source: 'manual: official website', sourceUrl: r.supportUrl, license: null })
+      .onConflictDoUpdate({ target: s.providerContacts.provider, set: { name: r.name, supportUrl: r.supportUrl } });
+  }
+  return rows.length;
+}
+
 /** Seed automatically the first time the server starts on an empty database. */
 export async function ensureSeeded(db: Db, log: Log = console.log) {
   const [{ n }] = await db.select({ n: count() }).from(s.destinations);
@@ -156,6 +170,8 @@ export async function ensureSeeded(db: Db, log: Log = console.log) {
     // Databases seeded before the cost index existed get it now.
     const [{ c }] = await db.select({ c: count() }).from(s.destinationCostIndex);
     if (c === 0) log(`cost index: ${await refreshCostIndex(db)} rows`);
+    const [{ p }] = await db.select({ p: count() }).from(s.providerContacts);
+    if (p === 0) log(`provider contacts: ${await seedProviderContacts(db)}`);
     return false;
   }
   log('Empty database: loading seed data…');

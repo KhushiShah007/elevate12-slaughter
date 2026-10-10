@@ -35,6 +35,9 @@ import Credits from './screens/Credits';
 import Destinations from './screens/destinations/Destinations';
 import DestinationDetail from './screens/destinations/DestinationDetail';
 import BudgetPlanner from './screens/budget/BudgetPlanner';
+import ManageBooking from './screens/bookings/ManageBooking';
+import RefundDetail, { RefundList } from './screens/bookings/Refunds';
+import Outbox from './screens/bookings/Outbox';
 
 export const router = createBrowserRouter([
   {
@@ -73,6 +76,10 @@ export const router = createBrowserRouter([
       { path: '/trips/:tripId/active', element: <ActiveTrip /> },
       { path: '/trips/:tripId/disruption/:type', element: <Disruption /> },
       { path: '/plan', element: <BudgetPlanner /> },
+      { path: '/trips/:tripId/bookings/:bookingId', element: <ManageBooking /> },
+      { path: '/refunds', element: <RefundList /> },
+      { path: '/refunds/:id', element: <RefundDetail /> },
+      { path: '/outbox', element: <Outbox /> },
       { path: '/destinations', element: <Destinations /> },
       { path: '/destinations/:slug', element: <DestinationDetail /> },
       { path: '/assistant', element: <Assistant /> },

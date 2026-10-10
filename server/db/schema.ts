@@ -321,6 +321,146 @@ export const bookings = pgTable('bookings', {
   provider: text('provider'),
   providerRef: text('provider_ref'),
   paymentStatus: text('payment_status'),
+  // Added for payments and cancellations (all nullable: additive).
+  clientId: text('client_id').unique(), // the booking's id on the device
+  kind: text('kind'), // flight | hotel | experience | transport
+  title: text('title'),
+  currency: text('currency').notNull().default('INR'),
+  paymentId: uuid('payment_id'),
+  source: text('source').notNull().default('in_app'), // in_app | external
+  pnr: text('pnr'),
+  startsAt: timestamp('starts_at', { withTimezone: true }),
+  cancellationPolicy: jsonb('cancellation_policy'),
+  details: jsonb('details'),
+  pointsUsed: integer('points_used').notNull().default(0),
+  refundedInr: integer('refunded_inr').notNull().default(0),
+  createdAt: created(),
+});
+
+/** One payment attempt (Razorpay order or the demo provider). Card details are never stored. */
+export const payments = pgTable('payments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  bookingId: uuid('booking_id').references(() => bookings.id, { onDelete: 'set null' }),
+  provider: text('provider').notNull(), // razorpay | mock
+  providerOrderId: text('provider_order_id').notNull().unique(),
+  providerPaymentId: text('provider_payment_id'),
+  amountInr: integer('amount_inr').notNull(),
+  currency: text('currency').notNull().default('INR'),
+  method: text('method'), // card | upi | netbanking …
+  status: text('status').notNull().default('created'), // created | paid | failed | refunded | partially_refunded
+  idempotencyKey: text('idempotency_key').notNull().unique(),
+  createdAt: created(),
+  updatedAt: updated(),
+});
+
+/** Every provider event, once (webhooks are retried, so the event id is unique). */
+export const paymentEvents = pgTable('payment_events', {
+  id: serial('id').primaryKey(),
+  paymentId: uuid('payment_id').references(() => payments.id, { onDelete: 'cascade' }),
+  providerEventId: text('provider_event_id').unique(),
+  type: text('type').notNull(),
+  payload: jsonb('payload'),
+  createdAt: created(),
+});
+
+export const cancellationRequests = pgTable('cancellation_requests', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  bookingId: uuid('booking_id').references(() => bookings.id, { onDelete: 'set null' }),
+  /** The booking as it was (also used for bookings made outside Voyage). */
+  booking: jsonb('booking').notNull(),
+  status: text('status').notNull().default('draft'),
+  reason: text('reason'),
+  refundMethod: text('refund_method'),
+  expectedBy: timestamp('expected_by', { withTimezone: true }),
+  providerRef: text('provider_ref'), // refund id or provider cancellation id
+  refundedInr: integer('refunded_inr').notNull().default(0),
+  autoFollowUp: boolean('auto_follow_up').notNull().default(false),
+  version: integer('version').notNull().default(1),
+  statusChangedAt: timestamp('status_changed_at', { withTimezone: true }).notNull().defaultNow(),
+  createdAt: created(),
+  updatedAt: updated(),
+});
+
+export const refundQuotes = pgTable('refund_quotes', {
+  id: serial('id').primaryKey(),
+  requestId: uuid('request_id')
+    .notNull()
+    .references(() => cancellationRequests.id, { onDelete: 'cascade' }),
+  refundInr: integer('refund_inr').notNull(),
+  feeInr: integer('fee_inr').notNull(),
+  components: jsonb('components').notNull(),
+  method: text('method').notNull(),
+  days: integer('days').notNull(),
+  source: text('source').notNull(), // rules | razorpay | duffel | amadeus | mock
+  notes: jsonb('notes'),
+  createdAt: created(),
+});
+
+/** Timeline and audit log of a cancellation. */
+export const refundEvents = pgTable('refund_events', {
+  id: serial('id').primaryKey(),
+  requestId: uuid('request_id')
+    .notNull()
+    .references(() => cancellationRequests.id, { onDelete: 'cascade' }),
+  type: text('type').notNull(), // status | email | note | suggestion | reply
+  fromStatus: text('from_status'),
+  toStatus: text('to_status'),
+  actor: text('actor').notNull(), // user | system | provider
+  note: text('note'),
+  data: jsonb('data'),
+  createdAt: created(),
+});
+
+/** Everything Voyage would send (email, SMS, WhatsApp, call, push). In demo mode it stops here. */
+export const outboundMessages = pgTable('outbound_emails', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  channel: text('channel').notNull().default('email'), // email | sms | whatsapp | voice | push
+  toAddress: text('to_address').notNull(), // masked for phone numbers
+  cc: text('cc'),
+  replyTo: text('reply_to'),
+  subject: text('subject'),
+  body: text('body').notNull(),
+  status: text('status').notNull().default('dry_run'), // dry_run | sent | failed
+  provider: text('provider'),
+  relatedType: text('related_type'), // cancellation | booking | notification
+  relatedId: text('related_id'),
+  createdAt: created(),
+  sentAt: timestamp('sent_at', { withTimezone: true }),
+});
+
+/** Support contacts for providers. Only details verified on the provider's own site. */
+export const providerContacts = pgTable('provider_contacts', {
+  id: serial('id').primaryKey(),
+  provider: text('provider').notNull().unique(),
+  name: text('name').notNull(),
+  kind: text('kind').notNull(), // airline | hotel | ota | rail | ride
+  supportUrl: text('support_url').notNull(),
+  email: text('email'),
+  phone: text('phone'),
+  verified: boolean('verified').notNull().default(false),
+  ...provenance,
+});
+
+/** Airline credit shells and vouchers issued instead of money back. */
+export const creditShells = pgTable('credit_shells', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  bookingId: uuid('booking_id').references(() => bookings.id, { onDelete: 'set null' }),
+  provider: text('provider').notNull(),
+  amountInr: integer('amount_inr').notNull(),
+  code: text('code'),
+  expiresOn: date('expires_on'),
   createdAt: created(),
 });
 

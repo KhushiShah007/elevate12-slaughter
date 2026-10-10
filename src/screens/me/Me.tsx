@@ -52,6 +52,17 @@ export default function Me() {
 
         <CardsEditor />
 
+        <section className="divide-y divide-line rounded-lg border border-line bg-paper">
+          {[
+            ['/refunds', 'Refunds and cancellations'],
+            ['/outbox', 'Outbox (emails and messages)'],
+          ].map(([to, label]) => (
+            <button key={to} onClick={() => navigate(to)} className="flex min-h-[3.5rem] w-full items-center justify-between px-4 text-ink">
+              {label} <ChevronRight size={18} className="text-muted" />
+            </button>
+          ))}
+        </section>
+
         <section>
           <h2 className="mb-2 text-lg">{t('me.sync')}</h2>
           <SyncStatus />

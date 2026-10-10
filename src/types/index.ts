@@ -60,6 +60,16 @@ export interface Booking {
   status: 'confirmed' | 'suggested' | 'cancelled';
   /** Money back after a cancellation (INR), once known. */
   refundInr?: number;
+  /** Paid in Voyage: the server's booking id (for receipts and refunds). */
+  serverBookingId?: string;
+  pointsUsed?: number;
+  /** Cancellation policy (see engines/refund). */
+  policy?: Record<string, unknown>;
+  startsAt?: string;
+  pnr?: string;
+  provider?: string;
+  /** Open cancellation request, if any. */
+  cancellationId?: string;
   bookedViaApp: boolean;
   simulated?: boolean; // prototype: confirmed without a real provider
   recoveryFor?: string; // which disruption this booking fixes (so it is not booked twice)

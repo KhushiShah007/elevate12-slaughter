@@ -1,0 +1,26 @@
+{
+  "_note": "Editable defaults for Indian air-ticket refunds, based on DGCA CAR Section 3 Series M Part II (passenger charter). Verify with the airline: rules and fees change.",
+  "verifyLabel": "Estimate based on DGCA rules and typical airline fees. Verify with the airline.",
+  "freeLook": {
+    "hours": 48,
+    "minDaysBeforeDomestic": 7,
+    "minDaysBeforeInternational": 15,
+    "onlyDirectBookings": true
+  },
+  "refundDays": {
+    "card": 7,
+    "upi": 7,
+    "netbanking": 7,
+    "cash": 0,
+    "agent": 30,
+    "creditShell": 0
+  },
+  "taxesAlwaysRefundable": true,
+  "feeCappedAtBaseFare": true,
+  "defaultFlightFeeTiers": [
+    { "hoursBeforeAtLeast": 96, "feeInr": 3000 },
+    { "hoursBeforeAtLeast": 24, "feeInr": 3500 },
+    { "hoursBeforeAtLeast": 2, "feeInr": 4000 }
+  ],
+  "noShowHoursBefore": 2
+}

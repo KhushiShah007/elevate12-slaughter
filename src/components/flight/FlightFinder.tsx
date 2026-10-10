@@ -10,6 +10,7 @@ import { removeOption, saveOption } from '../../db/repos/bookings';
 import { useAuth } from '../../state/auth';
 import { duration, inr } from '../../utils/format';
 import { PayHelp } from '../guide/PayHelp';
+import { BookSheet } from '../pay/BookSheet';
 import type { Booking, Trip } from '../../types';
 
 interface Offer {
@@ -91,6 +92,7 @@ export function FlightFinder({ trip, saved }: { trip: Trip; saved: Booking[] }) 
     setSavedIds((s) => new Set(s).add(o.id));
   };
 
+  const [toBook, setToBook] = useState<Booking | null>(null);
   const options = saved.filter((b) => b.kind === 'flight' && b.status === 'suggested');
 
   return (
@@ -177,17 +179,21 @@ export function FlightFinder({ trip, saved }: { trip: Trip; saved: Booking[] }) 
                 <span className="tabular-nums text-ink">
                   {b.details?.priceRange ? `${inr(b.details.priceRange[0])}–${inr(b.details.priceRange[1])}` : inr(b.amount)}
                 </span>
+                <button onClick={() => setToBook(b)} className="min-h-tap rounded-pill bg-ink px-3 text-xs font-medium text-ivory">
+                  Book
+                </button>
                 <button onClick={() => void removeOption(b)} aria-label={`Remove ${b.title}`} className="grid min-h-tap min-w-[2.75rem] place-items-center text-muted">
                   <Trash2 size={16} />
                 </button>
               </span>
             </div>
           ))}
-          <p className="text-xs text-muted">Totals are for all {trip.travellers} travellers. Saved options are not bookings.</p>
+          <p className="text-xs text-muted">Totals are for all {trip.travellers} travellers. Saved options are not bookings until you tap Book.</p>
           <p className="pt-1 text-xs font-medium text-ink">Pay less on the cheapest saved option ({inr(Math.min(...options.map((o) => o.amount)))}):</p>
           <PayHelp amount={Math.min(...options.map((o) => o.amount))} kind="flight" />
         </div>
       )}
+      {toBook && <BookSheet trip={trip} booking={toBook} onClose={() => setToBook(null)} onBooked={() => undefined} />}
     </section>
   );
 }

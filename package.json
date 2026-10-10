@@ -14,7 +14,8 @@
     "pipeline:destinations": "tsx data-pipeline/destinations.ts",
     "pipeline:places": "tsx data-pipeline/osm-places.ts",
     "pipeline:images": "tsx data-pipeline/images.ts",
-    "refresh:cost-index": "tsx server/seed/refresh-cost-index.ts"
+    "refresh:cost-index": "tsx server/seed/refresh-cost-index.ts",
+    "dev:qa": "vite --port 5174 --strictPort --mode qa"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.2.14",
