@@ -95,7 +95,11 @@ export async function seedAll(db: Db, log: Log = console.log) {
     log(`provider contacts: ${await seedProviderContacts(db)}`);
   }
 
-  // Places from OpenStreetMap (hotels, attractions, restaurants).
+  await seedPlaces(db, log);
+}
+
+/** Places from OpenStreetMap (hotels, attractions, restaurants); updates details on re-run. */
+export async function seedPlaces(db: Db, log: Log = console.log) {
   type Place = Record<string, unknown> & { destinationSlug: string; externalId: string; name: string };
   const places = await readJson<{ hotels: Place[]; attractions: Place[]; restaurants: Place[] }>('places.json');
   if (places) {
@@ -132,17 +136,21 @@ export async function seedAll(db: Db, log: Log = console.log) {
         )
         .onConflictDoUpdate({ target: [s.hotelsCache.provider, s.hotelsCache.externalId], set: { kind: sql`excluded.kind`, stars: sql`excluded.stars` } }),
     );
-    await inChunks(places.attractions.filter(known), 300, (chunk) =>
+    const once = (rows: Place[]) => {
+      const seen = new Set<string>();
+      return rows.filter((p) => known(p) && !seen.has(p.externalId) && seen.add(p.externalId));
+    };
+    await inChunks(once(places.attractions), 300, (chunk) =>
       db
         .insert(s.attractions)
-        .values(chunk.map((p) => ({ ...common(p), category: p.category as string, openingHours: p.openingHours as string | null, fee: p.fee as string | null, description: p.description as string | null })))
-        .onConflictDoNothing(),
+        .values(chunk.map((p) => ({ ...common(p), category: p.category as string, openingHours: p.openingHours as string | null, fee: p.fee as string | null, description: p.description as string | null, famous: Boolean(p.famous), website: (p.website as string) ?? null, phone: (p.phone as string) ?? null })))
+        .onConflictDoUpdate({ target: [s.attractions.source, s.attractions.externalId], set: { famous: sql`excluded.famous`, website: sql`excluded.website`, phone: sql`excluded.phone`, description: sql`excluded.description` } }),
     );
-    await inChunks(places.restaurants.filter(known), 300, (chunk) =>
+    await inChunks(once(places.restaurants), 300, (chunk) =>
       db
         .insert(s.restaurants)
-        .values(chunk.map((p) => ({ ...common(p), cuisine: p.cuisine as string | null, vegetarian: p.vegetarian as boolean | null, openingHours: p.openingHours as string | null })))
-        .onConflictDoNothing(),
+        .values(chunk.map((p) => ({ ...common(p), cuisine: p.cuisine as string | null, vegetarian: p.vegetarian as boolean | null, openingHours: p.openingHours as string | null, diets: (p.diets as string[]) ?? [], website: (p.website as string) ?? null, phone: (p.phone as string) ?? null, reservation: (p.reservation as string) ?? null })))
+        .onConflictDoUpdate({ target: [s.restaurants.source, s.restaurants.externalId], set: { diets: sql`excluded.diets`, website: sql`excluded.website`, phone: sql`excluded.phone`, reservation: sql`excluded.reservation` } }),
     );
     log(`places: ${places.hotels.length} hotels, ${places.attractions.length} attractions, ${places.restaurants.length} restaurants`);
   } else {
@@ -170,6 +178,9 @@ export async function ensureSeeded(db: Db, log: Log = console.log) {
     // Databases seeded before the cost index existed get it now.
     const [{ c }] = await db.select({ c: count() }).from(s.destinationCostIndex);
     if (c === 0) log(`cost index: ${await refreshCostIndex(db)} rows`);
+    // Seeded before place details existed: load them (famous, websites, phones, diets).
+    const [{ f }] = await db.select({ f: count() }).from(s.attractions).where(sql`${s.attractions.famous} = true`);
+    if (f === 0) await seedPlaces(db, log);
     const [{ p }] = await db.select({ p: count() }).from(s.providerContacts);
     if (p === 0) log(`provider contacts: ${await seedProviderContacts(db)}`);
     return false;

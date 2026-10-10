@@ -66,3 +66,22 @@ describe('getting around', () => {
     expect((await get('/airports/JAI')).body.airport.city).toBe('Jaipur');
   });
 });
+
+describe('experience and restaurant details', () => {
+  it('marks famous sights and hidden gems, with booking search links and diet tags', async () => {
+    const { body } = await get('/destinations/jaipur/guide');
+    expect(body.see.some((p: { famous: boolean }) => p.famous)).toBe(true);
+    const gem = body.see.find((p: { famous: boolean; nicheScore: number }) => !p.famous && p.nicheScore >= 0.5);
+    expect(gem).toBeTruthy();
+    expect(body.see[0].bookingOptions.map((b: { provider: string }) => b.provider)).toEqual(expect.arrayContaining(['GetYourGuide', 'Viator', 'Klook', 'Airbnb Experiences']));
+    expect(body.see[0].directionsUrl ?? body.see[0].mapUrl).toMatch(/^https:/);
+    for (const r of body.eat) expect(Array.isArray(r.diets)).toBe(true);
+  });
+
+  it('scores niche places from ratings when available', async () => {
+    const { nicheScore } = await import('../guide');
+    expect(nicheScore(false, 4.8, 120, true)).toBeGreaterThan(0.7);
+    expect(nicheScore(false, 4.8, 5000, true)).toBe(0);
+    expect(nicheScore(true, 4.9, 50, true)).toBe(0.1);
+  });
+});

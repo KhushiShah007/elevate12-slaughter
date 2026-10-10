@@ -14,5 +14,5 @@
     "noEmit": true,
     "types": ["vite/client", "vite-plugin-pwa/client", "node"]
   },
-  "include": ["src", "api", "server", "data-pipeline", "tailwind.config.ts", "vite.config.ts", "drizzle.config.ts"]
+  "include": ["src", "api", "server", "data-pipeline", "tailwind.config.ts", "vite.config.ts", "drizzle.config.ts", "vitest.config.ts"]
 }

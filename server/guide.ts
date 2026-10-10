@@ -26,6 +26,22 @@ export interface GuidePlace {
   ratingCount: number | null;
   reviewsUrl: string;
   mapUrl: string;
+  directionsUrl: string | null;
+  website: string | null;
+  phone: string | null;
+  description: string | null;
+  // Experiences
+  famous: boolean;
+  /** 0..1: well-loved but little-known (high rating, few reviews; or documented local spot). */
+  nicheScore: number;
+  indoor: boolean;
+  intensity: number; // 1..5
+  durationMin: number;
+  bestTime: string | null;
+  bookingOptions: { provider: string; url: string }[];
+  // Restaurants
+  diets: string[];
+  reservationUrl: string | null;
 }
 
 export interface Guide {
@@ -51,6 +67,29 @@ export function entryFrom(fee: string | null): 'free' | 'paid' | null {
   if (!fee) return null;
   if (/^no$/i.test(fee.trim())) return 'free';
   return 'paid';
+}
+
+const INDOOR = new Set(['museum', 'gallery']);
+const INTENSITY: Record<string, number> = { museum: 2, gallery: 2, monument: 2, attraction: 2, artwork: 1, castle: 4, fort: 4, ruins: 3, archaeological_site: 3, viewpoint: 3, zoo: 3, theme_park: 4 };
+const DURATION: Record<string, number> = { museum: 90, gallery: 60, monument: 45, attraction: 60, castle: 120, fort: 120, ruins: 75, archaeological_site: 90, viewpoint: 45, zoo: 150, theme_park: 180 };
+const BEST: Record<string, string> = { viewpoint: 'Sunset', fort: 'Early morning (cooler, fewer people)', castle: 'Morning', ruins: 'Morning', museum: 'Any time (indoors)', gallery: 'Any time (indoors)', zoo: 'Morning' };
+
+/** Search links on experience sites (no partner keys needed); disclosed as possible affiliate links. */
+export function experienceLinks(name: string, city: string, website: string | null) {
+  const q = encodeURIComponent(`${name} ${city}`);
+  return [
+    ...(website ? [{ provider: 'Official website', url: website }] : []),
+    { provider: 'GetYourGuide', url: `https://www.getyourguide.com/s/?q=${q}` },
+    { provider: 'Viator', url: `https://www.viator.com/searchResults/all?text=${q}` },
+    { provider: 'Klook', url: `https://www.klook.com/search/result/?query=${q}` },
+    { provider: 'Airbnb Experiences', url: `https://www.airbnb.co.in/s/${encodeURIComponent(city)}/experiences` },
+  ];
+}
+
+/** Hidden-gem score: with ratings, high stars and few reviews; without, documented but not famous. */
+export function nicheScore(famous: boolean, rating: number | null, count: number | null, documented: boolean) {
+  if (rating != null && count != null) return famous ? 0.1 : Math.max(0, Math.min(1, ((rating - 4) / 1) * (1 - Math.min(count, 2000) / 2000)));
+  return famous ? 0 : documented ? 0.6 : 0.4;
 }
 
 const mapsSearch = (name: string, city: string) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${name}, ${city}`)}`;
@@ -116,6 +155,19 @@ export async function buildGuide(slug: string, style: Style): Promise<Guide | nu
     ratingCount: null,
     reviewsUrl: mapsSearch(a.name, d.name),
     mapUrl: osmPoint(a.lat, a.lon, a.name, d.name),
+    directionsUrl: a.lat != null && a.lon != null ? `https://www.google.com/maps/dir/?api=1&destination=${a.lat},${a.lon}` : null,
+    website: a.website,
+    phone: a.phone,
+    description: a.description,
+    famous: a.famous,
+    nicheScore: nicheScore(a.famous, null, null, Boolean(a.website || a.openingHours)),
+    indoor: INDOOR.has(a.category ?? ''),
+    intensity: INTENSITY[a.category ?? ''] ?? 2,
+    durationMin: DURATION[a.category ?? ''] ?? 60,
+    bestTime: BEST[a.category ?? ''] ?? null,
+    bookingOptions: experienceLinks(a.name, d.name, a.website),
+    diets: [],
+    reservationUrl: null,
   }));
   const eat: GuidePlace[] = unique(restaurants).map((r) => {
     const kind = eateryKind(r.cuisine);
@@ -135,6 +187,19 @@ export async function buildGuide(slug: string, style: Style): Promise<Guide | nu
       ratingCount: null,
       reviewsUrl: mapsSearch(r.name, d.name),
       mapUrl: osmPoint(r.lat, r.lon, r.name, d.name),
+      directionsUrl: r.lat != null && r.lon != null ? `https://www.google.com/maps/dir/?api=1&destination=${r.lat},${r.lon}` : null,
+      website: r.website,
+      phone: r.phone,
+      description: null,
+      famous: false,
+      nicheScore: 0,
+      indoor: true,
+      intensity: 1,
+      durationMin: kind === 'cafe' ? 45 : 75,
+      bestTime: null,
+      bookingOptions: [],
+      diets: r.diets?.length ? r.diets : r.vegetarian ? ['veg'] : [],
+      reservationUrl: r.reservation && r.reservation !== 'no' ? (r.website ?? null) : null,
     };
   });
 
@@ -148,6 +213,7 @@ export async function buildGuide(slug: string, style: Style): Promise<Guide | nu
       targets[i].rating = r.value.rating;
       targets[i].ratingCount = r.value.count;
       if (r.value.url) targets[i].reviewsUrl = r.value.url;
+      if (targets[i].kind === 'see') targets[i].nicheScore = nicheScore(targets[i].famous, r.value.rating, r.value.count, true);
     });
     if (results.some((r) => r.status === 'fulfilled')) ratingsFrom = 'google';
   }

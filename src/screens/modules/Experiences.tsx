@@ -10,7 +10,8 @@ import { useGuide } from '../../hooks/useGuide';
 import { allowanceFor } from '../../hooks/useAllowance';
 import { defaultPersona, orderExperiences } from '../../engines/persona';
 import { useT, type MessageKey } from '../../i18n';
-import type { Trip } from '../../types';
+import type { Booking, Trip } from '../../types';
+import { stayOrigin } from '../../hooks/useAllowance';
 
 const pastels: Pastel[] = ['rose', 'lavender', 'mint', 'butter'];
 
@@ -21,7 +22,7 @@ export default function Experiences() {
 
   return (
     <ModuleFrame module="experiences" title="Experiences" sub={sub}>
-      {({ trip, experiences }) => (
+      {({ trip, experiences, bookings }) => (
         <div className="space-y-6 pb-8">
           {experiences.length > 0 && (
             <div className="grid grid-cols-2 gap-x-4 gap-y-5 pt-1">
@@ -45,7 +46,7 @@ export default function Experiences() {
               ))}
             </div>
           )}
-          <CitySights trip={trip} />
+          <CitySights trip={trip} bookings={bookings} />
         </div>
       )}
     </ModuleFrame>
@@ -53,7 +54,7 @@ export default function Experiences() {
 }
 
 /** Real places to see in the trip's city, ordered for the traveller. */
-function CitySights({ trip }: { trip: Trip }) {
+function CitySights({ trip, bookings }: { trip: Trip; bookings: Booking[] }) {
   const p = usePersona();
   const { guide, style, offline } = useGuide(trip);
   if (guide === undefined) return <p className="text-sm text-muted">Finding things to do in {trip.to}…</p>;
@@ -61,7 +62,7 @@ function CitySights({ trip }: { trip: Trip }) {
   return (
     <section className="space-y-3">
       <h2 className="text-xl">Things to do in {guide.destination.name}</h2>
-      <PlaceList guide={guide} kind="see" persona={p?.persona ?? defaultPersona()} pastels={['lavender', 'mint', 'rose', 'butter']} allowance={allowanceFor(trip, guide, style)} tripId={trip.sample ? null : trip.id} />
+      <PlaceList guide={guide} kind="see" persona={p?.persona ?? defaultPersona()} pastels={['lavender', 'mint', 'rose', 'butter']} allowance={allowanceFor(trip, guide, style)} tripId={trip.sample ? null : trip.id} origin={stayOrigin(bookings)} />
     </section>
   );
 }

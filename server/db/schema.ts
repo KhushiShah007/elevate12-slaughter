@@ -209,6 +209,9 @@ export const attractions = pgTable(
     description: text('description'),
     openingHours: text('opening_hours'),
     fee: text('fee'),
+    famous: boolean('famous').notNull().default(false),
+    website: text('website'),
+    phone: text('phone'),
   },
   (t) => [index('attractions_dest_idx').on(t.destinationId), uniqueIndex('attractions_ext_idx').on(t.source, t.externalId)],
 );
@@ -221,6 +224,10 @@ export const restaurants = pgTable(
     priceLevel: integer('price_level'),
     vegetarian: boolean('vegetarian'),
     openingHours: text('opening_hours'),
+    diets: text('diets').array().notNull().default(sql`'{}'::text[]`),
+    website: text('website'),
+    phone: text('phone'),
+    reservation: text('reservation'),
   },
   (t) => [index('restaurants_dest_idx').on(t.destinationId), uniqueIndex('restaurants_ext_idx').on(t.source, t.externalId)],
 );

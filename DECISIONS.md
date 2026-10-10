@@ -27,3 +27,7 @@ One line each, in the order they were made.
 - Real-time sync: Server-Sent Events from the API plus a 60 s poll fallback (serverless hosts cut long streams); version numbers reject stale writes (409).
 - Vegetarian travellers: places marked vegetarian first, untagged places allowed (most OSM listings have no diet tag), places tagged non-vegetarian never.
 - Dev server applies new migration files on the next request (no restart needed); a dev server started before that code needs one restart.
+- Famous vs hidden gem: famous = the OpenStreetMap place has a Wikipedia/Wikidata link; niche score = high rating with few reviews when Google ratings exist, else 0.6 for documented non-famous places. Reddit/Foursquare/OpenTripMap signals not added (keys/approval).
+- Experience booking links are search deep links (GetYourGuide, Viator, Klook, Airbnb Experiences, official site) with an affiliate disclosure; partner APIs need approval.
+- Restaurant diet tags (veg/vegan/Jain/halal), phone, website and reservation come from OSM tags (re-derived from the cached downloads, no new fetching); signature dishes are not shown (no open source).
+- Test runner limited to 3 parallel files (each server test boots an in-memory Postgres with seed data).

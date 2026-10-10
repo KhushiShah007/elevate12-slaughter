@@ -26,6 +26,19 @@ export interface GuidePlace {
   ratingCount: number | null;
   reviewsUrl: string;
   mapUrl: string;
+  directionsUrl: string | null;
+  website: string | null;
+  phone: string | null;
+  description: string | null;
+  famous: boolean;
+  nicheScore: number;
+  indoor: boolean;
+  intensity: number;
+  durationMin: number;
+  bestTime: string | null;
+  bookingOptions: { provider: string; url: string }[];
+  diets: string[];
+  reservationUrl: string | null;
 }
 
 export interface Guide {

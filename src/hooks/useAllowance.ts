@@ -25,3 +25,9 @@ export function allowanceFor(trip: Trip, guide: Guide | null | undefined, style:
   // Same shares as the server's cost index (stay 45%, food 30%, local 12%, activities 13%).
   return { source: 'style', food: Math.round(c * 0.3), meal: Math.round(c * 0.15), local: Math.round(c * 0.12), activities: Math.round(c * 0.13), stayPerNight: Math.round(c * 0.45 * 2) };
 }
+
+/** Where to measure distances from: the saved or booked stay, if it has coordinates. */
+export function stayOrigin(bookings: { kind: string; status: string; title: string; details?: { lat?: number | null; lon?: number | null } }[]) {
+  const stay = bookings.find((b) => b.kind === 'hotel' && b.status !== 'cancelled' && b.details?.lat != null && b.details?.lon != null);
+  return stay ? { lat: stay.details!.lat!, lon: stay.details!.lon!, label: stay.title } : null;
+}

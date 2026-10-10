@@ -9,7 +9,8 @@ import { allowanceFor } from '../../hooks/useAllowance';
 import { defaultPersona, orderRestaurants } from '../../engines/persona';
 import { budgetStyleLabel } from '../../engines/personalize';
 import { useT } from '../../i18n';
-import type { Restaurant, Trip } from '../../types';
+import type { Booking, Restaurant, Trip } from '../../types';
+import { stayOrigin } from '../../hooks/useAllowance';
 
 export default function Restaurants() {
   const p = usePersona();
@@ -18,7 +19,7 @@ export default function Restaurants() {
 
   return (
     <ModuleFrame module="restaurants" title="Restaurants & Cafes" sub={vegFirst ? t('effect.veg') : undefined}>
-      {({ trip, restaurants }) => (
+      {({ trip, restaurants, bookings }) => (
         <div className="space-y-6 pb-8">
           {restaurants.length > 0 && (
             <div className="space-y-3">
@@ -27,7 +28,7 @@ export default function Restaurants() {
               ))}
             </div>
           )}
-          <CityEateries trip={trip} />
+          <CityEateries trip={trip} bookings={bookings} />
         </div>
       )}
     </ModuleFrame>
@@ -63,7 +64,7 @@ function SavedRestaurant({ r, i, vegFirst, jain }: { r: Restaurant; i: number; v
 }
 
 /** Real places to eat in the trip's city, priced for the traveller's budget. */
-function CityEateries({ trip }: { trip: Trip }) {
+function CityEateries({ trip, bookings }: { trip: Trip; bookings: Booking[] }) {
   const p = usePersona();
   const { guide, style, offline } = useGuide(trip);
   if (guide === undefined) return <p className="text-sm text-muted">Finding places to eat in {trip.to}…</p>;
@@ -72,7 +73,7 @@ function CityEateries({ trip }: { trip: Trip }) {
     <section className="space-y-3">
       <h2 className="text-xl">Places to eat in {guide.destination.name}</h2>
       <p className="-mt-2 text-xs text-muted">Prices for a {budgetStyleLabel[style].toLowerCase()} budget, per person per meal.</p>
-      <PlaceList guide={guide} kind="eat" persona={p?.persona ?? defaultPersona()} pastels={['butter', 'peach']} allowance={allowanceFor(trip, guide, style)} tripId={trip.sample ? null : trip.id} />
+      <PlaceList guide={guide} kind="eat" persona={p?.persona ?? defaultPersona()} pastels={['butter', 'peach']} allowance={allowanceFor(trip, guide, style)} tripId={trip.sample ? null : trip.id} origin={stayOrigin(bookings)} />
     </section>
   );
 }

@@ -110,6 +110,10 @@ async function main() {
         openingHours: e.tags.opening_hours ?? null,
         fee: e.tags.fee ?? null,
         description: e.tags.description ?? null,
+        // Famous: has a Wikipedia / Wikidata entry. Everything else is a candidate hidden gem.
+        famous: Boolean(e.tags.wikidata || e.tags.wikipedia),
+        website: e.tags.website ?? e.tags['contact:website'] ?? null,
+        phone: e.tags.phone ?? e.tags['contact:phone'] ?? null,
       });
     }
     for (const e of r) {
@@ -124,6 +128,15 @@ async function main() {
         cuisine: e.tags.cuisine?.replace(/;/g, ', ').replace(/_/g, ' ') ?? (e.tags.amenity === 'cafe' ? 'cafe' : null),
         vegetarian: diet === 'only' || diet === 'yes' ? true : diet === 'no' ? false : null,
         openingHours: e.tags.opening_hours ?? null,
+        diets: [
+          (diet === 'only' || diet === 'yes') && 'veg',
+          /^(only|yes)$/.test(e.tags['diet:vegan'] ?? '') && 'vegan',
+          /^(only|yes)$/.test(e.tags['diet:jain'] ?? '') && 'jain',
+          /^(only|yes)$/.test(e.tags['diet:halal'] ?? '') && 'halal',
+        ].filter(Boolean),
+        website: e.tags.website ?? e.tags['contact:website'] ?? null,
+        phone: e.tags.phone ?? e.tags['contact:phone'] ?? null,
+        reservation: e.tags.reservation ?? null,
       });
     }
     console.log(`${d.name.padEnd(18)} hotels ${h.length}, attractions ${a.length}, restaurants ${r.length}`);
