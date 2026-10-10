@@ -620,6 +620,12 @@ function normalizeDbUrl(raw) {
     u = `${scheme}${user}:${encodeURIComponent(plain)}@${rest}`;
   }
   if (/\[YOUR-PASSWORD\]/i.test(raw ?? "") || /%5BYOUR-PASSWORD%5D/i.test(u)) throw new Error("DATABASE_URL still contains the [YOUR-PASSWORD] placeholder. Put your real database password there.");
+  if (!/^postgres(?:ql)?:\/\//i.test(u)) {
+    const scheme = u.match(/^([a-z]+):\/\//i)?.[1];
+    throw new Error(
+      scheme ? `DATABASE_URL starts with "${scheme}://" but must start with "postgresql://". Use the database connection string (Supabase: Connect -> Transaction pooler), not the project URL.` : 'DATABASE_URL must start with "postgresql://". Use the database connection string (Supabase: Connect -> Transaction pooler).'
+    );
+  }
   return u;
 }
 async function connect() {
@@ -5399,7 +5405,7 @@ app.use("*", async (c, next) => {
 });
 var seeded = null;
 var startupError = null;
-var redact = (err) => String(err?.message ?? err).replace(/[a-z]+:\/\/\S+/gi, "[url]").replace(/password\S*/gi, "[redacted]").slice(0, 300);
+var redact = (err) => String(err?.message ?? err).replace(/[a-z]+:\/\/[^\s"]+/gi, (m2) => m2.endsWith("://") ? m2 : "[url]").replace(/password\S*/gi, "[redacted]").slice(0, 300);
 app.use("*", async (c, next) => {
   seeded ??= getDb().catch((err) => {
     startupError = { stage: "connect", reason: redact(err) };
@@ -5419,7 +5425,7 @@ app.use("*", async (c, next) => {
   try {
     await seeded;
   } catch {
-    return c.json({ error: { code: "database_unavailable", message: "The database is not ready.", ...startupError ?? {} } }, 503);
+    return c.json({ error: { code: "database_unavailable", message: "The database is not ready.", ...startupError ?? {}, build: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) } }, 503);
   }
   await next();
 });

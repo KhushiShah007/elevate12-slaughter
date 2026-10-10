@@ -36,6 +36,14 @@ export function normalizeDbUrl(raw: string | undefined): string | undefined {
     u = `${scheme}${user}:${encodeURIComponent(plain)}@${rest}`;
   }
   if (/\[YOUR-PASSWORD\]/i.test(raw ?? '') || /%5BYOUR-PASSWORD%5D/i.test(u)) throw new Error('DATABASE_URL still contains the [YOUR-PASSWORD] placeholder. Put your real database password there.');
+  if (!/^postgres(?:ql)?:\/\//i.test(u)) {
+    const scheme = u.match(/^([a-z]+):\/\//i)?.[1];
+    throw new Error(
+      scheme
+        ? `DATABASE_URL starts with "${scheme}://" but must start with "postgresql://". Use the database connection string (Supabase: Connect -> Transaction pooler), not the project URL.`
+        : 'DATABASE_URL must start with "postgresql://". Use the database connection string (Supabase: Connect -> Transaction pooler).',
+    );
+  }
   return u;
 }
 

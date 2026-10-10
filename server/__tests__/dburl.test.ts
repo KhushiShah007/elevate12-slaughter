@@ -15,3 +15,9 @@ describe('DATABASE_URL clean-up', () => {
     expect(() => normalizeDbUrl('postgresql://postgres:[YOUR-PASSWORD]@db.x.supabase.co:5432/postgres')).toThrow(/placeholder/);
   });
 });
+
+describe('DATABASE_URL wrong kind', () => {
+  it('says when the project URL was pasted', () => {
+    expect(() => normalizeDbUrl('https://abc.supabase.co')).toThrow(/starts with "https:\/\/"/);
+  });
+});

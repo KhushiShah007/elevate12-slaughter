@@ -35,7 +35,7 @@ let startupError: { stage: 'connect' | 'seed'; reason: string } | null = null;
 // Safe to show: drops anything that looks like a connection string or credential.
 const redact = (err: unknown) =>
   String((err as Error)?.message ?? err)
-    .replace(/[a-z]+:\/\/\S+/gi, '[url]')
+    .replace(/[a-z]+:\/\/[^\s"]+/gi, (m) => (m.endsWith('://') ? m : '[url]'))
     .replace(/password\S*/gi, '[redacted]')
     .slice(0, 300);
 app.use('*', async (c, next) => {
@@ -62,7 +62,7 @@ app.use('*', async (c, next) => {
     await seeded;
   } catch {
     // Say what is wrong (database not reachable, not set, seed failed) so a deploy can be fixed.
-    return c.json({ error: { code: 'database_unavailable', message: 'The database is not ready.', ...(startupError ?? {}) } }, 503);
+    return c.json({ error: { code: 'database_unavailable', message: 'The database is not ready.', ...(startupError ?? {}), build: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) } }, 503);
   }
   await next();
 });
