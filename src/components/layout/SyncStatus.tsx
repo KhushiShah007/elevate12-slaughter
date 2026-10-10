@@ -1,9 +1,26 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { isStoragePersisted } from '../../db/persist';
 import { AlertTriangle, CheckCircle2, CloudUpload, RefreshCw } from 'lucide-react';
 import { useSyncStatus } from '../../hooks/useSyncStatus';
 import { replay } from '../../db/syncQueue';
 import { localTime } from '../../utils/format';
 import { ConflictSheet } from './ConflictSheet';
+
+/** Whether the browser promised to keep this app's data (null = it can't tell us). */
+export function StorageNote() {
+  const [kept, setKept] = useState<boolean | null>(null);
+  useEffect(() => {
+    void isStoragePersisted().then(setKept);
+  }, []);
+  if (kept === null) return null;
+  return (
+    <p className="mt-2 px-1 text-xs text-muted">
+      {kept
+        ? 'This phone has promised to keep your trips and documents.'
+        : 'Your browser may clear saved trips if storage runs low. Add Voyage to your home screen to keep them safe.'}
+    </p>
+  );
+}
 
 /** One line on sync state: saved on device, waiting to sync, or needs a decision. */
 export function SyncStatus() {

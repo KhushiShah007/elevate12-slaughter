@@ -21,6 +21,7 @@ import './design/global.css';
 import App from './App';
 import { ensureSeeded } from './db/seed';
 import { startSync } from './db/syncQueue';
+import { requestPersistentStorage } from './db/persist';
 
 // Dev only: ?noanim jumps every animation to its end state, for screenshot checks.
 if (import.meta.env.DEV && new URLSearchParams(location.search).has('noanim')) {
@@ -36,6 +37,7 @@ ensureSeeded()
   .catch((err) => console.error('Could not prepare on-device storage', err))
   .finally(() => {
     startSync();
+    void requestPersistentStorage();
     root.render(
       <StrictMode>
         <App />

@@ -1,5 +1,6 @@
 import { db } from './db';
 import { pushToServer } from './mockServer';
+import { sameMeaning } from './merge';
 import type { SyncEntry, SyncTable } from '../types';
 
 type Rev = { rev?: number };
@@ -57,6 +58,13 @@ async function settle(entry: SyncEntry, result: Awaited<ReturnType<typeof pushTo
   const table = tableOf(entry.table);
   await db.transaction('rw', table, db.syncQueue, db.meta, async () => {
     if (result.kind === 'conflict') {
+      if (sameMeaning(entry.payload, result.serverPayload)) {
+        // Both versions say the same thing: take the server's copy quietly, no question needed.
+        await table.put({ ...(result.serverPayload as object), rev: result.serverRev });
+        await db.syncQueue.delete(entry.seq!);
+        await db.meta.put({ key: 'lastSyncedAt', value: new Date().toISOString() });
+        return;
+      }
       await db.syncQueue.update(entry.seq!, { status: 'conflict', serverPayload: result.serverPayload, serverRev: result.serverRev });
       return;
     }

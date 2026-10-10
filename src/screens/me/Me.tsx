@@ -7,7 +7,7 @@ import { PageHeader } from '../../components/layout/PageHeader';
 import { StampCard } from '../../components/cards/StampCard';
 import { Toggle } from '../../components/ui/Toggle';
 import { Chip } from '../../components/ui/Chip';
-import { SyncStatus } from '../../components/layout/SyncStatus';
+import { StorageNote, SyncStatus } from '../../components/layout/SyncStatus';
 import { num } from '../../utils/format';
 
 const languages: { value: Language; label: string }[] = [
@@ -57,6 +57,7 @@ export default function Me() {
         <section>
           <h2 className="mb-2 text-lg">Sync</h2>
           <SyncStatus />
+          <StorageNote />
         </section>
 
         <section className="rounded-lg border border-line bg-paper p-4">

@@ -38,7 +38,10 @@ async function seed() {
 export async function ensureSeeded() {
   const version = await db.meta.get('dataVersion');
   if (version?.value === DATA_VERSION) return;
+  // New sample data: start the device and the simulated server from the same clean state,
+  // or old server records would clash with the fresh device data.
   await Promise.all(db.tables.map((t) => t.clear()));
+  resetMockServer();
   await seed();
 }
 
