@@ -6,7 +6,8 @@ import { recoveryCandidates } from '../../data/sampleDisruptions';
 import type { DisruptionType, RecheckResult } from '../../types';
 import type { TripBundle } from '../../db/repos/trips';
 import { rankOptions, recheckRows, withRecheck, type RankContext } from '../../engines/ranking';
-import { confirmRecovery } from '../../db/repos/bookings';
+import { confirmRecovery, getChosenRecovery } from '../../db/repos/bookings';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { recheckWithProvider } from '../../db/mockProvider';
 import { useOnline } from '../../hooks/useOnline';
 import { useReworded } from '../../hooks/useReworded';
@@ -23,14 +24,17 @@ type Stage = 'choose' | 'checking' | 'rechecked' | 'confirmed';
 const wordingLabel = { ai: 'Reasons worded by AI (Groq)', cache: 'AI wording, saved on phone', template: 'Reasons worded on this phone' };
 
 /** Ranked options -> recheck with the provider -> confirm. Nothing is applied before confirm. */
-export function RecoveryOptions({ bundle, type }: { bundle: TripBundle; type: DisruptionType }) {
+export function RecoveryOptions({ bundle, type, fixKey }: { bundle: TripBundle; type: DisruptionType; fixKey: string }) {
   const navigate = useNavigate();
   const online = useOnline();
   const [rechecks, setRechecks] = useState<Record<string, RecheckResult>>({});
   const [stage, setStage] = useState<Stage>('choose');
   const [error, setError] = useState<string | null>(null);
 
-  const candidates = useMemo(() => recoveryCandidates.filter((c) => c.appliesTo.includes(type)), [type]);
+  const tripId = bundle.trip.id;
+  const candidates = useMemo(() => recoveryCandidates.filter((c) => c.tripId === tripId && c.appliesTo.includes(type)), [tripId, type]);
+  // undefined while loading; null when nothing has been chosen for this disruption yet.
+  const already = useLiveQuery(() => getChosenRecovery(tripId, fixKey), [tripId, fixKey]);
   const ctx: RankContext = useMemo(
     () => ({
       travellers: bundle.trip.travellers,
@@ -77,6 +81,30 @@ export function RecoveryOptions({ bundle, type }: { bundle: TripBundle; type: Di
       setStage('choose');
     }
   };
+
+  if (already === undefined) return null;
+
+  if (!candidates.length) {
+    return (
+      <p className="rounded-lg border border-line bg-paper p-4 text-sm leading-relaxed text-espresso">
+        No sample recovery options for this trip. In the full app, live alternatives from airlines and hotels would appear here.
+      </p>
+    );
+  }
+
+  // Already fixed: show the plan instead of offering to book it again.
+  if (already && stage !== 'confirmed') {
+    return (
+      <section className="flex items-start gap-4 rounded-lg border border-line bg-mint p-4">
+        <StampThump label="Chosen" sub="simulated" tone="ok" size="md" />
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted">Your plan for this</p>
+          <p className="mt-1 font-display text-lg leading-snug text-ink">{already.title}</p>
+          <p className="mt-1 text-sm text-espresso">Paid {inr(already.amount)} · simulated booking, saved on this phone.</p>
+        </div>
+      </section>
+    );
+  }
 
   if (stage === 'confirmed' && chosen) {
     return (
@@ -185,7 +213,7 @@ export function RecoveryOptions({ bundle, type }: { bundle: TripBundle; type: Di
                   <PillButton
                     onClick={async () => {
                       if (!chosen) return;
-                      await confirmRecovery(bundle.trip.id, chosen.candidate.title, chosen.newSpend);
+                      await confirmRecovery(bundle.trip.id, chosen.candidate.title, chosen.newSpend, fixKey);
                       setStage('confirmed');
                     }}
                   >

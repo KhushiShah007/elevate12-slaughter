@@ -228,3 +228,14 @@ export function runCascade(input: CascadeInput, event: CascadeEvent | null): Cas
 
   return { headline, trigger, effects, brokenAt, newArrival, familyLeave, familyLeaveWas };
 }
+
+/**
+ * Airport-timeline times after the current disruption. A prepone of the first leg moves
+ * every step earlier; a delay keeps the original plan (delays can shrink, check-in closes
+ * on the original schedule).
+ */
+export function adjustedSteps(steps: JourneyStep[], flights: Flight[], event: CascadeEvent | null): JourneyStep[] {
+  const first = [...flights].sort((a, b) => a.depart.localeCompare(b.depart))[0];
+  if (event?.kind !== 'prepone' || !first || event.flightId !== first.id || !event.minutes) return steps;
+  return steps.map((s) => ({ ...s, at: shiftClock(s.at, -event.minutes) }));
+}

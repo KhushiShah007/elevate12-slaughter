@@ -1,5 +1,5 @@
 import { db } from '../db';
-import { eventFromStatuses, runCascade } from '../../engines/cascade';
+import { adjustedSteps, eventFromStatuses, runCascade } from '../../engines/cascade';
 import { minutesBetween } from '../../engines/time';
 import type { RiskLevel } from '../../types';
 
@@ -78,6 +78,6 @@ export async function getNextFlight() {
     headline: result.headline,
     risk,
     status: status ?? null,
-    leaveHomeAt: bundle.steps[0]?.at ?? null,
+    leaveHomeAt: adjustedSteps(bundle.steps, bundle.flights, event)[0]?.at ?? null,
   };
 }

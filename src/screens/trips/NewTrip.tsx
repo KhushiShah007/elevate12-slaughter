@@ -69,6 +69,7 @@ export default function NewTrip() {
         <PillButton full onClick={create}>
           {mode === 'plan' ? 'Create trip' : 'Read booking'}
         </PillButton>
+        <p className="text-center text-xs text-muted">Prototype: this opens the sample Kyoto & Tokyo trip. Saving new trips comes later.</p>
       </div>
     </div>
   );

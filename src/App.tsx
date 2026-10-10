@@ -7,7 +7,7 @@ export default function App() {
   return (
     <SettingsProvider>
       <MotionConfig reducedMotion="user">
-        <RouterProvider router={router} />
+        <RouterProvider router={router} future={{ v7_startTransition: true }} />
       </MotionConfig>
     </SettingsProvider>
   );

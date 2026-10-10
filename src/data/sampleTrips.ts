@@ -133,6 +133,7 @@ export const flights: Flight[] = [
 export const flightStatuses: FlightStatus[] = [
   { flightId: 'f1', tripId: 't-japan', delayMin: 0, preponedMin: 0, missed: false, source: 'sample', lastSynced: '2026-10-10T18:05:00+05:30' },
   { flightId: 'f2', tripId: 't-japan', delayMin: 0, preponedMin: 0, missed: false, source: 'sample', lastSynced: '2026-10-10T18:05:00+05:30' },
+  { flightId: 'f3', tripId: 't-goa', delayMin: 0, preponedMin: 0, missed: false, source: 'sample', lastSynced: '2026-10-10T18:05:00+05:30' },
 ];
 
 export const bookings: Booking[] = [

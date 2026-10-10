@@ -59,6 +59,13 @@ function DisruptionView() {
           />
         )}
 
+        {(type === 'connecting' || type === 'layover') && bundle.flights.length < 2 && (
+          <div className="flex items-start gap-3 rounded-lg border border-ok/30 bg-mint p-4">
+            <CheckCircle2 size={20} className="mt-0.5 shrink-0 text-ok" />
+            <p className="text-sm leading-relaxed text-ink">This trip is a direct flight, so there is no connection or layover to plan.</p>
+          </div>
+        )}
+
         {type === 'missed' && !result && (
           <div className="rounded-lg border border-line bg-paper p-4 shadow-card">
             <p className="font-display text-xl text-ink">Which flight did you miss?</p>
@@ -74,7 +81,7 @@ function DisruptionView() {
 
         {result && (
           // Keyed on the headline so the ripple and stagger replay when the input changes.
-          <div key={result.headline}>
+          <div key={`cascade:${result.headline}`}>
             <CascadeTimeline d={result} />
             <div className="mt-2 flex items-center justify-between px-1">
               <Chip>Worked out on this phone</Chip>
@@ -91,13 +98,17 @@ function DisruptionView() {
           <div className="flex items-start gap-3 rounded-lg border border-ok/30 bg-mint p-4">
             <CheckCircle2 size={20} className="mt-0.5 shrink-0 text-ok" />
             <p className="text-sm leading-relaxed text-ink">
-              {minutes === 0 ? 'Nothing to fix yet. Set how late the flight is and we will show what it affects.' : 'Nothing breaks. Keep an eye on the amber items above.'}
+              {minutes === 0 && (type === 'delay' || type === 'preponed')
+                ? 'Nothing to fix yet. Set how late the flight is and we will show what it affects.'
+                : result.effects.some((e) => e.level === 'warn')
+                  ? 'Nothing breaks. Keep an eye on the amber items above.'
+                  : 'Nothing else on this trip depends on this flight, so nothing breaks.'}
             </p>
           </div>
         )}
 
         {/* A new disruption starts a fresh choice: keyed on what broke. */}
-        {result && needsFix && <RecoveryOptions key={result.headline} bundle={bundle} type={type} />}
+        {result && needsFix && <RecoveryOptions key={`options:${result.headline}`} bundle={bundle} type={type} fixKey={`${type}:${result.headline}`} />}
       </div>
     </div>
   );

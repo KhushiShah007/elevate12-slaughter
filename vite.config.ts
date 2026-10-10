@@ -71,5 +71,17 @@ export default defineConfig(({ mode }) => {
       }),
     ],
     server: { port: 5173 },
+    build: {
+      rollupOptions: {
+        output: {
+          // Libraries change rarely: separate files cache well and keep the app chunk small.
+          manualChunks: {
+            react: ['react', 'react-dom', 'react-router-dom'],
+            motion: ['framer-motion'],
+            data: ['dexie', 'dexie-react-hooks'],
+          },
+        },
+      },
+    },
   };
 });

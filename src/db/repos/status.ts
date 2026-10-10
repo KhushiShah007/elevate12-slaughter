@@ -7,9 +7,17 @@ import type { FlightStatus } from '../../types';
 
 type Source = FlightStatus['source'];
 
-async function patch(flightId: string, change: Partial<FlightStatus>, source: Source) {
-  const current = await db.flightStatus.get(flightId);
-  if (!current) return;
+async function patch(tripId: string, flightId: string, change: Partial<FlightStatus>, source: Source) {
+  // A flight with no status yet starts from the published schedule.
+  const current: FlightStatus = (await db.flightStatus.get(flightId)) ?? {
+    flightId,
+    tripId,
+    delayMin: 0,
+    preponedMin: 0,
+    missed: false,
+    source: 'sample',
+    lastSynced: new Date().toISOString(),
+  };
   await db.flightStatus.put({ ...current, ...change, source, lastSynced: new Date().toISOString() });
 }
 
@@ -25,17 +33,17 @@ async function clearOthers(tripId: string, keep: string) {
 
 export async function setDelay(tripId: string, flightId: string, minutes: number, source: Source = 'reported') {
   await clearOthers(tripId, flightId);
-  await patch(flightId, { delayMin: Math.max(0, minutes), preponedMin: 0, missed: false }, source);
+  await patch(tripId, flightId, { delayMin: Math.max(0, minutes), preponedMin: 0, missed: false }, source);
 }
 
 export async function setPrepone(tripId: string, flightId: string, minutes: number, source: Source = 'reported') {
   await clearOthers(tripId, flightId);
-  await patch(flightId, { preponedMin: Math.max(0, minutes), delayMin: 0, missed: false }, source);
+  await patch(tripId, flightId, { preponedMin: Math.max(0, minutes), delayMin: 0, missed: false }, source);
 }
 
 export async function setMissed(tripId: string, flightId: string, source: Source = 'reported') {
   await clearOthers(tripId, flightId);
-  await patch(flightId, { missed: true, delayMin: 0, preponedMin: 0 }, source);
+  await patch(tripId, flightId, { missed: true, delayMin: 0, preponedMin: 0 }, source);
 }
 
 /** Back to the published schedule. */

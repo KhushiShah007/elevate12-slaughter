@@ -7,6 +7,7 @@ export const recoveryCandidates: RecoveryCandidate[] = [
   // Connection broken (big delay) or missed
   {
     id: 'c-ai358',
+    tripId: 't-japan',
     appliesTo: ['delay', 'missed'],
     title: 'Air India rebooks you on AI 358 tonight',
     provider: 'Air India',
@@ -21,6 +22,7 @@ export const recoveryCandidates: RecoveryCandidate[] = [
   },
   {
     id: 'c-jl740',
+    tripId: 't-japan',
     appliesTo: ['delay', 'missed'],
     title: 'New ticket on JAL JL 740 this evening',
     provider: 'Japan Airlines',
@@ -35,6 +37,7 @@ export const recoveryCandidates: RecoveryCandidate[] = [
   },
   {
     id: 'c-overnight',
+    tripId: 't-japan',
     appliesTo: ['delay', 'missed'],
     title: 'Overnight in Delhi, AI 306 tomorrow',
     provider: 'Air India',
@@ -49,6 +52,7 @@ export const recoveryCandidates: RecoveryCandidate[] = [
   },
   {
     id: 'c-tg',
+    tripId: 't-japan',
     appliesTo: ['delay', 'missed'],
     title: 'Via Bangkok on Thai Airways tonight',
     provider: 'Thai Airways',
@@ -66,6 +70,7 @@ export const recoveryCandidates: RecoveryCandidate[] = [
   // Preponed first leg
   {
     id: 'c-cab',
+    tripId: 't-japan',
     appliesTo: ['preponed'],
     title: 'Move the cab to 02:40',
     provider: 'Cab company',
@@ -79,6 +84,7 @@ export const recoveryCandidates: RecoveryCandidate[] = [
   },
   {
     id: 'c-ai805',
+    tripId: 't-japan',
     appliesTo: ['preponed'],
     title: 'Switch to Air India AI 805 at 06:30',
     provider: 'Air India',
@@ -95,6 +101,7 @@ export const recoveryCandidates: RecoveryCandidate[] = [
   // Tight connection
   {
     id: 'c-signs',
+    tripId: 't-japan',
     appliesTo: ['connecting'],
     title: 'Follow the Domestic-to-International transfer signs',
     provider: 'You',
@@ -108,6 +115,7 @@ export const recoveryCandidates: RecoveryCandidate[] = [
   },
   {
     id: 'c-priority',
+    tripId: 't-japan',
     appliesTo: ['connecting'],
     title: 'Ask for priority emigration',
     provider: 'Airport',
@@ -121,6 +129,7 @@ export const recoveryCandidates: RecoveryCandidate[] = [
   },
   {
     id: 'c-meet',
+    tripId: 't-japan',
     appliesTo: ['connecting'],
     title: 'Book a meet-and-assist transfer',
     provider: 'DEL Airport',
@@ -137,6 +146,7 @@ export const recoveryCandidates: RecoveryCandidate[] = [
   // Layover
   {
     id: 'c-lounge',
+    tripId: 't-japan',
     appliesTo: ['layover'],
     title: 'Lounge near Gate 11',
     provider: 'Encalm Lounge',
@@ -150,6 +160,7 @@ export const recoveryCandidates: RecoveryCandidate[] = [
   },
   {
     id: 'c-breakfast',
+    tripId: 't-japan',
     appliesTo: ['layover'],
     title: 'Vegetarian breakfast at the food court',
     provider: 'DEL T3',
@@ -163,6 +174,7 @@ export const recoveryCandidates: RecoveryCandidate[] = [
   },
   {
     id: 'c-nap',
+    tripId: 't-japan',
     appliesTo: ['layover'],
     title: 'Nap pod in the transit area',
     provider: 'DEL T3',

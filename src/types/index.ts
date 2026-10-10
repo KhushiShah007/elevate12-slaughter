@@ -52,6 +52,7 @@ export interface Booking {
   status: 'confirmed' | 'suggested';
   bookedViaApp: boolean;
   simulated?: boolean; // prototype: confirmed without a real provider
+  recoveryFor?: string; // which disruption this booking fixes (so it is not booked twice)
   rev?: number;
 }
 
@@ -187,6 +188,7 @@ export interface CascadeEffect {
 /** A possible fix for a disruption, with the raw facts the ranking engine needs. */
 export interface RecoveryCandidate {
   id: string;
+  tripId: string;
   appliesTo: DisruptionType[];
   title: string;
   provider: string;

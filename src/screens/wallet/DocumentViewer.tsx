@@ -62,9 +62,10 @@ export default function DocumentViewer() {
           )}
           <span className="text-xs text-muted">Page 1 of {doc.pages}</span>
         </div>
-        <PillButton full variant="ghost" className="mt-4" icon={<Download size={18} />}>
+        <PillButton full variant="ghost" className="mt-4" icon={<Download size={18} />} disabled>
           Save a copy
         </PillButton>
+        <p className="mt-2 text-center text-xs text-muted">Prototype: this is a preview of sample data, so there is no file to save yet.</p>
       </div>
     </div>
   );

@@ -74,4 +74,13 @@ export const router = createBrowserRouter([
       { path: '*', element: <NotFound /> },
     ],
   },
-]);
+], {
+  // Opt in to React Router v7 behaviour now (also silences its upgrade warnings).
+  future: {
+    v7_relativeSplatPath: true,
+    v7_fetcherPersist: true,
+    v7_normalizeFormMethod: true,
+    v7_partialHydration: true,
+    v7_skipActionErrorRevalidation: true,
+  },
+});

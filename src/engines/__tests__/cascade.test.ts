@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { eventFromStatuses, runCascade, type CascadeInput } from '../cascade';
+import { adjustedSteps, eventFromStatuses, runCascade, type CascadeInput } from '../cascade';
 import { connectionView, layoverPlan } from '../layover';
 import { shift, shiftClock } from '../time';
 import * as sample from '../../data/sampleTrips';
@@ -103,5 +103,14 @@ describe('wording', () => {
     ] as const) {
       for (const e of runCascade(input, ev).effects) expect(e.detail[0]).toBe(e.detail[0].toUpperCase());
     }
+  });
+});
+
+describe('adjusted timeline', () => {
+  it('moves every step earlier on a prepone, and keeps it on a delay', () => {
+    const pre = adjustedSteps(input.steps, input.flights, { kind: 'prepone', flightId: 'f1', minutes: 50 });
+    expect(pre[0].at).toBe('02:40');
+    expect(pre[pre.length - 1].at).toBe('04:50');
+    expect(adjustedSteps(input.steps, input.flights, { kind: 'delay', flightId: 'f1', minutes: 50 })).toBe(input.steps);
   });
 });

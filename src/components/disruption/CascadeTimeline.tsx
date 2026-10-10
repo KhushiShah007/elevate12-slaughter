@@ -43,6 +43,7 @@ export function CascadeTimeline({ d }: { d: CascadeResult }) {
         </div>
       </div>
 
+      {d.effects.length > 0 && (
       <motion.ol variants={stagger(0.25)} initial="hidden" animate="show" className="ml-[1.3rem] mt-4 border-l-2 border-dashed border-line pl-5">
         {d.effects.map((e) => {
           const Icon = icons[e.icon];
@@ -63,6 +64,7 @@ export function CascadeTimeline({ d }: { d: CascadeResult }) {
           );
         })}
       </motion.ol>
+      )}
     </div>
   );
 }
