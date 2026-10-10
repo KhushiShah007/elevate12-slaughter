@@ -262,6 +262,31 @@ export const en = {
   'itin.note.rest': 'Time to rest',
   'itin.note.veg': 'Vegetarian',
   'itin.empty': 'Nothing planned. Enjoy a free day.',
+
+  // Documents vault (Goal 6)
+  'scan.title': 'Scan to PDF',
+  'scan.sub': 'Take a photo of each page, or pick photos you already have.',
+  'scan.add': 'Take photo or choose image',
+  'scan.addMore': 'Add another page',
+  'scan.name': 'Document name',
+  'scan.defaultName': 'Scanned document',
+  'scan.save': 'Save {n} pages as PDF',
+  'scan.saveOne': 'Save 1 page as PDF',
+  'scan.saving': 'Making your PDF…',
+  'scan.local': 'Scans are saved only on this phone and work offline.',
+  'scan.remove': 'Remove page {n}',
+  'scan.failed': 'That image could not be read. Try another photo.',
+  'viewer.open': 'Open PDF',
+  'viewer.save': 'Save a copy',
+  'viewer.sample': 'Sample document: a preview only, there is no file to save.',
+  'viewer.page': 'Page {n} of {total}',
+  'doc.valid': 'Valid till {date}',
+  'doc.expired': 'Expired on {date}',
+  'doc.passport6m': 'Expires {date}, less than 6 months after your {trip} trip. Many countries refuse entry. Renew before you fly.',
+  'doc.endsBefore': 'Ends {date}, before your {trip} trip ends.',
+  'doc.soon': 'Expires {date}. Renew soon.',
+  'wallet.attention': '{n} documents need attention',
+  'wallet.attentionOne': '1 document needs attention',
 } as const;
 
 export type MessageKey = keyof typeof en;

@@ -68,6 +68,7 @@ export interface TravelDocument {
   expires?: Iso;
   pages: number;
   offline: boolean;
+  hasFile?: boolean; // a real PDF is stored on this phone (scans)
   rev?: number;
 }
 

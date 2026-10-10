@@ -4,7 +4,7 @@ import { documents } from '../data/sampleDocuments';
 import { resetMockServer } from './mockServer';
 
 // Bump when the bundled sample data changes, so devices reseed.
-export const DATA_VERSION = '5';
+export const DATA_VERSION = '6';
 
 async function seed() {
   await db.transaction('rw', db.tables, async () => {

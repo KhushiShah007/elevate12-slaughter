@@ -2,7 +2,7 @@ import type { TravelDocument } from '../types';
 
 // SAMPLE documents. Real scans arrive in Goal 6.
 export const documents: TravelDocument[] = [
-  { id: 'doc1', tripId: null, kind: 'passport', title: 'Passport', holder: 'Riya Mehta', ref: 'Z4XXXX21', expires: '2033-02-11', pages: 2, offline: true },
+  { id: 'doc1', tripId: null, kind: 'passport', title: 'Passport', holder: 'Riya Mehta', ref: 'Z4XXXX21', expires: '2027-02-11', pages: 2, offline: true },
   { id: 'doc2', tripId: 't-japan', kind: 'visa', title: 'Japan e-Visa', holder: 'Riya Mehta', ref: 'JPN-EV-88231', expires: '2027-01-14', pages: 1, offline: true },
   { id: 'doc3', tripId: 't-japan', kind: 'boarding-pass', title: 'Boarding pass AI 865', holder: 'Riya Mehta', ref: 'QX7H2M', pages: 1, offline: true },
   { id: 'doc4', tripId: 't-japan', kind: 'boarding-pass', title: 'Boarding pass AI 306', holder: 'Riya Mehta', ref: 'QX7H2M', pages: 1, offline: false },

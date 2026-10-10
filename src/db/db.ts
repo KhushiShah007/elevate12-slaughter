@@ -21,6 +21,15 @@ import type {
   User,
 } from '../types';
 
+/** A scanned document's PDF and page images. Kept only on this phone (never synced). */
+export interface StoredFile {
+  id: string; // docId:pdf or docId:p0, docId:p1, ...
+  docId: string;
+  kind: 'pdf' | 'page';
+  index: number;
+  blob: Blob;
+}
+
 /** Saved AI answers, so the same request is never sent twice. */
 export interface AiCacheEntry {
   key: string;
@@ -56,6 +65,7 @@ export class VoyageDB extends Dexie {
   syncQueue!: Table<SyncEntry, number>;
   meta!: Table<Meta, string>;
   aiCache!: Table<AiCacheEntry, string>;
+  files!: Table<StoredFile, string>;
 
   constructor() {
     super('voyage');
@@ -83,6 +93,8 @@ export class VoyageDB extends Dexie {
     });
     // v2: cache for AI wording (Goal 4). Existing data is kept.
     this.version(2).stores({ aiCache: 'key' });
+    // v3: scanned documents (Goal 6).
+    this.version(3).stores({ files: 'id, docId' });
   }
 }
 
