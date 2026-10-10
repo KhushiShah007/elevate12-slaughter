@@ -2,9 +2,9 @@ import type { Booking, LoyaltyEntry } from '../types';
 
 export const LOYALTY_RATE = 0.03; // 3% of spend through the app
 
-/** Only confirmed bookings made through the app earn points. */
+/** Only confirmed bookings the traveller made through the app earn points (not the demo trip's). */
 export function earnsPoints(b: Booking): boolean {
-  return b.bookedViaApp && b.status === 'confirmed' && b.amount > 0;
+  return b.bookedViaApp && b.status === 'confirmed' && b.amount > 0 && !b.sample;
 }
 
 /** Points for one amount, rounded down to whole points. */

@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS "attractions" (
 CREATE TABLE IF NOT EXISTS "bookings" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" uuid NOT NULL,
-	"trip_id" uuid,
+	"trip_id" text,
 	"trip_item_id" uuid,
 	"status" text DEFAULT 'pending' NOT NULL,
 	"amount_inr" integer DEFAULT 0 NOT NULL,
@@ -248,6 +248,7 @@ CREATE TABLE IF NOT EXISTS "sessions" (
 CREATE TABLE IF NOT EXISTS "sync_receipts" (
 	"idempotency_key" text PRIMARY KEY NOT NULL,
 	"user_id" uuid NOT NULL,
+	"result" jsonb,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
@@ -263,7 +264,7 @@ CREATE TABLE IF NOT EXISTS "trip_drafts" (
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "trip_items" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"trip_id" uuid NOT NULL,
+	"trip_id" text NOT NULL,
 	"kind" text NOT NULL,
 	"title" text NOT NULL,
 	"starts_at" timestamp with time zone,
@@ -275,7 +276,7 @@ CREATE TABLE IF NOT EXISTS "trip_items" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "trips" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"id" text PRIMARY KEY NOT NULL,
 	"user_id" uuid NOT NULL,
 	"title" text NOT NULL,
 	"origin" text,
@@ -285,9 +286,20 @@ CREATE TABLE IF NOT EXISTS "trips" (
 	"end_date" date NOT NULL,
 	"travellers" integer DEFAULT 1 NOT NULL,
 	"budget_inr" integer,
-	"status" text DEFAULT 'planned' NOT NULL,
+	"status" text DEFAULT 'upcoming' NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "user_records" (
+	"user_id" uuid NOT NULL,
+	"tbl" text NOT NULL,
+	"record_id" text NOT NULL,
+	"payload" jsonb,
+	"rev" integer NOT NULL,
+	"deleted" boolean DEFAULT false NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "user_records_user_id_tbl_record_id_pk" PRIMARY KEY("user_id","tbl","record_id")
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "users" (
@@ -415,6 +427,12 @@ END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "trips" ADD CONSTRAINT "trips_destination_id_destinations_id_fk" FOREIGN KEY ("destination_id") REFERENCES "public"."destinations"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "user_records" ADD CONSTRAINT "user_records_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;

@@ -21,6 +21,12 @@ export interface Trip {
   endDate: Iso;
   status: TripStatus;
   travellers: number;
+  /** Bundled demo trip (not the traveller's own). */
+  sample?: boolean;
+  destinationSlug?: string | null;
+  budgetInr?: number | null;
+  createdAt?: Iso;
+  rev?: number;
 }
 
 export interface Flight {
@@ -53,6 +59,7 @@ export interface Booking {
   bookedViaApp: boolean;
   simulated?: boolean; // prototype: confirmed without a real provider
   recoveryFor?: string; // which disruption this booking fixes (so it is not booked twice)
+  sample?: boolean; // part of the bundled demo trip: never earns the traveller points
   rev?: number;
 }
 
@@ -262,7 +269,20 @@ export interface FamilyPickup {
   meetPoint: string;
 }
 
-export type SyncTable = 'bookings' | 'documents' | 'journeyProgress' | 'preferences' | 'users';
+export type SyncTable =
+  | 'trips'
+  | 'bookings'
+  | 'documents'
+  | 'journeyProgress'
+  | 'preferences'
+  | 'users'
+  | 'expenses'
+  | 'accommodations'
+  | 'transport'
+  | 'experiences'
+  | 'restaurants'
+  | 'itineraryDays'
+  | 'itineraryItems';
 
 /** One offline change waiting to reach the server. */
 export interface SyncEntry {

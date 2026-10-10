@@ -6,6 +6,7 @@ import {
   integer,
   jsonb,
   pgTable,
+  primaryKey,
   real,
   serial,
   text,
@@ -230,7 +231,7 @@ export const flightsCache = pgTable('flights_cache', {
 export const trips = pgTable(
   'trips',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: text('id').primaryKey(), // made on the device, so trips can be created offline
     userId: uuid('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
@@ -242,7 +243,7 @@ export const trips = pgTable(
     endDate: date('end_date').notNull(),
     travellers: integer('travellers').notNull().default(1),
     budgetInr: integer('budget_inr'),
-    status: text('status').notNull().default('planned'), // planned | booked | completed | cancelled
+    status: text('status').notNull().default('upcoming'), // upcoming | active | completed
     createdAt: created(),
     updatedAt: updated(),
   },
@@ -269,7 +270,7 @@ export const tripItems = pgTable(
   'trip_items',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    tripId: uuid('trip_id')
+    tripId: text('trip_id')
       .notNull()
       .references(() => trips.id, { onDelete: 'cascade' }),
     kind: text('kind').notNull(), // flight | hotel | activity | transport
@@ -289,7 +290,7 @@ export const bookings = pgTable('bookings', {
   userId: uuid('user_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
-  tripId: uuid('trip_id').references(() => trips.id, { onDelete: 'cascade' }),
+  tripId: text('trip_id').references(() => trips.id, { onDelete: 'cascade' }),
   tripItemId: uuid('trip_item_id').references(() => tripItems.id, { onDelete: 'set null' }),
   status: text('status').notNull().default('pending'), // pending | confirmed | cancelled | simulated
   amountInr: integer('amount_inr').notNull().default(0),
@@ -377,11 +378,33 @@ export const airlineSentimentScores = pgTable('airline_sentiment_scores', {
 
 // ---------- Offline sync ----------
 
-/** Each offline change is applied once: its idempotency key is remembered here. */
+/** Each offline change is applied once: its idempotency key and the answer given are kept. */
 export const syncReceipts = pgTable('sync_receipts', {
   idempotencyKey: text('idempotency_key').primaryKey(),
   userId: uuid('user_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
+  result: jsonb('result'),
   createdAt: created(),
 });
+
+/**
+ * The traveller's on-device records (bookings, documents' metadata, expenses, journey
+ * progress…), one row per record, with a revision for conflict detection. Trips are
+ * also copied into the typed trips table.
+ */
+export const userRecords = pgTable(
+  'user_records',
+  {
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    tbl: text('tbl').notNull(),
+    recordId: text('record_id').notNull(),
+    payload: jsonb('payload'),
+    rev: integer('rev').notNull(),
+    deleted: boolean('deleted').notNull().default(false),
+    updatedAt: updated(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.tbl, t.recordId] })],
+);

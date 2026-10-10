@@ -23,7 +23,7 @@ export default function TripsList() {
 
   return (
     <div>
-      <PageHeader title={t('trips.title')} sub={t('trips.sub')} right={<SampleTag />} />
+      <PageHeader title={t('trips.title')} sub={t('trips.sub')} />
       <div className="px-gutter">
         <Segmented
           value={tab}
@@ -51,10 +51,13 @@ export default function TripsList() {
                     </div>
                   }
                 >
-                  <p className="text-xs font-semibold uppercase tracking-widest text-espresso">{range(trip.startDate, trip.endDate)}</p>
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-xs font-semibold uppercase tracking-widest text-espresso">{range(trip.startDate, trip.endDate)}</p>
+                    {trip.sample && <SampleTag />}
+                  </div>
                   <p className="mt-1 font-display text-2xl text-ink">{trip.title}</p>
                   <p className="text-sm text-espresso">
-                    {trip.from} → {trip.to}
+                    {trip.from ? `${trip.from} → ${trip.to}` : trip.to}
                   </p>
                 </TicketCard>
               </Link>
@@ -75,6 +78,7 @@ export default function TripsList() {
                 return (
                   <Link key={trip.id} to={`/trips/${trip.id}/memories`}>
                     <StampCard pastel={stampPastels[n % stampPastels.length]} tilt={n % 2 ? 2.5 : -2}>
+                      {trip.sample && <p className="mb-1 text-[0.625rem] uppercase tracking-widest text-muted">{t('common.sampleData')}</p>}
                       <p className="font-display text-3xl text-ink">{m?.stampCode}</p>
                       <p className="mt-1 text-sm font-medium text-ink">{m?.stampCity}</p>
                       <p className="mt-2 text-[0.6875rem] uppercase tracking-widest text-espresso">{day(trip.startDate, { month: 'short', year: 'numeric' }, info.intl)}</p>

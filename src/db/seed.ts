@@ -1,19 +1,18 @@
 import { db } from './db';
 import * as sample from '../data/sampleTrips';
 import { documents } from '../data/sampleDocuments';
-import { resetMockServer } from './mockServer';
 
 // Bump when the bundled sample data changes, so devices reseed.
-export const DATA_VERSION = '6';
+export const DATA_VERSION = '8';
 
 async function seed() {
   await db.transaction('rw', db.tables, async () => {
     await Promise.all([
       db.users.put(sample.sampleUser),
-      db.trips.bulkPut(sample.trips),
+      db.trips.bulkPut(sample.trips.map((t) => ({ ...t, sample: true }))),
       db.flights.bulkPut(sample.flights),
       db.flightStatus.bulkPut(sample.flightStatuses),
-      db.bookings.bulkPut(sample.bookings),
+      db.bookings.bulkPut(sample.bookings.map((b) => ({ ...b, sample: true }))),
       db.documents.bulkPut(documents),
       db.accommodations.bulkPut(sample.accommodations),
       db.transport.bulkPut(sample.transport),
@@ -38,16 +37,13 @@ async function seed() {
 export async function ensureSeeded() {
   const version = await db.meta.get('dataVersion');
   if (version?.value === DATA_VERSION) return;
-  // New sample data: start the device and the simulated server from the same clean state,
-  // or old server records would clash with the fresh device data.
+  // New sample data: start the device clean. The account's own records come back from the server.
   await Promise.all(db.tables.map((t) => t.clear()));
-  resetMockServer();
   await seed();
 }
 
-/** Judge Mode reset: wipe this device and the mock server, then reseed. */
+/** Judge Mode reset: wipe this device and reseed. The account's own records come back from the server. */
 export async function resetDemo() {
   await Promise.all(db.tables.map((t) => t.clear()));
-  resetMockServer();
   await seed();
 }

@@ -1,6 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { api, ApiError, type Me } from '../api/client';
 import { db } from '../db/db';
+import { pullFromServer, replay } from '../db/syncQueue';
+import { resetDemo } from '../db/seed';
 import { useSettings } from './settings';
 
 // Who is signed in. The server session (httpOnly cookie) is the truth; a copy of the
@@ -63,6 +65,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus('signedIn');
     writeJson(CACHE_KEY, next);
     await mirror(next).catch(() => undefined);
+    // Send changes made offline, then bring down the account's trips and records.
+    void replay()
+      .then(pullFromServer)
+      .catch(() => undefined);
   }, []);
 
   const signedIn = useCallback(
@@ -136,7 +142,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [settings.language, settings.seniorMode]);
 
   const signOut = useCallback(async () => {
+    // Last chance to send waiting changes, then remove this account's data from the device.
+    await replay().catch(() => undefined);
     await api('POST', '/auth/logout').catch(() => undefined);
+    await resetDemo().catch(() => undefined);
     clear();
   }, [clear]);
 

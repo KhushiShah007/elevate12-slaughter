@@ -1,9 +1,57 @@
 import { db } from '../db';
 import { adjustedSteps, eventFromStatuses, runCascade } from '../../engines/cascade';
 import { minutesBetween } from '../../engines/time';
-import type { RiskLevel } from '../../types';
+import { removeAndQueue, writeAndQueue } from '../syncQueue';
+import type { RiskLevel, Trip } from '../../types';
 
 export const listTrips = () => db.trips.toArray();
+
+export interface NewTripInput {
+  title: string;
+  from: string;
+  to: string;
+  destinationSlug?: string | null;
+  startDate: string; // yyyy-mm-dd
+  endDate: string;
+  travellers: number;
+  budgetInr?: number | null;
+}
+
+/** Problems with a new trip, by field. Empty when it can be saved. */
+export function checkNewTrip(t: Partial<NewTripInput>, today = new Date().toISOString().slice(0, 10)) {
+  const errors: Partial<Record<keyof NewTripInput, string>> = {};
+  if (!t.to?.trim()) errors.to = 'Where are you going?';
+  if (!t.startDate) errors.startDate = 'Pick a start date.';
+  else if (t.startDate < today) errors.startDate = 'The start date has passed.';
+  if (!t.endDate) errors.endDate = 'Pick a return date.';
+  else if (t.startDate && t.endDate < t.startDate) errors.endDate = 'Return is before the start.';
+  if (!t.travellers || t.travellers < 1 || t.travellers > 20) errors.travellers = 'Between 1 and 20 travellers.';
+  if (t.budgetInr != null && (t.budgetInr < 0 || !Number.isFinite(t.budgetInr))) errors.budgetInr = 'Enter an amount in rupees.';
+  return errors;
+}
+
+/** Save a new trip on the device and queue it for the account (works offline). */
+export async function createTrip(input: NewTripInput) {
+  const trip: Trip = {
+    id: crypto.randomUUID(),
+    title: input.title.trim() || `${input.to.trim()} trip`,
+    from: input.from.trim(),
+    to: input.to.trim(),
+    destinationSlug: input.destinationSlug ?? null,
+    startDate: input.startDate,
+    endDate: input.endDate,
+    status: 'upcoming',
+    travellers: input.travellers,
+    budgetInr: input.budgetInr ?? null,
+    createdAt: new Date().toISOString(),
+  };
+  await writeAndQueue('trips', trip.id, trip, `New trip: ${trip.title}`);
+  return trip;
+}
+
+export async function deleteTrip(trip: Trip) {
+  await removeAndQueue('trips', trip.id, `Deleted trip: ${trip.title}`);
+}
 
 /** Everything one trip owns. Data is always looked up by tripId, never shared. */
 export async function getTripBundle(tripId: string) {
@@ -59,10 +107,17 @@ export function currentCascade(b: TripBundle) {
 /** The next upcoming flight leg, its onward connection and the connection risk. */
 export async function getNextFlight() {
   const upcoming = (await db.trips.where('status').equals('upcoming').toArray()).sort((a, b) => a.startDate.localeCompare(b.startDate));
-  const trip = upcoming[0];
-  if (!trip) return null;
-  const bundle = await getTripBundle(trip.id);
-  if (!bundle?.flights.length) return null;
+  // The first upcoming trip that has a flight (a just-created trip may not have one yet).
+  let bundle: TripBundle | null = null;
+  for (const t of upcoming) {
+    const b = await getTripBundle(t.id);
+    if (b?.flights.length) {
+      bundle = b;
+      break;
+    }
+  }
+  if (!bundle) return null;
+  const trip = bundle.trip;
 
   const [leg, onward] = bundle.flights;
   const { event, result } = currentCascade(bundle);

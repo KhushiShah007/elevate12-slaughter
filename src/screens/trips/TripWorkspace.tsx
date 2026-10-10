@@ -1,7 +1,9 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { BedDouble, CalendarRange, Car, FileText, Plane, Sparkles, UtensilsCrossed, Wallet2 } from 'lucide-react';
+import { useState } from 'react';
 import { useTrip } from '../../hooks/useTrip';
+import { deleteTrip } from '../../db/repos/trips';
 import { modulePastel } from '../../design/tokens';
 import { fadeUp, stagger } from '../../design/motion';
 import { PageHeader } from '../../components/layout/PageHeader';
@@ -30,6 +32,7 @@ export default function TripWorkspace() {
   const navigate = useNavigate();
   const { t } = useT();
   const data = useTrip(tripId);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   if (data === undefined) return null;
   if (!data) return <NotFound />;
   const { trip } = data;
@@ -52,10 +55,10 @@ export default function TripWorkspace() {
         title={trip.title}
         sub={
           <>
-            {trip.from} → {trip.to} · {range(trip.startDate, trip.endDate)}
+            {trip.from ? `${trip.from} → ${trip.to}` : trip.to} · {range(trip.startDate, trip.endDate)}
           </>
         }
-        right={<SampleTag />}
+        right={trip.sample ? <SampleTag /> : undefined}
       />
       <motion.div variants={stagger(0.04)} initial="hidden" animate="show" className="grid grid-cols-2 gap-3 px-gutter">
         {modules.map(({ key, title, Icon }) => (
@@ -66,10 +69,41 @@ export default function TripWorkspace() {
       </motion.div>
 
       <div className="px-gutter pt-6">
-        <PillButton full icon={<Plane size={18} />} onClick={() => navigate(`/trips/${trip.id}/active`)}>
-          {t('workspace.startTrip')}
-        </PillButton>
-        <p className="mt-2 text-center text-xs text-muted">{t('workspace.startTripSub')}</p>
+        {data.flights.length > 0 ? (
+          <>
+            <PillButton full icon={<Plane size={18} />} onClick={() => navigate(`/trips/${trip.id}/active`)}>
+              {t('workspace.startTrip')}
+            </PillButton>
+            <p className="mt-2 text-center text-xs text-muted">{t('workspace.startTripSub')}</p>
+          </>
+        ) : (
+          <p className="text-center text-sm text-muted">Saved to your account. Add flights and a stay to start the trip day by day.</p>
+        )}
+        {!trip.sample && (
+          <div className="mt-6 text-center">
+            {confirmDelete ? (
+              <p className="text-sm text-ink">
+                Delete this trip?{' '}
+                <button
+                  className="min-h-tap px-2 font-semibold text-bad underline underline-offset-4"
+                  onClick={async () => {
+                    await deleteTrip(trip);
+                    navigate('/trips', { replace: true });
+                  }}
+                >
+                  Delete
+                </button>
+                <button className="min-h-tap px-2 text-espresso underline underline-offset-4" onClick={() => setConfirmDelete(false)}>
+                  Keep
+                </button>
+              </p>
+            ) : (
+              <button className="min-h-tap text-sm text-muted underline underline-offset-4" onClick={() => setConfirmDelete(true)}>
+                Delete trip
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

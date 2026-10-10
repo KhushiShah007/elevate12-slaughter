@@ -1,7 +1,18 @@
 import { db } from './db';
-import { pushToServer } from './mockServer';
+import { api, ApiError } from '../api/client';
 import { sameMeaning } from './merge';
 import type { SyncEntry, SyncTable } from '../types';
+
+export type PushResult =
+  | { kind: 'applied'; rev: number }
+  | { kind: 'duplicate' }
+  | { kind: 'conflict'; serverRev: number; serverPayload: unknown };
+
+/** Send one queued change to the Voyage API (POST /api/sync/push). */
+async function pushToServer(entry: SyncEntry): Promise<PushResult> {
+  const { key, table, recordId, op, payload, baseRev } = entry;
+  return api<PushResult>('POST', '/sync/push', { key, table, recordId, op, payload, baseRev });
+}
 
 type Rev = { rev?: number };
 
@@ -47,14 +58,21 @@ async function drain() {
     let result;
     try {
       result = await pushToServer(entry);
-    } catch {
-      break; // went offline mid-replay; try again on the next 'online' event
+    } catch (err) {
+      // The server refused the change itself (bad data): drop it rather than block the queue.
+      if (err instanceof ApiError && err.status === 400) {
+        console.warn('[sync] change refused by the server', entry.label, err.message);
+        await db.syncQueue.delete(entry.seq!);
+        continue;
+      }
+      // Offline, signed out or server busy: keep it and try again later.
+      break;
     }
     await settle(entry, result);
   }
 }
 
-async function settle(entry: SyncEntry, result: Awaited<ReturnType<typeof pushToServer>>) {
+async function settle(entry: SyncEntry, result: PushResult) {
   const table = tableOf(entry.table);
   await db.transaction('rw', table, db.syncQueue, db.meta, async () => {
     if (result.kind === 'conflict') {
@@ -104,8 +122,48 @@ export async function resolveConflict(seq: number, keep: 'mine' | 'theirs') {
   await replay();
 }
 
+/**
+ * Bring the account's records onto this device (new phone, cleared storage, or changes
+ * made elsewhere). Records with a change still waiting to be sent are left alone.
+ */
+export async function pullFromServer() {
+  const { records } = await api<{ records: { table: SyncTable; recordId: string; payload: unknown; rev: number; deleted: boolean }[] }>('GET', '/sync/pull');
+  const waiting = new Set((await db.syncQueue.toArray()).map((e) => `${e.table}:${e.recordId}`));
+  const known = new Set(db.tables.map((t) => t.name));
+  await db.transaction('rw', db.tables, async () => {
+    for (const r of records) {
+      if (!known.has(r.table) || waiting.has(`${r.table}:${r.recordId}`)) continue;
+      const table = tableOf(r.table);
+      const local = (await table.get(r.recordId)) as Rev | undefined;
+      if (local?.rev && local.rev >= r.rev) continue;
+      if (r.deleted) await table.delete(r.recordId);
+      else await table.put({ ...(r.payload as object), rev: r.rev });
+    }
+  });
+}
+
 /** Replay whenever the device comes back online, and once at start-up. */
 export function startSync() {
   window.addEventListener('online', () => void replay());
+  void replay();
+}
+
+/** Delete a record on the device and queue the delete for the server. */
+export async function removeAndQueue(table: SyncTable, recordId: string, label: string) {
+  await db.transaction('rw', tableOf(table), db.syncQueue, async () => {
+    const existing = (await tableOf(table).get(recordId)) as Rev | undefined;
+    await tableOf(table).delete(recordId);
+    await db.syncQueue.add({
+      key: crypto.randomUUID(),
+      table,
+      recordId,
+      op: 'delete',
+      payload: null,
+      baseRev: existing?.rev ?? 0,
+      createdAt: new Date().toISOString(),
+      status: 'pending',
+      label,
+    });
+  });
   void replay();
 }

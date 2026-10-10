@@ -6,6 +6,7 @@ import { ensureSeeded } from './seed/seed';
 import { errorBody, rateLimit } from './http';
 import { catalog } from './routes/catalog';
 import { auth } from './routes/auth';
+import { trips } from './routes/trips';
 import { handleAi } from '../api/_ai';
 
 // The Voyage API. Runs inside `npm run dev` (Vite middleware) and on Vercel (api/index.ts).
@@ -49,6 +50,11 @@ app.route('/', catalog);
 // Accounts. Tight limit on anything that checks a password or a code.
 app.use('/auth/*', rateLimit('auth', 20, 60_000));
 app.route('/', auth);
+
+// The traveller's trips, drafts and offline changes.
+app.use('/sync/*', rateLimit('sync', 300, 60_000));
+app.use('/trips/*', rateLimit('trips', 120, 60_000));
+app.route('/', trips);
 
 // AI wording, translation and intent (Groq today; Grok/xAI in Phase 11).
 app.post('/ai', rateLimit('ai', 30, 60_000), async (c) => {
