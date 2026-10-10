@@ -43,6 +43,8 @@ export const en = {
   'home.newTripSub': 'Plan or paste a booking',
   'home.explore': 'Explore',
   'home.exploreSub': '53 places with photos',
+  'home.budgetPlan': 'Where can I go?',
+  'home.budgetPlanSub': 'Trips that fit your budget',
   'home.forYou': 'Suggested for you',
   'home.popular': 'Popular places',
   'home.completedTrips': 'Completed trips',

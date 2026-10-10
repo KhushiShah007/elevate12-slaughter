@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { count, sql } from 'drizzle-orm';
 import type { Db } from '../db/client';
+import { refreshCostIndex } from '../budget';
 import * as s from '../db/schema';
 
 // Loads the open datasets produced by data-pipeline/ into the database.
@@ -90,6 +91,7 @@ export async function seedAll(db: Db, log: Log = console.log) {
       await db.insert(s.destinations).values(row).onConflictDoUpdate({ target: s.destinations.slug, set: row });
     }
     log(`destinations: ${dests.length}`);
+    log(`cost index: ${await refreshCostIndex(db)} rows`);
   }
 
   // Places from OpenStreetMap (hotels, attractions, restaurants).
@@ -150,7 +152,12 @@ export async function seedAll(db: Db, log: Log = console.log) {
 /** Seed automatically the first time the server starts on an empty database. */
 export async function ensureSeeded(db: Db, log: Log = console.log) {
   const [{ n }] = await db.select({ n: count() }).from(s.destinations);
-  if (n > 0) return false;
+  if (n > 0) {
+    // Databases seeded before the cost index existed get it now.
+    const [{ c }] = await db.select({ c: count() }).from(s.destinationCostIndex);
+    if (c === 0) log(`cost index: ${await refreshCostIndex(db)} rows`);
+    return false;
+  }
   log('Empty database: loading seed data…');
   await seedAll(db, log);
   return true;

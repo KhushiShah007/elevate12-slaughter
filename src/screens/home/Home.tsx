@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { AlertTriangle, ArrowRight, ChevronRight, Compass, Luggage, Plus, Stamp, Wifi, WifiOff } from 'lucide-react';
+import { AlertTriangle, ArrowRight, ChevronRight, Compass, IndianRupee, Luggage, Plus, Stamp, Wifi, WifiOff } from 'lucide-react';
 import { useNextFlight, useTrips, useTraveller } from '../../hooks/useTrip';
 import { useOnline } from '../../hooks/useOnline';
 import { fadeUp, stagger } from '../../design/motion';
@@ -120,6 +120,7 @@ export default function Home() {
             sub={t('home.stamps', { n: trips.completed.length })}
           />
           <Tile to="/destinations" pastel="mint" icon={<Compass size={20} />} title={t('home.explore')} sub={t('home.exploreSub')} />
+          <Tile to="/plan" pastel="sky" icon={<IndianRupee size={20} />} title={t('home.budgetPlan')} sub={t('home.budgetPlanSub')} className="col-span-2 min-h-[6rem]" />
         </div>
       </motion.section>
 

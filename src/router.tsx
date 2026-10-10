@@ -34,6 +34,7 @@ import NotFound from './screens/NotFound';
 import Credits from './screens/Credits';
 import Destinations from './screens/destinations/Destinations';
 import DestinationDetail from './screens/destinations/DestinationDetail';
+import BudgetPlanner from './screens/budget/BudgetPlanner';
 
 export const router = createBrowserRouter([
   {
@@ -71,6 +72,7 @@ export const router = createBrowserRouter([
       { path: '/trips/:tripId/restaurants', element: <Restaurants /> },
       { path: '/trips/:tripId/active', element: <ActiveTrip /> },
       { path: '/trips/:tripId/disruption/:type', element: <Disruption /> },
+      { path: '/plan', element: <BudgetPlanner /> },
       { path: '/destinations', element: <Destinations /> },
       { path: '/destinations/:slug', element: <DestinationDetail /> },
       { path: '/assistant', element: <Assistant /> },

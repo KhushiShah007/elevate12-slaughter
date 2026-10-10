@@ -8,6 +8,7 @@ import { placeReason } from '../../engines/personalize';
 import type { Persona } from '../../engines/persona';
 import type { Guide, GuidePlace } from '../../hooks/useGuide';
 import type { Pastel } from '../../design/tokens';
+import type { Allowance } from '../../hooks/useAllowance';
 
 type Order = 'you' | 'cheap' | 'rated';
 
@@ -17,15 +18,19 @@ const sightLabel = (c: string | null) => (c ? c.replace(/_/g, ' ') : 'Place');
 const priceRank = (p: GuidePlace) => (p.kind === 'eat' ? (p.costRange?.[0] ?? 1e6) : p.entry === 'free' ? 0 : p.entry === null ? 1 : 2);
 
 /** Places to see or eat from the city guide, ordered for the traveller, with costs and links. */
-export function PlaceList({ guide, kind, persona, pastels }: { guide: Guide; kind: 'see' | 'eat'; persona: Persona; pastels: Pastel[] }) {
+export function PlaceList({ guide, kind, persona, pastels, allowance }: { guide: Guide; kind: 'see' | 'eat'; persona: Persona; pastels: Pastel[]; allowance?: Allowance | null }) {
   const [order, setOrder] = useState<Order>(persona.id === 'saver' ? 'cheap' : 'you');
   const [vegOnly, setVegOnly] = useState(false);
+  const [fitsOnly, setFitsOnly] = useState(false);
+  /** Fits the daily allowance: a meal within the per-meal amount, or free entry. */
+  const fits = (p: GuidePlace) => (allowance ? (kind === 'eat' ? p.costRange != null && p.costRange[0] <= allowance.meal : p.entry === 'free') : false);
   const places = kind === 'see' ? guide.see : guide.eat;
   const rated = places.some((p) => p.rating != null);
 
   const list = useMemo(() => {
     const rows = places
       .filter((p) => !vegOnly || p.vegetarian)
+      .filter((p) => !fitsOnly || fits(p))
       .map((p, index) => ({
         p,
         index,
@@ -36,7 +41,8 @@ export function PlaceList({ guide, kind, persona, pastels }: { guide: Guide; kin
     else if (order === 'rated') rows.sort((a, b) => (b.p.rating ?? 0) - (a.p.rating ?? 0) || byYou(a, b));
     else rows.sort(byYou);
     return rows;
-  }, [places, order, vegOnly, persona, kind]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [places, order, vegOnly, fitsOnly, persona, kind, allowance]);
 
   return (
     <div className="space-y-3">
@@ -49,6 +55,12 @@ export function PlaceList({ guide, kind, persona, pastels }: { guide: Guide; kin
           ...(rated ? [{ value: 'rated' as const, label: 'Top rated' }] : []),
         ]}
       />
+      {allowance && (
+        <label className="flex min-h-tap items-center gap-2 text-sm text-espresso">
+          <input type="checkbox" checked={fitsOnly} onChange={(e) => setFitsOnly(e.target.checked)} className="h-5 w-5 accent-ink" />
+          {kind === 'eat' ? `Fits my budget (about ${inr(allowance.meal)} a meal)` : 'Free entry only'}
+        </label>
+      )}
       {kind === 'eat' && (
         <label className="flex min-h-tap items-center gap-2 text-sm text-espresso">
           <input type="checkbox" checked={vegOnly} onChange={(e) => setVegOnly(e.target.checked)} className="h-5 w-5 accent-ink" />
@@ -78,11 +90,14 @@ export function PlaceList({ guide, kind, persona, pastels }: { guide: Guide; kin
         >
           <div className="flex items-start justify-between gap-2">
             <p className="font-display text-lg leading-tight text-ink">{p.name}</p>
-            {p.vegetarian && (
-              <Chip tone="ok" icon={<Leaf size={11} />}>
-                Veg
-              </Chip>
-            )}
+            <span className="flex shrink-0 flex-col items-end gap-1">
+              {p.vegetarian && (
+                <Chip tone="ok" icon={<Leaf size={11} />}>
+                  Veg
+                </Chip>
+              )}
+              {fits(p) && <Chip tone="ok">Fits your budget</Chip>}
+            </span>
           </div>
           <p className="mt-1 text-sm capitalize text-espresso">
             {kind === 'eat' ? (p.cuisine ?? 'Restaurant') : sightLabel(p.category)}

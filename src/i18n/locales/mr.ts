@@ -41,6 +41,8 @@ export const mr: Messages = {
   'home.newTripSub': 'योजना करा किंवा बुकिंग पेस्ट करा',
   'home.explore': 'ठिकाणे पाहा',
   'home.exploreSub': 'फोटोंसह 53 ठिकाणे',
+  'home.budgetPlan': 'कुठे जाऊ शकतो?',
+  'home.budgetPlanSub': 'तुमच्या बजेटमधील सहली',
   'home.forYou': 'तुमच्यासाठी सुचवलेले',
   'home.popular': 'लोकप्रिय ठिकाणे',
   'home.completedTrips': 'पूर्ण झालेले प्रवास',

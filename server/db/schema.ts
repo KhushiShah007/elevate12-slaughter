@@ -169,6 +169,23 @@ export const destinations = pgTable('destinations', {
   ...provenance,
 });
 
+/** Typical daily cost per person by travel style, split by category (INR). Refreshed by a script. */
+export const destinationCostIndex = pgTable(
+  'destination_cost_index',
+  {
+    destinationId: integer('destination_id')
+      .notNull()
+      .references(() => destinations.id, { onDelete: 'cascade' }),
+    style: text('style').notNull(), // shoestring | moderate | comfort | luxury
+    stay: integer('stay').notNull(), // per person per night
+    food: integer('food').notNull(),
+    transport: integer('transport').notNull(),
+    activities: integer('activities').notNull(),
+    ...provenance,
+  },
+  (t) => [primaryKey({ columns: [t.destinationId, t.style] })],
+);
+
 const placeColumns = () => ({
   id: serial('id').primaryKey(),
   destinationId: integer('destination_id')

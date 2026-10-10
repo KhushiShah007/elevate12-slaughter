@@ -53,9 +53,16 @@ export default function NewTrip() {
   const draft = useTripDraft(blank);
   const d = draft.data;
   // Arrived from a destination page: fill in where to.
-  const preset = (useLocation().state as { to?: string } | null)?.to;
+  const presetState = useLocation().state as { to?: string; startDate?: string; endDate?: string; travellers?: number; budgetInr?: number } | null;
+  const preset = presetState?.to;
   useEffect(() => {
-    if (preset && !d.to) draft.update({ to: preset });
+    if (preset && !d.to)
+      draft.update({
+        to: preset,
+        ...(presetState?.startDate ? { startDate: presetState.startDate, endDate: presetState.endDate ?? '' } : {}),
+        ...(presetState?.travellers ? { travellers: presetState.travellers } : {}),
+        ...(presetState?.budgetInr ? { budgetInr: String(presetState.budgetInr) } : {}),
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preset]);
   const [showErrors, setShowErrors] = useState(false);

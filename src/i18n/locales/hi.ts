@@ -41,6 +41,8 @@ export const hi: Messages = {
   'home.newTripSub': 'योजना बनाएँ या बुकिंग पेस्ट करें',
   'home.explore': 'घूमने की जगहें',
   'home.exploreSub': 'फ़ोटो के साथ 53 जगहें',
+  'home.budgetPlan': 'कहाँ जा सकता हूँ?',
+  'home.budgetPlanSub': 'आपके बजट में यात्राएँ',
   'home.forYou': 'आपके लिए सुझाव',
   'home.popular': 'लोकप्रिय जगहें',
   'home.completedTrips': 'पूरी हुई यात्राएँ',

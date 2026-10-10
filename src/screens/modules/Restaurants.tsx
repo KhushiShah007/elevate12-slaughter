@@ -5,6 +5,7 @@ import { Chip } from '../../components/ui/Chip';
 import { PlaceList } from '../../components/guide/PlaceList';
 import { usePersona } from '../../hooks/usePersona';
 import { useGuide } from '../../hooks/useGuide';
+import { allowanceFor } from '../../hooks/useAllowance';
 import { defaultPersona, orderRestaurants } from '../../engines/persona';
 import { budgetStyleLabel } from '../../engines/personalize';
 import { useT } from '../../i18n';
@@ -71,7 +72,7 @@ function CityEateries({ trip }: { trip: Trip }) {
     <section className="space-y-3">
       <h2 className="text-xl">Places to eat in {guide.destination.name}</h2>
       <p className="-mt-2 text-xs text-muted">Prices for a {budgetStyleLabel[style].toLowerCase()} budget, per person per meal.</p>
-      <PlaceList guide={guide} kind="eat" persona={p?.persona ?? defaultPersona()} pastels={['butter', 'peach']} />
+      <PlaceList guide={guide} kind="eat" persona={p?.persona ?? defaultPersona()} pastels={['butter', 'peach']} allowance={allowanceFor(trip, guide, style)} />
     </section>
   );
 }

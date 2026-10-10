@@ -25,6 +25,8 @@ export interface Trip {
   sample?: boolean;
   destinationSlug?: string | null;
   budgetInr?: number | null;
+  /** Shares of the budget per category (travel, stay, food, local, activities, buffer). */
+  budgetSplit?: Partial<Record<'travel' | 'stay' | 'food' | 'local' | 'activities' | 'buffer', number>>;
   createdAt?: Iso;
   rev?: number;
 }
@@ -55,7 +57,9 @@ export interface Booking {
   kind: BookingKind;
   title: string;
   amount: number; // INR
-  status: 'confirmed' | 'suggested';
+  status: 'confirmed' | 'suggested' | 'cancelled';
+  /** Money back after a cancellation (INR), once known. */
+  refundInr?: number;
   bookedViaApp: boolean;
   simulated?: boolean; // prototype: confirmed without a real provider
   recoveryFor?: string; // which disruption this booking fixes (so it is not booked twice)
@@ -154,6 +158,8 @@ export interface Expense {
   label: string;
   amount: number;
   category: 'tickets' | 'stay' | 'transport' | 'food' | 'fees' | 'other';
+  date?: string; // yyyy-mm-dd
+  rev?: number;
 }
 
 export interface CompletedTripMemory {

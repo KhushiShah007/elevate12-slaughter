@@ -7,6 +7,7 @@ import type { Pastel } from '../../design/tokens';
 import { inr } from '../../utils/format';
 import { usePersona } from '../../hooks/usePersona';
 import { useGuide } from '../../hooks/useGuide';
+import { allowanceFor } from '../../hooks/useAllowance';
 import { defaultPersona, orderExperiences } from '../../engines/persona';
 import { useT, type MessageKey } from '../../i18n';
 import type { Trip } from '../../types';
@@ -54,13 +55,13 @@ export default function Experiences() {
 /** Real places to see in the trip's city, ordered for the traveller. */
 function CitySights({ trip }: { trip: Trip }) {
   const p = usePersona();
-  const { guide, offline } = useGuide(trip);
+  const { guide, style, offline } = useGuide(trip);
   if (guide === undefined) return <p className="text-sm text-muted">Finding things to do in {trip.to}…</p>;
   if (guide === null) return <p className="text-sm text-muted">{offline ? 'Connect to the internet once to load things to do.' : `We don't have a guide for “${trip.to}” yet.`}</p>;
   return (
     <section className="space-y-3">
       <h2 className="text-xl">Things to do in {guide.destination.name}</h2>
-      <PlaceList guide={guide} kind="see" persona={p?.persona ?? defaultPersona()} pastels={['lavender', 'mint', 'rose', 'butter']} />
+      <PlaceList guide={guide} kind="see" persona={p?.persona ?? defaultPersona()} pastels={['lavender', 'mint', 'rose', 'butter']} allowance={allowanceFor(trip, guide, style)} />
     </section>
   );
 }

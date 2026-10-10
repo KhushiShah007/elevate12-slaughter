@@ -8,6 +8,7 @@ import { pastelBg } from '../../design/tokens';
 import { PayHelp } from '../../components/guide/PayHelp';
 import { useGuide } from '../../hooks/useGuide';
 import { budgetStyleLabel } from '../../engines/personalize';
+import { SplitEditor, SpendTracker } from '../../components/guide/TripBudget';
 import type { Booking, Trip } from '../../types';
 
 /** Plan vs budget for a trip: cheapest saved flight and stay, plus typical daily spend. */
@@ -76,10 +77,16 @@ export default function Budget() {
       {({ trip, expenses, bookings }) => {
         const cost = trueCost(expenses);
         const points = loyaltySummary(bookings);
-        if (!trip.sample && expenses.length === 0) return <PlanVsBudget trip={trip} bookings={bookings} />;
+        if (!trip.sample)
+          return (
+            <>
+              <PlanVsBudget trip={trip} bookings={bookings} />
+              <SplitEditor trip={trip} />
+              <SpendTracker trip={trip} expenses={expenses} bookings={bookings} />
+            </>
+          );
         return (
           <>
-            {!trip.sample && <PlanVsBudget trip={trip} bookings={bookings} />}
             <div className="rounded-lg border border-line bg-paper p-5 shadow-card">
               <p className="text-sm text-muted">True journey cost</p>
               <p className="font-display text-[2.75rem] leading-none text-ink">{inr(cost.total)}</p>
