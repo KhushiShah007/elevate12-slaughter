@@ -94,7 +94,7 @@ export function RidePlanner({ trip, guide, bookings }: { trip: Trip; guide: Guid
 
   return (
     <section className="space-y-3">
-      <h2 className="text-xl">Getting around {guide.destination.name}</h2>
+      <h2 className="text-xl">Airport transfers and getting around</h2>
       <div className="grid grid-cols-2 gap-3">
         {select('From', fromId, setFromId)}
         {select('To', toId, setToId)}

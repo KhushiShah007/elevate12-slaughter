@@ -93,3 +93,17 @@ describe('estimates and mapping', () => {
     expect(o.airlines).toEqual([{ iata: 'AI', name: 'AIR INDIA' }]);
   });
 });
+
+describe('between cities', () => {
+  it('compares flight, train, bus and road with cheapest and fastest badges', async () => {
+    const { body } = await call(`/transport/intercity?from=BOM&to=GOI&date=${inDays(30)}&travellers=2`);
+    const modes = body.options.map((o: { mode: string }) => o.mode);
+    expect(modes).toEqual(expect.arrayContaining(['flight', 'train', 'bus', 'car']));
+    const cheapest = body.options.find((o: { badges: string[] }) => o.badges.includes('cheapest'));
+    const fastest = body.options.find((o: { badges: string[] }) => o.badges.includes('fastest'));
+    expect(cheapest.priceInr).toBe(Math.min(...body.options.map((o: { priceInr: number }) => o.priceInr)));
+    expect(fastest.mode).toBe('flight');
+    expect(body.options.find((o: { mode: string }) => o.mode === 'train').link).toContain('irctc.co.in');
+    expect(body.options.find((o: { mode: string }) => o.mode === 'bus').link).toBe('https://www.redbus.in/bus-tickets/mumbai-to-goa');
+  });
+});

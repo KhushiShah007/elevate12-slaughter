@@ -31,3 +31,4 @@ One line each, in the order they were made.
 - Experience booking links are search deep links (GetYourGuide, Viator, Klook, Airbnb Experiences, official site) with an affiliate disclosure; partner APIs need approval.
 - Restaurant diet tags (veg/vegan/Jain/halal), phone, website and reservation come from OSM tags (re-derived from the cached downloads, no new fetching); signature dishes are not shown (no open source).
 - Test runner limited to 3 parallel files (each server test boots an in-memory Postgres with seed data).
+- Transportation between cities: flight from the flight provider plus estimated train (3AC ~Rs 1.6/km), bus (AC sleeper ~Rs 1.3/km) and outstation cab (~Rs 12/km, 18 for SUVs); IRCTC and redBus have no open API, so they are deep links behind `TrainProvider`/`BusProvider` stubs; Rome2Rio link for more routes. Amadeus Transfer Search not wired (no keys); car rentals are link-outs (Zoomcar / Rentalcars.com).

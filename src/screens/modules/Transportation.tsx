@@ -2,6 +2,7 @@ import { Bus, Car, TrainFront, TramFront } from 'lucide-react';
 import { ModuleFrame } from './ModuleFrame';
 import { TagCard } from '../../components/cards/TagCard';
 import { RidePlanner } from '../../components/guide/RidePlanner';
+import { IntercityPlanner } from '../../components/guide/IntercityPlanner';
 import { useGuide } from '../../hooks/useGuide';
 import type { Booking, TransportBooking, Trip } from '../../types';
 import type { Pastel } from '../../design/tokens';
@@ -51,5 +52,10 @@ function Planner({ trip, bookings }: { trip: Trip; bookings: Booking[] }) {
   const { guide, offline } = useGuide(trip);
   if (guide === undefined) return <p className="text-sm text-muted">Loading ways to get around {trip.to}…</p>;
   if (guide === null) return <p className="text-sm text-muted">{offline ? 'Connect to the internet to plan rides.' : `Ride planning works for the destinations in Explore. “${trip.to}” is not one yet.`}</p>;
-  return <RidePlanner trip={trip} guide={guide} bookings={bookings} />;
+  return (
+    <>
+      <IntercityPlanner trip={trip} guide={guide} />
+      <RidePlanner trip={trip} guide={guide} bookings={bookings} />
+    </>
+  );
 }
