@@ -2,33 +2,28 @@ import { defineConfig, loadEnv, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { colors } from './src/design/tokens';
-import { handleAi, type AiEnv } from './api/_ai';
+import { getRequestListener } from '@hono/node-server';
 
-/** Dev only: serve POST /api/ai like the Vercel function, with the key from .env.local. */
-function devApi(env: AiEnv): Plugin {
+/**
+ * Dev only: serve /api/* from the Hono app in server/app.ts. Loaded through Vite's SSR
+ * loader on every request, so edits to server code apply without a restart.
+ */
+function devApi(): Plugin {
   return {
     name: 'voyage-dev-api',
     configureServer(server) {
-      server.middlewares.use('/api/ai', (req, res) => {
-        if (req.method !== 'POST') {
-          res.statusCode = 405;
-          res.end();
-          return;
-        }
-        let raw = '';
-        req.on('data', (c) => (raw += c));
-        req.on('end', async () => {
-          let body: unknown = null;
-          try {
-            body = JSON.parse(raw);
-          } catch {
-            /* handled as a bad request */
-          }
-          const out = await handleAi(body, env);
-          res.statusCode = out.status;
+      server.middlewares.use(async (req, res, next) => {
+        if (!req.url?.startsWith('/api/')) return next();
+        try {
+          const { app } = (await server.ssrLoadModule('/server/app.ts')) as typeof import('./server/app');
+          await getRequestListener(app.fetch)(req, res);
+        } catch (err) {
+          server.ssrFixStacktrace(err as Error);
+          console.error(err);
+          res.statusCode = 500;
           res.setHeader('content-type', 'application/json');
-          res.end(JSON.stringify(out.json));
-        });
+          res.end(JSON.stringify({ error: { code: 'server_error', message: 'The API failed to start. See the terminal.' } }));
+        }
       });
     },
   };
@@ -36,11 +31,13 @@ function devApi(env: AiEnv): Plugin {
 
 export default defineConfig(({ mode }) => {
   // Server-side only: no VITE_ prefix, so these never reach the browser bundle.
+  // Copied into process.env so the API (server/) reads the same variables as on Vercel.
   const env = loadEnv(mode, process.cwd(), '');
+  for (const [k, v] of Object.entries(env)) if (!k.startsWith('VITE_') && process.env[k] === undefined) process.env[k] = v;
   return {
     plugins: [
       react(),
-      devApi({ GROQ_API_KEY: env.GROQ_API_KEY, GROQ_MODEL: env.GROQ_MODEL }),
+      devApi(),
       VitePWA({
         registerType: 'autoUpdate',
         includeAssets: ['icons/icon.svg', 'icons/apple-touch-icon.png'],

@@ -6,3 +6,6 @@ dev-dist
 .vercel
 *.log
 .DS_Store
+
+# Local database (PGlite) and data pipeline downloads
+.data
