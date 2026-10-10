@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { getDb, schema as s } from '../db/client';
 import { AppError, parse } from '../http';
 import { currencyFor } from './live';
+import { estimateRoom } from '../hotels';
 
 // Read-only reference data: destinations (with places) and airports.
 
@@ -61,7 +62,7 @@ catalog.get('/destinations/:slug', async (c) => {
   ]);
   // Chains repeat (five Starbucks): keep the first of each name.
   const unique = <T extends { name: string }>(rows: T[]) => rows.filter((r, i) => rows.findIndex((x) => x.name.toLowerCase() === r.name.toLowerCase()) === i);
-  return c.json({ destination: { ...destination, currency: currencyFor(destination.country) }, attractions: unique(attractions), restaurants: unique(restaurants), hotels: unique(hotels) });
+  return c.json({ destination: { ...destination, currency: currencyFor(destination.country) }, attractions: unique(attractions), restaurants: unique(restaurants), hotels: unique(hotels).map((h) => ({ ...h, priceRange: destination.dailyCostInr ? estimateRoom(destination.dailyCostInr, h.stars, h.kind).range : null })) });
 });
 
 catalog.get('/airports', async (c) => {

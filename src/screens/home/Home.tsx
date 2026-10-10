@@ -12,6 +12,11 @@ import { SyncStatus } from '../../components/layout/SyncStatus';
 import { clock, day, greetingKey, localTime } from '../../utils/format';
 import { useT } from '../../i18n';
 import { useTranslated } from '../../hooks/useTranslated';
+import { usePersona } from '../../hooks/usePersona';
+import { useDestinations } from '../../hooks/useDestinations';
+import { suggestDestinations } from '../../engines/personalize';
+import { destinationPhoto } from '../../data/photos';
+import { Polaroid } from '../../components/cards/Polaroid';
 
 const screenFor = { delay: 'delay', prepone: 'preponed', missed: 'missed' } as const;
 
@@ -21,6 +26,8 @@ export default function Home() {
   const traveller = useTraveller();
   const next = useNextFlight();
   const trips = useTrips();
+  const persona = usePersona();
+  const { destinations } = useDestinations();
   const { tr } = useTranslated(next?.event ? [{ id: 'headline', text: next.headline }] : []);
   if (next === undefined || !trips || !traveller) return null;
 
@@ -115,6 +122,33 @@ export default function Home() {
           <Tile to="/destinations" pastel="mint" icon={<Compass size={20} />} title={t('home.explore')} sub={t('home.exploreSub')} />
         </div>
       </motion.section>
+
+      {persona && destinations.length > 0 && (
+        <motion.section variants={fadeUp} className="mt-8">
+          <div className="mb-1 flex items-center justify-between">
+            <h2 className="text-xl">{persona.fromQuiz ? t('home.forYou') : t('home.popular')}</h2>
+            <Link to="/destinations" className="flex min-h-tap items-center text-sm font-medium text-espresso">
+              {t('home.explore')} <ChevronRight size={16} />
+            </Link>
+          </div>
+          <div className="no-scrollbar -mx-gutter flex gap-4 overflow-x-auto px-gutter pb-4 pt-2">
+            {suggestDestinations(destinations, persona.persona, 6).map(({ dest, reasons }, i) => {
+              const photo = destinationPhoto(dest.slug);
+              return (
+                <Link key={dest.slug} to={`/destinations/${dest.slug}`} className="block">
+                  <Polaroid
+                    pastel={(['peach', 'sky', 'mint', 'butter', 'lavender', 'rose'] as const)[i % 6]}
+                    caption={dest.name}
+                    sub={persona.fromQuiz && reasons[0] ? reasons[0] : dest.country}
+                    image={photo ? { src: photo.src, alt: dest.name } : undefined}
+                    tilt={i % 2 ? 2 : -2}
+                  />
+                </Link>
+              );
+            })}
+          </div>
+        </motion.section>
+      )}
 
       {next && (
         <motion.div variants={fadeUp} className="mt-6">

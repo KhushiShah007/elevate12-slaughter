@@ -88,3 +88,14 @@ describe('live data', () => {
     expect(((await get('/destinations/goa')).body.destination as { currency: string }).currency).toBe('INR');
   });
 });
+
+describe('weather wording', () => {
+  it('turns MET Norway symbols into plain words', async () => {
+    const { metWords, weatherWords } = await import('../routes/live');
+    expect(metWords('partlycloudy_day')).toBe('Partly cloudy');
+    expect(metWords('lightrainshowers_night')).toBe('Showers');
+    expect(metWords('heavyrainandthunder')).toBe('Thunderstorm');
+    expect(metWords('clearsky_polartwilight')).toBe('Clear');
+    expect(weatherWords(61)).toBe('Rain');
+  });
+});

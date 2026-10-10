@@ -23,7 +23,7 @@ async function cached<T>(key: string, ttlMs: number, load: () => Promise<T>): Pr
 async function getJson<T>(url: string, tries = 2): Promise<T> {
   for (let i = 0; ; i++) {
     try {
-      const res = await fetch(url, { headers: { 'user-agent': 'VoyageTravelApp/0.1' }, signal: AbortSignal.timeout(10_000) });
+      const res = await fetch(url, { headers: { 'user-agent': 'VoyageTravelApp/0.1 (hackathon prototype; https://github.com)' }, signal: AbortSignal.timeout(10_000) });
       if (!res.ok) throw new Error(`${res.status} from ${new URL(url).hostname}`);
       return (await res.json()) as T;
     } catch (err) {
@@ -46,36 +46,99 @@ export function weatherWords(code: number): string {
   return 'Thunderstorm';
 }
 
+interface Weather {
+  now: { tempC: number; summary: string; at: string };
+  days: { date: string; maxC: number; minC: number; summary: string; rainChance: number | null }[];
+  source: string;
+  sourceUrl: string;
+  license: string;
+  fetchedAt: string;
+}
+
+async function openMeteo(lat: number, lon: number): Promise<Weather> {
+  const r = await getJson<{
+    current: { time: string; temperature_2m: number; weather_code: number };
+    daily: { time: string[]; temperature_2m_max: number[]; temperature_2m_min: number[]; weather_code: number[]; precipitation_probability_max: (number | null)[] };
+  }>(
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max&timezone=auto&forecast_days=7`,
+    1,
+  );
+  return {
+    now: { tempC: Math.round(r.current.temperature_2m), summary: weatherWords(r.current.weather_code), at: r.current.time },
+    days: r.daily.time.map((date, i) => ({
+      date,
+      maxC: Math.round(r.daily.temperature_2m_max[i]),
+      minC: Math.round(r.daily.temperature_2m_min[i]),
+      summary: weatherWords(r.daily.weather_code[i]),
+      rainChance: r.daily.precipitation_probability_max[i],
+    })),
+    source: 'Open-Meteo',
+    sourceUrl: 'https://open-meteo.com',
+    license: 'CC BY 4.0',
+    fetchedAt: new Date().toISOString(),
+  };
+}
+
+/** MET Norway symbol codes ("partlycloudy_day") in plain words. */
+export function metWords(symbol: string): string {
+  const code = symbol.replace(/_(day|night|polartwilight)$/, '');
+  if (code.includes('thunder')) return 'Thunderstorm';
+  if (code.includes('snow') || code.includes('sleet')) return 'Snow';
+  if (code.includes('showers')) return 'Showers';
+  if (code.includes('rain')) return 'Rain';
+  if (code === 'fog') return 'Fog';
+  if (code === 'cloudy') return 'Cloudy';
+  if (code === 'partlycloudy' || code === 'fair') return 'Partly cloudy';
+  return 'Clear';
+}
+
+/** Second source: MET Norway (free, needs a User-Agent). Daily values from the hourly series (UTC days). */
+async function metNorway(lat: number, lon: number): Promise<Weather> {
+  const r = await getJson<{
+    properties: { timeseries: { time: string; data: { instant: { details: { air_temperature: number } }; next_1_hours?: { summary: { symbol_code: string } }; next_6_hours?: { summary: { symbol_code: string } } } }[] };
+  }>(`https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${lat.toFixed(4)}&lon=${lon.toFixed(4)}`, 1);
+  const series = r.properties.timeseries;
+  const first = series[0];
+  const byDay = new Map<string, { temps: number[]; noon?: string }>();
+  for (const t of series) {
+    const date = t.time.slice(0, 10);
+    const day = byDay.get(date) ?? { temps: [] };
+    day.temps.push(t.data.instant.details.air_temperature);
+    const sym = t.data.next_6_hours?.summary.symbol_code ?? t.data.next_1_hours?.summary.symbol_code;
+    if (sym && (!day.noon || t.time.slice(11, 13) === '12')) day.noon = sym;
+    byDay.set(date, day);
+  }
+  return {
+    now: { tempC: Math.round(first.data.instant.details.air_temperature), summary: metWords(first.data.next_1_hours?.summary.symbol_code ?? 'clearsky'), at: first.time },
+    days: [...byDay.entries()].slice(0, 7).map(([date, d]) => ({ date, maxC: Math.round(Math.max(...d.temps)), minC: Math.round(Math.min(...d.temps)), summary: metWords(d.noon ?? 'clearsky'), rainChance: null })),
+    source: 'MET Norway',
+    sourceUrl: 'https://api.met.no',
+    license: 'CC BY 4.0',
+    fetchedAt: new Date().toISOString(),
+  };
+}
+
+const lastGood = new Map<string, Weather>();
+
 live.get('/destinations/:slug/weather', async (c) => {
   const slug = parse(z.string().regex(/^[a-z0-9-]{1,60}$/), c.req.param('slug'));
   const { db } = await getDb();
   const [d] = await db.select({ lat: s.destinations.lat, lon: s.destinations.lon }).from(s.destinations).where(eq(s.destinations.slug, slug)).limit(1);
   if (!d) throw new AppError(404, 'not_found', 'We could not find that destination.');
   try {
-    const out = await cached(`wx:${slug}`, 30 * 60_000, async () => {
-      const r = await getJson<{
-        current: { time: string; temperature_2m: number; weather_code: number };
-        daily: { time: string[]; temperature_2m_max: number[]; temperature_2m_min: number[]; weather_code: number[]; precipitation_probability_max: (number | null)[] };
-      }>(
-        `https://api.open-meteo.com/v1/forecast?latitude=${d.lat}&longitude=${d.lon}&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max&timezone=auto&forecast_days=7`,
-      );
-      return {
-        now: { tempC: Math.round(r.current.temperature_2m), summary: weatherWords(r.current.weather_code), at: r.current.time },
-        days: r.daily.time.map((date, i) => ({
-          date,
-          maxC: Math.round(r.daily.temperature_2m_max[i]),
-          minC: Math.round(r.daily.temperature_2m_min[i]),
-          summary: weatherWords(r.daily.weather_code[i]),
-          rainChance: r.daily.precipitation_probability_max[i],
-        })),
-        source: 'Open-Meteo',
-        sourceUrl: 'https://open-meteo.com',
-        license: 'CC BY 4.0',
-        fetchedAt: new Date().toISOString(),
-      };
+    const out = await cached(`wx:${slug}`, 60 * 60_000, async () => {
+      try {
+        return await openMeteo(d.lat, d.lon);
+      } catch {
+        return await metNorway(d.lat, d.lon); // Open-Meteo busy or rate limited
+      }
     });
+    lastGood.set(slug, out);
     return c.json(out);
   } catch {
+    // Both sources failed: an older forecast is better than none, if it says how old.
+    const stale = lastGood.get(slug);
+    if (stale) return c.json({ ...stale, stale: true });
     throw new AppError(503, 'weather_unavailable', 'Weather is not available right now.');
   }
 });

@@ -41,6 +41,8 @@ export const hinglish: Messages = {
   'home.newTripSub': 'Plan karo ya booking paste karo',
   'home.explore': 'Explore',
   'home.exploreSub': '53 places, photos ke saath',
+  'home.forYou': 'Aapke liye suggestions',
+  'home.popular': 'Popular places',
   'home.completedTrips': 'Poori hui trips',
   'home.stamps': '{n} stamps jama',
   'home.openWorkspace': '{trip} kholo',

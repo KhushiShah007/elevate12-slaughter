@@ -7,6 +7,9 @@ import { Chip } from '../../components/ui/Chip';
 import { api, ApiError } from '../../api/client';
 import { destinationPhoto } from '../../data/photos';
 import { inr } from '../../utils/format';
+import { usePersona } from '../../hooks/usePersona';
+import { defaultPersona } from '../../engines/persona';
+import { budgetStyle, budgetStyleLabel, orderEateries, orderPlaces, tripEstimate } from '../../engines/personalize';
 import NotFound from '../NotFound';
 
 interface Place {
@@ -20,6 +23,7 @@ interface Place {
   openingHours?: string | null;
   stars?: number | null;
   pricePerNightInr?: number | null;
+  priceRange?: [number, number] | null;
   priceIsEstimate?: boolean;
   address?: string | null;
   source: string;
@@ -51,6 +55,7 @@ interface Weather {
   now: { tempC: number; summary: string };
   days: { date: string; maxC: number; minC: number; summary: string; rainChance: number | null }[];
   source: string;
+  stale?: boolean;
 }
 
 interface Fx {
@@ -112,6 +117,9 @@ export default function DestinationDetail() {
   const { slug = '' } = useParams();
   const navigate = useNavigate();
   const { data, missing, offline } = useDetail(slug);
+  const you = usePersona();
+  const persona = you?.persona ?? defaultPersona();
+  const style = budgetStyle(persona);
   const [weather, setWeather] = useState<Weather | 'error' | null>(null);
   const [weatherTry, setWeatherTry] = useState(0);
   const [fx, setFx] = useState<Fx | null>(null);
@@ -131,6 +139,9 @@ export default function DestinationDetail() {
   if (!data) return <PageHeader back title="Loading…" sub={offline ? 'You are offline and this place is not saved on the phone yet.' : undefined} />;
 
   const d = data.destination;
+  // Places that suit the traveller first (veg places first for veg and Jain travellers).
+  const sights = orderPlaces(data.attractions, persona);
+  const eateries = orderEateries(data.restaurants, persona);
   const photo = destinationPhoto(d.slug);
   const [license, page] = (d.imageLicense ?? '').split(' · ');
 
@@ -202,6 +213,10 @@ export default function DestinationDetail() {
                 <p className="text-xs text-espresso">
                   Next days {Math.min(...weather.days.map((x) => x.minC))}–{Math.max(...weather.days.map((x) => x.maxC))}°C
                 </p>
+                <p className="text-[0.625rem] text-muted">
+                  {weather.source}
+                  {weather.stale && ' · older forecast'}
+                </p>
               </>
             ) : (
               <p className="mt-1 text-sm text-muted">
@@ -223,20 +238,22 @@ export default function DestinationDetail() {
         {d.dailyCostInr && (
           <Section icon={<Coins size={18} />} title="Cost per person per day" note="Typical spend on stay, food and local travel. Estimates, not quotes.">
             <ul className="grid grid-cols-2 gap-2 text-sm">
-              {(
-                [
-                  ['Shoestring', d.dailyCostInr.shoestring],
-                  ['Moderate', d.dailyCostInr.moderate],
-                  ['Comfort', d.dailyCostInr.comfort],
-                  ['Luxury', d.dailyCostInr.luxury],
-                ] as const
-              ).map(([label, v]) => (
-                <li key={label} className="flex justify-between rounded-md border border-line bg-paper px-3 py-2">
-                  <span className="text-espresso">{label}</span>
-                  <span className="font-medium tabular-nums text-ink">{inr(v)}</span>
+              {(['shoestring', 'moderate', 'comfort', 'luxury'] as const).map((band) => (
+                <li
+                  key={band}
+                  className={`flex justify-between rounded-md border px-3 py-2 ${you?.fromQuiz && band === style ? 'border-ink bg-butter' : 'border-line bg-paper'}`}
+                >
+                  <span className="text-espresso">{budgetStyleLabel[band]}</span>
+                  <span className="font-medium tabular-nums text-ink">{inr(d.dailyCostInr![band])}</span>
                 </li>
               ))}
             </ul>
+            {you?.fromQuiz && d.idealDays && (
+              <p className="mt-2 text-sm text-ink">
+                Your style ({budgetStyleLabel[style].toLowerCase()}): about <span className="font-semibold">{inr(tripEstimate(d.dailyCostInr, style, d.idealDays, 1))}</span> per person for{' '}
+                {d.idealDays} days, plus flights.
+              </p>
+            )}
             {fx && (
               <p className="mt-2 text-xs text-muted">
                 ₹1,000 = {(fx.rate * 1000).toLocaleString('en-IN', { maximumFractionDigits: 2 })} {fx.to} · {fx.source}
@@ -249,12 +266,13 @@ export default function DestinationDetail() {
         {data.attractions.length > 0 && (
           <Section icon={<Landmark size={18} />} title="Places to see" note="From OpenStreetMap. Tap one to see it on the map.">
             <ul className="divide-y divide-line rounded-md border border-line bg-paper">
-              {data.attractions.slice(0, 8).map((p) => (
+              {sights.slice(0, 8).map(({ item: p, reason }) => (
                 <li key={p.id}>
                   <a href={mapLink(p, d.name)} target="_blank" rel="noreferrer" className="flex min-h-tap items-center justify-between gap-3 px-4 py-2 text-sm">
                     <span className="min-w-0">
                       <span className="block truncate font-medium text-ink">{p.name}</span>
                       {(p.category || p.openingHours) && <span className="block truncate text-xs capitalize text-muted">{[p.category?.replace(/_/g, ' '), p.openingHours].filter(Boolean).join(' · ')}</span>}
+                      {reason && <span className="mt-0.5 block text-[0.6875rem] font-semibold text-ok">For you · {reason}</span>}
                     </span>
                     <MapPin size={16} className="shrink-0 text-muted" />
                   </a>
@@ -267,7 +285,7 @@ export default function DestinationDetail() {
         {data.restaurants.length > 0 && (
           <Section icon={<UtensilsCrossed size={18} />} title="Places to eat" note="From OpenStreetMap.">
             <ul className="divide-y divide-line rounded-md border border-line bg-paper">
-              {data.restaurants.slice(0, 8).map((p) => (
+              {eateries.slice(0, 8).map((p) => (
                 <li key={p.id}>
                   <a href={mapLink(p, d.name)} target="_blank" rel="noreferrer" className="flex min-h-tap items-center justify-between gap-3 px-4 py-2 text-sm">
                     <span className="min-w-0">
@@ -293,7 +311,11 @@ export default function DestinationDetail() {
                     <span className="block truncate font-medium text-ink">{p.name}</span>
                     <span className="block truncate text-xs text-muted">{[p.stars ? `${p.stars}★` : null, p.address].filter(Boolean).join(' · ') || 'Hotel'}</span>
                   </span>
-                  {p.pricePerNightInr != null && <span className="shrink-0 text-xs tabular-nums text-espresso">~{inr(p.pricePerNightInr)}/night</span>}
+                  {p.priceRange && (
+                    <span className="shrink-0 text-xs tabular-nums text-espresso">
+                      {inr(p.priceRange[0])}–{inr(p.priceRange[1])}/night
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>

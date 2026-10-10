@@ -41,6 +41,8 @@ export const bn: Messages = {
   'home.newTripSub': 'পরিকল্পনা করুন বা বুকিং পেস্ট করুন',
   'home.explore': 'ঘুরে দেখুন',
   'home.exploreSub': 'ছবি সহ 53টি জায়গা',
+  'home.forYou': 'আপনার জন্য প্রস্তাব',
+  'home.popular': 'জনপ্রিয় জায়গা',
   'home.completedTrips': 'শেষ হওয়া ভ্রমণ',
   'home.stamps': '{n}টি স্ট্যাম্প জমেছে',
   'home.openWorkspace': '{trip} খুলুন',

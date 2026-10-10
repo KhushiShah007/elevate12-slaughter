@@ -11,6 +11,10 @@ import { useAuth } from '../../state/auth';
 import { matchDestination, useDestinations } from '../../hooks/useDestinations';
 import { useTripDraft, type DraftData, type SaveState } from '../../hooks/useTripDraft';
 import { checkNewTrip, createTrip } from '../../db/repos/trips';
+import { usePersona } from '../../hooks/usePersona';
+import { defaultPersona } from '../../engines/persona';
+import { budgetStyle, budgetStyleLabel, tripEstimate } from '../../engines/personalize';
+import { inr } from '../../utils/format';
 
 const saveLabel: Record<SaveState, string> = {
   idle: '',
@@ -43,6 +47,11 @@ export default function NewTrip() {
   const dest = matchDestination(destinations, d.to);
   const input = { title: d.title, from: d.from, to: d.to, destinationSlug: dest?.slug ?? null, startDate: d.startDate, endDate: d.endDate, travellers: d.travellers, budgetInr: budget };
   const errors = checkNewTrip(input, today);
+  // Budget hint from the destination's typical costs and how this traveller likes to spend.
+  const persona = usePersona()?.persona ?? defaultPersona();
+  const days = d.startDate && d.endDate && d.endDate >= d.startDate ? Math.round((Date.parse(d.endDate) - Date.parse(d.startDate)) / 86_400_000) + 1 : 0;
+  const style = budgetStyle(persona);
+  const hint = dest?.dailyCostInr && days && d.travellers > 0 ? { days, label: budgetStyleLabel[style].toLowerCase(), total: tripEstimate(dest.dailyCostInr, style, days, d.travellers) } : null;
   const err = (k: keyof typeof errors) => (showErrors ? errors[k] : undefined);
 
   const create = async () => {
@@ -133,6 +142,16 @@ export default function NewTrip() {
                 error={err('budgetInr')}
               />
             </div>
+            {hint && (
+              <p className="-mt-2 text-xs text-espresso">
+                Typical for a {hint.label} trip: about {inr(hint.total)} for {d.travellers} {d.travellers === 1 ? 'person' : 'people'} × {hint.days} days, plus flights.{' '}
+                {!d.budgetInr && (
+                  <button onClick={() => draft.update({ budgetInr: String(hint.total) })} className="min-h-tap font-medium underline underline-offset-4">
+                    Use this
+                  </button>
+                )}
+              </p>
+            )}
           </>
         ) : (
           <>

@@ -41,6 +41,8 @@ export const ta: Messages = {
   'home.newTripSub': 'திட்டமிடுங்கள் அல்லது முன்பதிவை ஒட்டுங்கள்',
   'home.explore': 'இடங்களை ஆராயுங்கள்',
   'home.exploreSub': 'படங்களுடன் 53 இடங்கள்',
+  'home.forYou': 'உங்களுக்கான பரிந்துரைகள்',
+  'home.popular': 'பிரபலமான இடங்கள்',
   'home.completedTrips': 'முடிந்த பயணங்கள்',
   'home.stamps': '{n} முத்திரைகள் சேர்ந்தன',
   'home.openWorkspace': '{trip} திற',
