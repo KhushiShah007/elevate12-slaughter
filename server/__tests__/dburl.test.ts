@@ -21,3 +21,13 @@ describe('DATABASE_URL wrong kind', () => {
     expect(() => normalizeDbUrl('https://abc.supabase.co')).toThrow(/starts with "https:\/\/"/);
   });
 });
+
+describe('DATABASE_URL shape problems', () => {
+  it('names a missing @ and a space without echoing the value', () => {
+    expect(() => normalizeDbUrl('postgresql://postgres.x: secretpwaws-0-ap.pooler.supabase.com:6543/postgres')).toThrow(/space.*no "@"/);
+    expect(() => normalizeDbUrl('postgresql://postgres.x: secretpwaws-0-ap.pooler.supabase.com:6543/postgres')).not.toThrow(/secretpw/);
+  });
+  it('accepts the pooler string', () => {
+    expect(normalizeDbUrl('postgresql://postgres.abc:Pw123xyz@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres')).toContain('@aws-0');
+  });
+});

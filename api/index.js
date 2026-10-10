@@ -626,6 +626,16 @@ function normalizeDbUrl(raw) {
       scheme ? `DATABASE_URL starts with "${scheme}://" but must start with "postgresql://". Use the database connection string (Supabase: Connect -> Transaction pooler), not the project URL.` : 'DATABASE_URL must start with "postgresql://". Use the database connection string (Supabase: Connect -> Transaction pooler).'
     );
   }
+  try {
+    new URL(u);
+  } catch {
+    const problems = [
+      /\s/.test(u) && "it contains a space or line break",
+      !u.includes("@") && 'there is no "@" between the password and the host',
+      !/:\d+\//.test(u) && 'the ":6543/" port part is missing'
+    ].filter(Boolean);
+    throw new Error(`DATABASE_URL is not a valid connection string${problems.length ? `: ${problems.join("; ")}` : ""}. Expected postgresql://USER:PASSWORD@HOST:6543/postgres`);
+  }
   return u;
 }
 async function connect() {
