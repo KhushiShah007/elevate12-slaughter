@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    @apply min-h-full;
+  }
+  body {
+    @apply bg-sand font-body text-ink antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display text-ink;
+    font-optical-sizing: auto;
+  }
+}
+
+@layer components {
+  /* Subtle paper grain over a surface. Noise only, no colour of its own. */
+  .grain {
+    position: relative;
+    isolation: isolate;
+  }
+  .grain::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+    opacity: 0.35;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.38 0 0 0 0 0.3 0 0 0 0.09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Postage-stamp perforated edge: holes only in the 6px padding ring, solid inside. */
+  .perforated {
+    padding: 6px;
+    -webkit-mask:
+      radial-gradient(circle at 5px 5px, transparent 3.5px, #000 4px) -5px -5px / 10px 10px,
+      linear-gradient(#000 0 0) content-box;
+    mask:
+      radial-gradient(circle at 5px 5px, transparent 3.5px, #000 4px) -5px -5px / 10px 10px,
+      linear-gradient(#000 0 0) content-box;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+}
