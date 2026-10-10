@@ -1,4 +1,5 @@
-import { Outlet, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { useAuth } from '../../state/auth';
 import { useEffect } from 'react';
 import { TopBar } from './TopBar';
 import { BottomNav } from './BottomNav';
@@ -11,9 +12,14 @@ export function AppShell() {
   const { pathname } = useLocation();
   const online = useOnline();
   const { t } = useT();
+  const { status } = useAuth();
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
+
+  // In-app screens need an account. While the session is being checked, show nothing.
+  if (status === 'signedOut') return <Navigate to="/welcome" replace />;
+  if (status === 'loading') return <div className="mx-auto min-h-screen w-full max-w-app bg-ivory" />;
 
   return (
     <div className="grain mx-auto min-h-screen w-full max-w-app bg-ivory pb-32 shadow-lift">

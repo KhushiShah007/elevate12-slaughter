@@ -30,10 +30,12 @@ const provenance = {
 
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
-  email: text('email').notNull().unique(),
+  // Sign in with an email or an Indian mobile number (stored as +91XXXXXXXXXX).
+  email: text('email').unique(),
+  phone: text('phone').unique(),
   passwordHash: text('password_hash'), // null for Google-only accounts
   googleSub: text('google_sub').unique(),
-  emailVerified: boolean('email_verified').notNull().default(false),
+  contactVerified: boolean('contact_verified').notNull().default(false),
   createdAt: created(),
 });
 
@@ -78,6 +80,22 @@ export const passwordResets = pgTable('password_resets', {
   usedAt: timestamp('used_at', { withTimezone: true }),
   createdAt: created(),
 });
+
+/** One-time codes for sign-up, code log-in and password reset. Only a hash is stored. */
+export const otpCodes = pgTable(
+  'otp_codes',
+  {
+    id: serial('id').primaryKey(),
+    contact: text('contact').notNull(),
+    purpose: text('purpose').notNull(), // signup | login | reset
+    codeHash: text('code_hash').notNull(),
+    attempts: integer('attempts').notNull().default(0),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    usedAt: timestamp('used_at', { withTimezone: true }),
+    createdAt: created(),
+  },
+  (t) => [index('otp_contact_idx').on(t.contact, t.purpose)],
+);
 
 // ---------- Reference data (seeded from open datasets) ----------
 

@@ -160,6 +160,17 @@ CREATE TABLE IF NOT EXISTS "hotels_cache" (
 	"expires_at" timestamp with time zone
 );
 --> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "otp_codes" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"contact" text NOT NULL,
+	"purpose" text NOT NULL,
+	"code_hash" text NOT NULL,
+	"attempts" integer DEFAULT 0 NOT NULL,
+	"expires_at" timestamp with time zone NOT NULL,
+	"used_at" timestamp with time zone,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "password_resets" (
 	"token_hash" text PRIMARY KEY NOT NULL,
 	"user_id" uuid NOT NULL,
@@ -281,12 +292,14 @@ CREATE TABLE IF NOT EXISTS "trips" (
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "users" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"email" text NOT NULL,
+	"email" text,
+	"phone" text,
 	"password_hash" text,
 	"google_sub" text,
-	"email_verified" boolean DEFAULT false NOT NULL,
+	"contact_verified" boolean DEFAULT false NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "users_email_unique" UNIQUE("email"),
+	CONSTRAINT "users_phone_unique" UNIQUE("phone"),
 	CONSTRAINT "users_google_sub_unique" UNIQUE("google_sub")
 );
 --> statement-breakpoint
@@ -418,6 +431,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS "attractions_ext_idx" ON "attractions" USING b
 CREATE INDEX IF NOT EXISTS "chat_messages_conv_idx" ON "chat_messages" USING btree ("conversation_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "hotels_dest_idx" ON "hotels_cache" USING btree ("destination_id");--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "hotels_ext_idx" ON "hotels_cache" USING btree ("provider","external_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "otp_contact_idx" ON "otp_codes" USING btree ("contact","purpose");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "restaurants_dest_idx" ON "restaurants" USING btree ("destination_id");--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "restaurants_ext_idx" ON "restaurants" USING btree ("source","external_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "routes_pair_idx" ON "routes" USING btree ("src_iata","dst_iata");--> statement-breakpoint

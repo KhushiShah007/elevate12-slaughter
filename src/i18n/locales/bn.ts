@@ -161,7 +161,7 @@ export const bn: Messages = {
   'me.senior': 'প্রবীণ মোড',
   'me.seniorSub': 'বড় লেখা আর বোতাম',
   'me.retakeQuiz': 'পারসোনা কুইজ আবার দিন',
-  'me.signOut': 'সাইন আউট (ডেমো)',
+  'me.signOut': 'সাইন আউট',
   'me.persona': 'পারসোনা',
   'me.points': 'পয়েন্ট',
   'me.storageKept': 'এই ফোন আপনার ভ্রমণ আর নথি যত্ন করে রাখবে।',

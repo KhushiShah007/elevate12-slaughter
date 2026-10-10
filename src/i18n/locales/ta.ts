@@ -161,7 +161,7 @@ export const ta: Messages = {
   'me.senior': 'மூத்தோர் முறை',
   'me.seniorSub': 'பெரிய எழுத்துகள், பொத்தான்கள்',
   'me.retakeQuiz': 'பர்சோனா வினாடி வினா மீண்டும்',
-  'me.signOut': 'வெளியேறு (டெமோ)',
+  'me.signOut': 'வெளியேறு',
   'me.persona': 'பர்சோனா',
   'me.points': 'புள்ளிகள்',
   'me.storageKept': 'இந்த போன் உங்கள் பயணங்களையும் ஆவணங்களையும் பாதுகாக்கும்.',

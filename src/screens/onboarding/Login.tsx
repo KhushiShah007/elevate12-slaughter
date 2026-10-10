@@ -6,23 +6,43 @@ import { ContactField, isValidContact, type ContactMode } from './ContactField';
 import type { AuthFlowState } from './SignUp';
 import { Input } from '../../components/ui/Input';
 import { PillButton } from '../../components/ui/PillButton';
-import { useSettings } from '../../state/settings';
-import { logInUser } from '../../db/repos/users';
+import { useAuth } from '../../state/auth';
+import { api, ApiError, type Me, type OtpSent } from '../../api/client';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { update } = useSettings();
+  const auth = useAuth();
   const [mode, setMode] = useState<ContactMode>('phone');
   const [contact, setContact] = useState('');
   const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
   const validContact = isValidContact(mode, contact);
 
-  // Demo: the password is not checked against a server. Production uses Supabase Auth or Firebase Auth.
-  const logIn = async () => {
-    await logInUser(contact.trim());
-    update({ signedIn: true });
-    navigate('/home', { replace: true });
+  const run = async (fn: () => Promise<void>) => {
+    setBusy(true);
+    setError(null);
+    try {
+      await fn();
+    } catch (err) {
+      setError(err instanceof ApiError ? err : new ApiError(0, 'unknown', 'Something went wrong. Please try again.'));
+    } finally {
+      setBusy(false);
+    }
   };
+
+  const logIn = () =>
+    run(async () => {
+      const res = await api<{ me: Me }>('POST', '/auth/login', { contact, password });
+      await auth.signedIn(res.me);
+      navigate('/home', { replace: true });
+    });
+
+  const sendCode = (flow: 'login' | 'reset') =>
+    run(async () => {
+      const sent = await api<OtpSent>('POST', '/auth/otp', { contact, purpose: flow });
+      navigate('/otp', { state: { flow, contact: sent.contact, devCode: sent.devCode } satisfies AuthFlowState });
+    });
 
   return (
     <OnboardingFrame
@@ -30,16 +50,11 @@ export default function Login() {
       sub="Log in with your phone or email and password."
       footer={
         <>
-          <PillButton full disabled={!validContact || password.length < 8} onClick={() => void logIn()}>
-            Log in
+          {error && !error.fields.contact && <p role="alert" className="mb-3 text-center text-sm text-bad">{error.message}</p>}
+          <PillButton full disabled={!validContact || password.length < 8 || busy} onClick={() => void logIn()}>
+            {busy ? 'Please wait…' : 'Log in'}
           </PillButton>
-          <PillButton
-            full
-            variant="ghost"
-            className="mt-3"
-            disabled={!validContact}
-            onClick={() => navigate('/otp', { state: { flow: 'login', contact: contact.trim() } satisfies AuthFlowState })}
-          >
+          <PillButton full variant="ghost" className="mt-3" disabled={!validContact || busy} onClick={() => void sendCode('login')}>
             Use a one-time code instead
           </PillButton>
           <p className="mt-4 text-center text-sm text-espresso">
@@ -48,13 +63,20 @@ export default function Login() {
               Create an account
             </Link>
           </p>
-          <p className="mt-3 text-center text-xs text-muted">Demo sign-in: the password is not checked. The real app would use Supabase Auth or Firebase Auth.</p>
         </>
       }
     >
       <div className="space-y-5">
-        <ContactField mode={mode} onMode={setMode} value={contact} onChange={setContact} />
+        <ContactField mode={mode} onMode={setMode} value={contact} onChange={(v) => { setContact(v); setError(null); }} error={error?.fields.contact} />
         <Input label="Password" icon={<Lock size={18} />} type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+        <button
+          type="button"
+          disabled={!validContact || busy}
+          onClick={() => void sendCode('reset')}
+          className="min-h-tap text-sm font-medium text-espresso underline underline-offset-4 disabled:opacity-50"
+        >
+          Forgot password?
+        </button>
       </div>
     </OnboardingFrame>
   );

@@ -161,7 +161,7 @@ export const mr: Messages = {
   'me.senior': 'ज्येष्ठ मोड',
   'me.seniorSub': 'मोठी अक्षरे आणि बटणे',
   'me.retakeQuiz': 'पर्सोना क्विझ पुन्हा द्या',
-  'me.signOut': 'साइन आउट (डेमो)',
+  'me.signOut': 'साइन आउट',
   'me.persona': 'पर्सोना',
   'me.points': 'गुण',
   'me.storageKept': 'हा फोन तुमचे प्रवास आणि कागदपत्रे जपून ठेवेल.',

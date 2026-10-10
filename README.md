@@ -15,6 +15,15 @@ On first request the API creates a local Postgres in `.data/pglite`, applies
 migrations and loads the seed data. To reload seed data: stop the dev server, then
 `npm run seed`.
 
+## Accounts
+
+Sign up with an email or Indian mobile number, a 6-digit code and a password.
+Passwords are hashed (bcrypt); sessions are httpOnly cookies whose token is stored
+only as a hash. Forgot password and code log-in work the same way. Until an
+email/SMS provider is connected the code is shown on screen.
+
+Local test account (dev database only): mobile `9820011111`, password `voyage-test-pass`.
+
 ## Data: live vs fallback
 
 | Area | Source today | Licence |
@@ -34,5 +43,5 @@ See [API_KEYS_NEEDED.md](API_KEYS_NEEDED.md) and `.env.example`.
 
 ## Deploying (Vercel)
 
-Set `DATABASE_URL` (Supabase/Neon) and `AUTH_SECRET`. `api/index.ts` serves the
+Set `DATABASE_URL` (Supabase/Neon). `api/index.ts` serves the
 API; migrations run on cold start.

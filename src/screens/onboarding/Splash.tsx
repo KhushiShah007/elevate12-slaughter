@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { PassportOpen } from '../../components/motion/PassportOpen';
 import { StampThump } from '../../components/motion/StampThump';
 import { PillButton } from '../../components/ui/PillButton';
-import { useSettings } from '../../state/settings';
+import { useAuth } from '../../state/auth';
 
 export default function Splash() {
   const navigate = useNavigate();
-  const { signedIn } = useSettings();
+  const signedIn = useAuth().status === 'signedIn';
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-10 px-gutter py-12">
       <PassportOpen>

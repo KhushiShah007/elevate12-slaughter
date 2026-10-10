@@ -1,13 +1,13 @@
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, Languages, LogOut, RotateCcw, Sparkles, Type } from 'lucide-react';
 import { useSettings } from '../../state/settings';
+import { useAuth } from '../../state/auth';
 import { LANGUAGES, useT } from '../../i18n';
 import { usePoints } from '../../hooks/usePoints';
 import { useTraveller } from '../../hooks/useTrip';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { StampCard } from '../../components/cards/StampCard';
 import { Toggle } from '../../components/ui/Toggle';
-import { Chip } from '../../components/ui/Chip';
 import { StorageNote, SyncStatus } from '../../components/layout/SyncStatus';
 import { PersonaEffects, PersonaStamp } from '../../components/persona/PersonaCard';
 import { usePersona } from '../../hooks/usePersona';
@@ -16,6 +16,7 @@ import { num } from '../../utils/format';
 export default function Me() {
   const navigate = useNavigate();
   const s = useSettings();
+  const auth = useAuth();
   const { t } = useT();
   const points = usePoints();
   const traveller = useTraveller();
@@ -32,9 +33,6 @@ export default function Me() {
             <p className="font-display text-2xl text-ink">{traveller.name}</p>
             <p className="truncate text-sm text-muted">{traveller.contact}</p>
           </div>
-          <Chip tone="warn" dot>
-            Demo
-          </Chip>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -94,7 +92,8 @@ export default function Me() {
             <ChevronRight size={18} className="text-muted" />
           </button>
           <button
-            onClick={() => {
+            onClick={async () => {
+              await auth.signOut();
               s.reset();
               navigate('/welcome', { replace: true });
             }}

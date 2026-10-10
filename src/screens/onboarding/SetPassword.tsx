@@ -4,38 +4,50 @@ import { Lock } from 'lucide-react';
 import { OnboardingFrame } from './OnboardingFrame';
 import { Input } from '../../components/ui/Input';
 import { PillButton } from '../../components/ui/PillButton';
-import { useSettings } from '../../state/settings';
-import { signUpUser } from '../../db/repos/users';
+import { useAuth } from '../../state/auth';
+import { api, ApiError, type Me } from '../../api/client';
 import type { AuthFlowState } from './SignUp';
 
 export default function SetPassword() {
   const navigate = useNavigate();
-  const { update } = useSettings();
+  const auth = useAuth();
   const [pw, setPw] = useState('');
   const [pw2, setPw2] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const state = useLocation().state as AuthFlowState | null;
   const ok = pw.length >= 8 && pw === pw2;
-  if (!state?.name) return <Navigate to="/signup" replace />;
-  const { name, contact } = state;
+  if (!state?.code || (state.flow === 'signup' && !state.name)) return <Navigate to="/welcome" replace />;
+  const reset = state.flow === 'reset';
+
+  const save = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = reset
+        ? await api<{ me: Me }>('POST', '/auth/reset', { contact: state.contact, code: state.code, password: pw })
+        : await api<{ me: Me }>('POST', '/auth/signup', { name: state.name, contact: state.contact, code: state.code, password: pw });
+      await auth.signedIn(res.me);
+      navigate(reset ? '/home' : '/quiz', { replace: true });
+    } catch (err) {
+      setError(err instanceof ApiError ? (err.fields.password ?? err.message) : 'Something went wrong. Please try again.');
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
     <OnboardingFrame
-      step="Step 3 of 3 · first time only"
-      title="Set a password"
-      sub="So you can sign in without a code next time. At least 8 characters."
+      step={reset ? undefined : 'Step 3 of 3 · first time only'}
+      title={reset ? 'Choose a new password' : 'Set a password'}
+      sub={reset ? 'At least 8 characters. Other devices will be signed out.' : 'So you can sign in without a code next time. At least 8 characters.'}
       footer={
-        <PillButton
-          full
-          disabled={!ok}
-          onClick={async () => {
-            // Demo: the password is never stored. Production hands it to the auth provider.
-            await signUpUser(name, contact);
-            update({ signedIn: true });
-            navigate('/quiz', { replace: true });
-          }}
-        >
-          Save and continue
-        </PillButton>
+        <>
+          {error && <p role="alert" className="mb-3 text-center text-sm text-bad">{error}</p>}
+          <PillButton full disabled={!ok || busy} onClick={() => void save()}>
+            {busy ? 'Saving…' : 'Save and continue'}
+          </PillButton>
+        </>
       }
     >
       <div className="space-y-4">

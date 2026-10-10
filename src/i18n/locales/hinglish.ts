@@ -161,7 +161,7 @@ export const hinglish: Messages = {
   'me.senior': 'Senior mode',
   'me.seniorSub': 'Bade letters aur buttons',
   'me.retakeQuiz': 'Persona quiz dobara do',
-  'me.signOut': 'Sign out (demo)',
+  'me.signOut': 'Sign out',
   'me.persona': 'Persona',
   'me.points': 'Points',
   'me.storageKept': 'Yeh phone tumhari trips aur documents sambhal kar rakhega.',

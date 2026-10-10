@@ -9,12 +9,14 @@ import { PillButton } from '../../components/ui/PillButton';
 import { StampThump } from '../../components/motion/StampThump';
 import { PersonaEffects, PersonaStamp } from '../../components/persona/PersonaCard';
 import { useSettings } from '../../state/settings';
+import { useAuth } from '../../state/auth';
 import { useT } from '../../i18n';
 
 export default function PersonaQuiz() {
   const navigate = useNavigate();
   const { t } = useT();
   const settings = useSettings();
+  const auth = useAuth();
   const [i, setI] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
   const [notes, setNotes] = useState<Notes>({});
@@ -76,7 +78,9 @@ export default function PersonaQuiz() {
           <PillButton
             full
             onClick={async () => {
+              // On the device right away; to the account too (queued if offline).
               await savePreferences(answers, notes);
+              await auth.saveProfile({ personaAnswers: answers as Record<string, string>, personaNotes: notes as Record<string, string> }).catch(() => undefined);
               navigate('/home');
             }}
           >

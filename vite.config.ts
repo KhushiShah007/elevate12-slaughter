@@ -14,6 +14,8 @@ function devApi(): Plugin {
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
         if (!req.url?.startsWith('/api/')) return next();
+        // The app also imports shared code from api/*.ts; let Vite serve those modules.
+        if (/^\/api\/[^?]*\.(ts|tsx|js|mjs)(\?|$)/.test(req.url)) return next();
         try {
           const { app } = (await server.ssrLoadModule('/server/app.ts')) as typeof import('./server/app');
           await getRequestListener(app.fetch)(req, res);

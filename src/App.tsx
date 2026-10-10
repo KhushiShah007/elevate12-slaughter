@@ -1,6 +1,7 @@
 import { RouterProvider } from 'react-router-dom';
 import { MotionConfig } from 'framer-motion';
 import { SettingsProvider } from './state/settings';
+import { AuthProvider } from './state/auth';
 import { router } from './router';
 import { useDocumentLanguage } from './i18n';
 
@@ -12,10 +13,12 @@ function LanguageSync() {
 export default function App() {
   return (
     <SettingsProvider>
-      <LanguageSync />
-      <MotionConfig reducedMotion="user">
-        <RouterProvider router={router} future={{ v7_startTransition: true }} />
-      </MotionConfig>
+      <AuthProvider>
+        <LanguageSync />
+        <MotionConfig reducedMotion="user">
+          <RouterProvider router={router} future={{ v7_startTransition: true }} />
+        </MotionConfig>
+      </AuthProvider>
     </SettingsProvider>
   );
 }

@@ -171,7 +171,7 @@ export const en = {
   'me.senior': 'Senior mode',
   'me.seniorSub': 'Bigger text and buttons',
   'me.retakeQuiz': 'Retake persona quiz',
-  'me.signOut': 'Sign out (demo)',
+  'me.signOut': 'Sign out',
   'me.persona': 'Persona',
   'me.points': 'Points',
   'me.storageKept': 'This phone has promised to keep your trips and documents.',
