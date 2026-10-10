@@ -31,9 +31,39 @@ app.use('*', async (c, next) => {
 
 // First request on an empty database loads the seed data.
 let seeded: Promise<unknown> | null = null;
-app.use('*', async (_c, next) => {
-  seeded ??= getDb().then(({ db }) => ensureSeeded(db));
-  await seeded;
+let startupError: { stage: 'connect' | 'seed'; reason: string } | null = null;
+// Safe to show: drops anything that looks like a connection string or credential.
+const redact = (err: unknown) =>
+  String((err as Error)?.message ?? err)
+    .replace(/[a-z]+:\/\/\S+/gi, '[url]')
+    .replace(/password\S*/gi, '[redacted]')
+    .slice(0, 300);
+app.use('*', async (c, next) => {
+  seeded ??= getDb()
+    .catch((err) => {
+      startupError = { stage: 'connect', reason: redact(err) };
+      throw err;
+    })
+    .then(({ db }) =>
+      ensureSeeded(db).catch((err) => {
+        startupError = { stage: 'seed', reason: redact(err) };
+        throw err;
+      }),
+    )
+    .then(() => {
+      startupError = null;
+    })
+    .catch((err) => {
+      seeded = null; // retry on the next request instead of failing forever
+      console.error('[startup]', err);
+      throw err;
+    });
+  try {
+    await seeded;
+  } catch {
+    // Say what is wrong (database not reachable, not set, seed failed) so a deploy can be fixed.
+    return c.json({ error: { code: 'database_unavailable', message: 'The database is not ready.', ...(startupError ?? {}) } }, 503);
+  }
   await next();
 });
 
