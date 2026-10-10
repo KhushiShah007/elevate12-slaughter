@@ -20,6 +20,7 @@ trips.use('/trips', requireUser);
 export const SYNC_TABLES = [
   'trips',
   'flights',
+  'packingLists',
   'bookings',
   'documents',
   'journeyProgress',

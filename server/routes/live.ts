@@ -195,3 +195,58 @@ live.get('/fx', async (c) => {
     throw new AppError(503, 'fx_unavailable', 'Exchange rates are not available right now.');
   }
 });
+
+// ---------- Weather for a trip's dates ----------
+
+interface TripDayWeather {
+  date: string;
+  maxC: number;
+  minC: number;
+  summary: string;
+  rainy: boolean;
+}
+
+/**
+ * Forecast when the dates are within the next week; otherwise the same dates last year
+ * (Open-Meteo archive) as a "typical" guide. Null when neither is available.
+ */
+export async function tripWeather(slug: string, start: string, end: string): Promise<{ kind: 'forecast' | 'typical'; days: TripDayWeather[]; source: string } | null> {
+  const today = new Date().toISOString().slice(0, 10);
+  const horizon = new Date(Date.now() + 6 * 86_400_000).toISOString().slice(0, 10);
+  if (start <= horizon && end >= today) {
+    const w = await getWeather(slug).catch(() => null);
+    const days = (w?.days ?? []).filter((d) => d.date >= start && d.date <= end).map((d) => ({ date: d.date, maxC: d.maxC, minC: d.minC, summary: d.summary, rainy: (d.rainChance ?? 0) >= 50 || /rain|shower|thunder/i.test(d.summary) }));
+    if (days.length) return { kind: 'forecast', days, source: w!.source };
+  }
+  const { db } = await getDb();
+  const [d] = await db.select({ lat: s.destinations.lat, lon: s.destinations.lon }).from(s.destinations).where(eq(s.destinations.slug, slug)).limit(1);
+  if (!d) return null;
+  const lastYear = (iso: string) => `${Number(iso.slice(0, 4)) - 1}${iso.slice(4)}`;
+  const toEnd = end > start ? end : start;
+  const span = Math.min(14, Math.round((Date.parse(toEnd) - Date.parse(start)) / 86_400_000));
+  const endCapped = new Date(Date.parse(start) + span * 86_400_000).toISOString().slice(0, 10);
+  try {
+    return await cached(`clim:${slug}:${start}:${endCapped}`, 24 * 3_600_000, async () => {
+      const r = await getJson<{ daily: { time: string[]; temperature_2m_max: number[]; temperature_2m_min: number[]; precipitation_sum: number[] } }>(
+        `https://archive-api.open-meteo.com/v1/archive?latitude=${d.lat}&longitude=${d.lon}&start_date=${lastYear(start)}&end_date=${lastYear(endCapped)}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=auto`,
+      );
+      return {
+        kind: 'typical' as const,
+        source: 'Open-Meteo archive (same dates last year)',
+        days: r.daily.time.map((t, i) => {
+          const rain = r.daily.precipitation_sum[i] ?? 0;
+          return { date: `${start.slice(0, 4)}${t.slice(4)}`, maxC: Math.round(r.daily.temperature_2m_max[i]), minC: Math.round(r.daily.temperature_2m_min[i]), summary: rain >= 5 ? 'Rain' : rain > 0.5 ? 'Showers' : 'Dry', rainy: rain >= 2 };
+        }),
+      };
+    });
+  } catch {
+    return null;
+  }
+}
+
+live.get('/destinations/:slug/trip-weather', async (c) => {
+  const slug = parse(z.string().regex(/^[a-z0-9-]{1,60}$/), c.req.param('slug'));
+  const q = parse(z.object({ start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), end: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) }), c.req.query());
+  if (q.end < q.start) throw new AppError(400, 'invalid_input', 'End is before start.');
+  return c.json({ weather: await tripWeather(slug, q.start, q.end) });
+});

@@ -13,6 +13,14 @@ const get = async (path: string) => {
   return { status: res.status, body: (await res.json()) as any };
 };
 
+describe('trip weather', () => {
+  it('validates dates and slug', async () => {
+    expect((await get('/destinations/jaipur/trip-weather?start=2026-13&end=2026-12-05')).status).toBe(400);
+    expect((await get('/destinations/jaipur/trip-weather?start=2026-12-05&end=2026-12-01')).status).toBe(400);
+    expect((await get('/destinations/BAD%20SLUG/trip-weather?start=2026-12-01&end=2026-12-05')).status).toBe(400);
+  }, 120_000);
+});
+
 describe('city guide', () => {
   it('returns places with cost estimates and review links', async () => {
     const { status, body } = await get('/destinations/jaipur/guide?style=shoestring');

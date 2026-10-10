@@ -14,6 +14,7 @@ import { inr, range } from '../../utils/format';
 import { Link } from 'react-router-dom';
 import { useT } from '../../i18n';
 import NotFound from '../NotFound';
+import { PackingLink } from './Packing';
 
 export const modules = [
   { key: 'flights', title: 'module.flights', Icon: Plane },
@@ -70,6 +71,8 @@ export default function TripWorkspace() {
           </motion.div>
         ))}
       </motion.div>
+
+      <PackingLink tripId={trip.id} slug={trip.destinationSlug} start={trip.startDate} end={trip.endDate} />
 
       {(() => {
         const booked = data.bookings.filter((b) => b.status === 'confirmed' || b.status === 'cancelled');

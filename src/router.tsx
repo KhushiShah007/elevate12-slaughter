@@ -38,6 +38,7 @@ import BudgetPlanner from './screens/budget/BudgetPlanner';
 import ManageBooking from './screens/bookings/ManageBooking';
 import RefundDetail, { RefundList } from './screens/bookings/Refunds';
 import Outbox from './screens/bookings/Outbox';
+import Packing from './screens/trips/Packing';
 
 export const router = createBrowserRouter([
   {
@@ -65,6 +66,7 @@ export const router = createBrowserRouter([
       { path: '/trips/new', element: <NewTrip /> },
       { path: '/trips/:tripId', element: <TripWorkspace /> },
       { path: '/trips/:tripId/memories', element: <CompletedTrip /> },
+      { path: '/trips/:tripId/packing', element: <Packing /> },
       { path: '/trips/:tripId/flights', element: <Flights /> },
       { path: '/trips/:tripId/documents', element: <Documents /> },
       { path: '/trips/:tripId/transportation', element: <Transportation /> },

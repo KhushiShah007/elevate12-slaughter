@@ -1,4 +1,14 @@
 import Dexie, { type Table } from 'dexie';
+import type { PackItem } from '../engines/packing';
+
+/** One trip's packing checklist (id = the trip id). */
+export interface PackingList {
+  id: string;
+  tripId: string;
+  items: PackItem[];
+  updatedAt: string;
+  rev?: number;
+}
 import type {
   Accommodation,
   Booking,
@@ -66,6 +76,7 @@ export class VoyageDB extends Dexie {
   meta!: Table<Meta, string>;
   aiCache!: Table<AiCacheEntry, string>;
   files!: Table<StoredFile, string>;
+  packingLists!: Table<PackingList, string>;
 
   constructor() {
     super('voyage');
@@ -95,6 +106,8 @@ export class VoyageDB extends Dexie {
     this.version(2).stores({ aiCache: 'key' });
     // v3: scanned documents (Goal 6).
     this.version(3).stores({ files: 'id, docId' });
+    // v4: packing checklist per trip.
+    this.version(4).stores({ packingLists: 'id' });
   }
 }
 

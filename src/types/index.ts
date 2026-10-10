@@ -294,6 +294,7 @@ export interface FamilyPickup {
 export type SyncTable =
   | 'trips'
   | 'flights'
+  | 'packingLists'
   | 'bookings'
   | 'documents'
   | 'journeyProgress'
