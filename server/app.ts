@@ -8,6 +8,7 @@ import { catalog } from './routes/catalog';
 import { auth } from './routes/auth';
 import { trips } from './routes/trips';
 import { notifications } from './routes/notifications';
+import { account } from './routes/account';
 import { startDevScheduler } from './notify/service';
 import { live } from './routes/live';
 import { flights } from './routes/flights';
@@ -20,12 +21,14 @@ import { payments } from './routes/payments';
 import { cancellations } from './routes/cancellations';
 import { itinerary } from './routes/itinerary';
 import { handleAi } from '../api/_ai';
+import { safeError, sameOriginOnly } from './security';
 
 // The Voyage API. Runs inside `npm run dev` (Vite middleware) and on Vercel (api/index.ts).
 
 export const app = new Hono().basePath('/api');
 
 app.use('*', secureHeaders());
+app.use('*', sameOriginOnly);
 app.use('*', async (c, next) => {
   c.header('cache-control', 'no-store');
   await next();
@@ -57,7 +60,7 @@ app.use('*', async (c, next) => {
     })
     .catch((err) => {
       seeded = null; // retry on the next request instead of failing forever
-      console.error('[startup]', err);
+      console.error('[startup]', safeError(err));
       throw err;
     });
   try {
@@ -113,6 +116,9 @@ app.use('/documents/*', rateLimit('documents', 60, 60_000));
 app.use('/files/*', rateLimit('files', 120, 60_000));
 app.route('/', documents);
 app.use('/assistant/chat', rateLimit('chat', 20, 60_000));
+app.use('/assistant/chat/*', rateLimit('chat', 20, 60_000));
+app.use('/assistant/stt', rateLimit('voice', 20, 60_000));
+app.use('/assistant/voice', rateLimit('voice', 20, 60_000));
 app.use('/assistant/parse-booking', rateLimit('parse', 10, 60_000));
 app.route('/', assistant);
 
@@ -122,7 +128,10 @@ app.use('/trips/*', rateLimit('trips', 120, 60_000));
 app.route('/', trips);
 app.use('/notifications/*', rateLimit('notifications', 120, 60_000));
 app.use('/cron/*', rateLimit('cron', 10, 60_000));
+app.use('/whatsapp/*', rateLimit('whatsapp', 120, 60_000));
 app.route('/', notifications);
+app.use('/account/*', rateLimit('account', 10, 60_000));
+app.route('/', account);
 startDevScheduler();
 
 // AI wording, translation and intent (short, guarded tasks).

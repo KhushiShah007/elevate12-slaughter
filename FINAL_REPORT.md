@@ -27,6 +27,7 @@ See [DEPLOY_ENV.md](DEPLOY_ENV.md).
 7. Book something with the demo payment, then cancel it and watch the refund and the Outbox.
 
 ## Known gaps
+- npm audit leaves drizzle-orm (high: SQL identifier escaping; Voyage never builds identifiers from user input) and react-router (moderate: open redirects; fix needs the v7 major). Both left to avoid risky major upgrades before the demo.
 - Section 11's optional "ask Claude to find fields the patterns missed" (send a page image to Anthropic with consent) was not built: the agent's safety check blocked sending document images to a third party during the autonomous run. Needs your explicit go-ahead.
 - Sections 10–14 not done (notifications, PDF masking, full security section, full QA).
 - Google sign-in not wired. Packing has no suitcase animation or departure planner (by request).
@@ -48,6 +49,8 @@ See [DECISIONS.md](DECISIONS.md).
 - Section 10 (notifications and escalation): done — in-app + push/email/WhatsApp/SMS/call channels behind consent, durable DB schedule (idempotent claims, UTC), escalation every 30 min (shorter near leave-by) until Acknowledge, max 2 calls, quiet hours, daily cost cap, STOP, masked numbers, user-visible timeline. Events: booking confirmed, free-cancel deadline, leave-by, refund updates, itinerary changes, packing reminder, demo flight alerts. All sends are Outbox dry runs unless keys + ALLOW_REAL_OUTBOUND=true.
 
 - Section 11 (document masking): done, except the optional Claude vision step (see Known gaps) — on-device detection (PDF text layer, OCR for scans/photos) of Aadhaar (Verhoeff, first 8 digits), PAN, passport, licence, DOB, address, MRZ; true redaction by burning boxes into page pixels and rebuilding an image-only PDF; drag to cover more; before/after preview; masked copy stored encrypted and shown/shared by default; original kept encrypted with view/erase; server refuses 'masked' PDFs that still have a text layer.
+
+- Section 12 (security, safety, engineering): done — CSP and security headers on Vercel, cross-site request guard (CSRF), SSRF host allowlist, PII-safe error logs, rate limits incl. streaming chat and voice, Twilio and WhatsApp webhook signatures, data export and account deletion, privacy notice, destination safety card (emergency numbers, hospital, pharmacy, official advice), error boundaries, ESLint (0 errors), npm audit (critical fixed; hono, node adapter, pdf.js patched). Full suite: 224 tests pass.
 
 ## Pushed
 - Repo: https://github.com/KhushiShah007/elevate12-slaughter — branches `feature/complete-app` and `main`.

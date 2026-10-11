@@ -1,6 +1,7 @@
+import { safeError } from './security';
 import type { Context, MiddlewareHandler } from 'hono';
 import { HTTPException } from 'hono/http-exception';
-import type { StatusCode } from 'hono/utils/http-status';
+import type { ContentfulStatusCode as StatusCode } from 'hono/utils/http-status';
 import { z, type ZodTypeAny } from 'zod';
 
 // Shared HTTP helpers: one error shape for every route, zod validation, rate limiting.
@@ -24,7 +25,7 @@ export function errorBody(err: unknown): { status: StatusCode; body: ApiError } 
   if (err instanceof AppError) return { status: err.status, body: { error: { code: err.code, message: err.message, fields: err.fields } } };
   if (err instanceof HTTPException) return { status: err.status, body: { error: { code: 'http_error', message: err.message } } };
   // Never leak internals: log on the server, send a friendly message.
-  console.error('[api] unexpected error', err);
+  console.error('[api] unexpected error', safeError(err));
   return { status: 500, body: { error: { code: 'server_error', message: 'Something went wrong on our side. Please try again.' } } };
 }
 

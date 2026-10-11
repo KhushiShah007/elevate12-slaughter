@@ -43,6 +43,7 @@ Paste these in **Vercel → Project → Settings → Environment Variables**. Ne
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM` | SMS / calls |
 | `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID` | WhatsApp messages |
 | `FCM_SERVER_KEY` | Push notifications |
+| `WHATSAPP_VERIFY_TOKEN`, `WHATSAPP_APP_SECRET` | WhatsApp webhook (STOP and acknowledge replies), signature-checked |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Reserved for Google sign-in (not wired yet) |
 
 ## Do not set on Vercel

@@ -9,6 +9,7 @@ import { useT } from '../../i18n';
 
 /** Phone-width column with the top bar (points pill) and bottom nav. */
 import { AckStrip } from './AckStrip';
+import { ErrorBoundary } from './ErrorBoundary';
 
 export function AppShell() {
   const { pathname } = useLocation();
@@ -34,7 +35,9 @@ export function AppShell() {
       )}
       <AckStrip />
       <main>
-        <Outlet />
+        <ErrorBoundary resetKey={pathname}>
+          <Outlet />
+        </ErrorBoundary>
       </main>
       <BottomNav />
     </div>
@@ -45,7 +48,9 @@ export function AppShell() {
 export function BareShell() {
   return (
     <div className="grain mx-auto min-h-screen w-full max-w-app bg-ivory shadow-lift">
-      <Outlet />
+      <ErrorBoundary>
+        <Outlet />
+      </ErrorBoundary>
     </div>
   );
 }

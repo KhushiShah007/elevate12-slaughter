@@ -49,3 +49,10 @@ One line each, in the order they were made.
 - **Aadhaar:** 12 digits passing Verhoeff; only the first 8 digits are covered. DOB only on lines labelled DOB/Year of Birth (expiry dates stay visible). Address: the labelled line plus following lines until the PIN code.
 - **Storage:** masked copy encrypted (AES-GCM) in `document_masked_blobs`; links default to the masked copy and are signed separately (a masked link cannot open the original). The original can be erased, keeping the masked copy.
 - **Claude vision fallback not built** (blocked by the agent's safety check on sending document images to a third party); patterns + manual boxes cover it for now.
+
+## Section 12: security
+- **CSRF:** cookies are httpOnly + SameSite=Lax; on top, every non-GET API request with a foreign Origin (or `Sec-Fetch-Site: cross-site`) is refused. Webhooks are exempt and verified by signature instead (Razorpay HMAC, Twilio HMAC-SHA1, WhatsApp `X-Hub-Signature-256`, inbound email secret, `CRON_SECRET`).
+- **CSP** lives in `vercel.json` (the API also sends Hono's secure headers). It allows Razorpay checkout and the jsDelivr/tessdata hosts that OCR loads lazily; `'wasm-unsafe-eval'` is needed for OCR's WebAssembly; inline styles are allowed for animations.
+- **SSRF:** the shared fetch helper only reaches an allowlist of API hosts; no route fetches a user-supplied URL.
+- **Account deletion** cascades through foreign keys, then sweeps any table with a `user_id` column; export skips sessions, codes, password hashes and encrypted blobs.
+- **Audit:** `npm audit fix` hung on the registry mirror, so patched versions were installed directly. drizzle-orm 0.45 and react-router 7 are majors and were deferred (documented in Known gaps).

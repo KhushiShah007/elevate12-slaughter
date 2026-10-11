@@ -30,8 +30,16 @@ async function ocrItems(canvas: HTMLCanvasElement): Promise<TextItem[]> {
 }
 
 async function pdfPages(file: Blob, onProgress?: (msg: string) => void): Promise<MaskPage[]> {
+  // pdf.js 4 needs Promise.withResolvers (missing on older phones).
+  const P = Promise as unknown as { withResolvers?: () => unknown };
+  P.withResolvers ??= () => {
+    let resolve!: (v: unknown) => void;
+    let reject!: (e: unknown) => void;
+    const promise = new Promise((a, b) => ((resolve = a), (reject = b)));
+    return { promise, resolve, reject };
+  };
   const pdfjs = await import('pdfjs-dist');
-  const workerUrl = (await import('pdfjs-dist/build/pdf.worker.min.js?url')).default;
+  const workerUrl = (await import('pdfjs-dist/build/pdf.worker.min.mjs?url')).default;
   pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
   const doc = await pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()), isEvalSupported: false }).promise;
   const pages: MaskPage[] = [];

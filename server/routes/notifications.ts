@@ -182,3 +182,34 @@ async function ackLatestFor(phone: string, via: string) {
     .limit(1);
   if (n) await acknowledge(user.id, n.id, via);
 }
+
+/** WhatsApp Cloud API: the subscription check (GET) and incoming messages (POST, signed by Meta). */
+notifications.get('/whatsapp/webhook', (c) => {
+  const token = process.env.WHATSAPP_VERIFY_TOKEN;
+  if (token && c.req.query('hub.mode') === 'subscribe' && safeEqual(c.req.query('hub.verify_token') ?? '', token)) return c.text(c.req.query('hub.challenge') ?? '');
+  throw new AppError(403, 'forbidden', 'Not allowed.');
+});
+
+/** X-Hub-Signature-256 = "sha256=" + HMAC-SHA256(app secret, raw body). */
+export const whatsappSignature = (secret: string, raw: string) => `sha256=${createHmac('sha256', secret).update(raw).digest('hex')}`;
+
+notifications.post('/whatsapp/webhook', async (c) => {
+  const secret = process.env.WHATSAPP_APP_SECRET;
+  const raw = await c.req.text();
+  if (!secret || !safeEqual(c.req.header('x-hub-signature-256') ?? '', whatsappSignature(secret, raw))) throw new AppError(403, 'forbidden', 'Bad signature.');
+  let body: { entry?: { changes?: { value?: { messages?: { from?: string; text?: { body?: string } }[] } }[] }[] } = {};
+  try {
+    body = JSON.parse(raw);
+  } catch {
+    throw new AppError(400, 'invalid_input', 'Bad JSON.');
+  }
+  for (const entry of body.entry ?? [])
+    for (const change of entry.changes ?? [])
+      for (const m of change.value?.messages ?? []) {
+        const text = (m.text?.body ?? '').trim().toUpperCase();
+        if (!m.from) continue;
+        if (/^(STOP|UNSUBSCRIBE)$/.test(text)) await stopMessages(m.from);
+        else if (text === '1') await ackLatestFor(m.from, 'whatsapp');
+      }
+  return c.json({ ok: true });
+});

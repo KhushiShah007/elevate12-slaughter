@@ -40,6 +40,7 @@ import RefundDetail, { RefundList } from './screens/bookings/Refunds';
 import Outbox from './screens/bookings/Outbox';
 import Packing from './screens/trips/Packing';
 import Notifications from './screens/me/Notifications';
+import Privacy from './screens/me/Privacy';
 
 export const router = createBrowserRouter([
   {
@@ -69,6 +70,7 @@ export const router = createBrowserRouter([
       { path: '/trips/:tripId/memories', element: <CompletedTrip /> },
       { path: '/trips/:tripId/packing', element: <Packing /> },
       { path: '/notifications', element: <Notifications /> },
+      { path: '/privacy', element: <Privacy /> },
       { path: '/trips/:tripId/flights', element: <Flights /> },
       { path: '/trips/:tripId/documents', element: <Documents /> },
       { path: '/trips/:tripId/transportation', element: <Transportation /> },

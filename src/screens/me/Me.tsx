@@ -57,6 +57,7 @@ export default function Me() {
             ['/notifications', 'Notifications and reminders'],
             ['/refunds', 'Refunds and cancellations'],
             ['/outbox', 'Outbox (emails and messages)'],
+            ['/privacy', 'Privacy and your data'],
           ].map(([to, label]) => (
             <button key={to} onClick={() => navigate(to)} className="flex min-h-[3.5rem] w-full items-center justify-between px-4 text-ink">
               {label} <ChevronRight size={18} className="text-muted" />

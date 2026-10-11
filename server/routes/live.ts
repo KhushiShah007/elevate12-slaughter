@@ -1,3 +1,4 @@
+import { assertAllowedUrl } from '../security';
 import { Hono } from 'hono';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
@@ -23,6 +24,7 @@ async function cached<T>(key: string, ttlMs: number, load: () => Promise<T>): Pr
 async function getJson<T>(url: string, tries = 2): Promise<T> {
   for (let i = 0; ; i++) {
     try {
+      assertAllowedUrl(url);
       const res = await fetch(url, { headers: { 'user-agent': 'VoyageTravelApp/0.1 (hackathon prototype; https://github.com)' }, signal: AbortSignal.timeout(10_000) });
       if (!res.ok) throw new Error(`${res.status} from ${new URL(url).hostname}`);
       return (await res.json()) as T;
