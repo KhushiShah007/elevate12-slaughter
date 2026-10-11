@@ -56,3 +56,9 @@ One line each, in the order they were made.
 - **SSRF:** the shared fetch helper only reaches an allowlist of API hosts; no route fetches a user-supplied URL.
 - **Account deletion** cascades through foreign keys, then sweeps any table with a `user_id` column; export skips sessions, codes, password hashes and encrypted blobs.
 - **Audit:** `npm audit fix` hung on the registry mirror, so patched versions were installed directly. drizzle-orm 0.45 and react-router 7 are majors and were deferred (documented in Known gaps).
+
+## Section 14: QA
+- **Playwright without a browser download:** the registry for browser binaries is unreachable here, so the smoke test drives the Microsoft Edge already installed (`channel: 'msedge'`; set `PW_CHANNEL=chrome` to use Chrome). It starts its own dev server on port 5175 with a throwaway database and blank AI keys (deterministic, no spend).
+- **UI where it matters, API for long steps:** sign-up, login, trip creation, packing, notifications and document masking go through the UI; payment, cancellation and the itinerary adapt run through the same session's API. Every main screen is checked for the error boundary and screenshotted.
+- **Fixes found by the smoke test:** the sync queue could miss a change written while a sync run was finishing (now it runs one more pass); packing ticks waited for the database round-trip (now optimistic).
+- The test Aadhaar PDF is generated at run time (made-up number with a valid checksum) and never committed.

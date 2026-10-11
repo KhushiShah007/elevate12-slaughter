@@ -6,6 +6,7 @@ export default defineConfig({
   test: {
     pool: 'forks',
     poolOptions: { forks: { maxForks: 3, minForks: 1 } },
+    exclude: ['**/node_modules/**', '**/dist/**', 'e2e/**'],
     testTimeout: 60_000,
     hookTimeout: 180_000,
   },

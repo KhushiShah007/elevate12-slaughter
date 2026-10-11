@@ -44,12 +44,24 @@ let running: Promise<void> | null = null;
 
 /** Push pending changes in order. Safe to call often: only one replay runs at a time. */
 export function replay(): Promise<void> {
+  // A change queued while a run is finishing would be missed by that run (it has already
+  // looked at the queue), so ask for one more pass instead of returning the old run.
+  if (running) {
+    rerun = true;
+    return running;
+  }
   // The lock is released via .finally on the stored promise. Releasing it inside drain()
   // would run *before* the assignment when drain finishes synchronously (e.g. offline),
   // leaving the lock stuck forever.
-  if (!running) running = drain().finally(() => (running = null));
+  running = (async () => {
+    do {
+      rerun = false;
+      await drain();
+    } while (rerun && navigator.onLine);
+  })().finally(() => (running = null));
   return running;
 }
+let rerun = false;
 
 async function drain() {
   while (navigator.onLine) {

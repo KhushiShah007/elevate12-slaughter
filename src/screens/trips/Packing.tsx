@@ -66,6 +66,9 @@ export default function Packing() {
   const weather = useTripWeather(guide?.destination.slug, trip?.startDate, trip?.endDate);
   const wx = summarise(weather);
   const [newItem, setNewItem] = useState('');
+  // Shown at once on tap; the saved copy catches up (and wins when another device changes it).
+  const [local, setLocal] = useState<PackItem[] | null>(null);
+  useEffect(() => setLocal(null), [saved?.updatedAt]);
 
   const fresh = useMemo(() => {
     if (!trip) return [];
@@ -82,8 +85,9 @@ export default function Packing() {
   if (data === undefined) return null;
   if (!data || !trip) return <NotFound />;
 
-  const items: PackItem[] = saved?.items ?? fresh;
+  const items: PackItem[] = local ?? saved?.items ?? fresh;
   const save = (next: PackItem[], label: string) => {
+    setLocal(next);
     const list: PackingList = { id: trip.id, tripId: trip.id, items: next, updatedAt: new Date().toISOString(), rev: saved?.rev };
     void writeAndQueue('packingLists', trip.id, list, label);
   };
