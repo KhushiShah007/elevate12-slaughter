@@ -2,8 +2,8 @@ import { useRef, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { OnboardingFrame } from './OnboardingFrame';
 import { PillButton } from '../../components/ui/PillButton';
-import { useAuth } from '../../state/auth';
-import { api, ApiError, type Me, type OtpSent } from '../../api/client';
+import { DEMO_OTP, useAuth } from '../../state/auth';
+import { ApiError } from '../../api/client';
 import type { AuthFlowState } from './SignUp';
 
 export default function Otp() {
@@ -42,16 +42,12 @@ export default function Otp() {
     setBusy(true);
     setError(null);
     try {
-      if (flow === 'login') {
-        const res = await api<{ me: Me }>('POST', '/auth/login-code', { contact, code });
-        await auth.signedIn(res.me);
-        navigate('/home', { replace: true });
-      } else {
-        await api('POST', '/auth/otp/check', { contact, purpose: flow, code });
-        navigate('/set-password', { state: { ...state, code } satisfies AuthFlowState, replace: true });
-      }
+      // Demo: no server. 123456 signs in on this device and goes straight to Home.
+      if (code !== DEMO_OTP) throw new Error('Use the code 123456.');
+      await auth.demoSignIn(contact, state.name);
+      navigate('/home', { replace: true });
     } catch (err) {
-      setError(err instanceof ApiError ? (err.fields.code ?? err.message) : 'Something went wrong. Please try again.');
+      setError(err instanceof ApiError ? (err.fields.code ?? err.message) : (err as Error).message || 'Something went wrong. Please try again.');
     } finally {
       setBusy(false);
     }
@@ -60,8 +56,7 @@ export default function Otp() {
   const resend = async () => {
     setError(null);
     try {
-      const sent = await api<OtpSent>('POST', '/auth/otp', { contact, purpose: flow });
-      setState({ ...state, devCode: sent.devCode });
+      setState({ ...state, devCode: DEMO_OTP });
       setDigits(Array(6).fill(''));
       setResent(true);
     } catch (err) {

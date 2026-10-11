@@ -18,11 +18,16 @@ interface AuthApi {
   signedIn: (me: Me) => Promise<void>;
   signOut: () => Promise<void>;
   /** Save profile fields to the server (and the device copy). */
+  /** Sign in on this device only: no server, nothing stored remotely. */
+  demoSignIn: (contact?: string, name?: string) => Promise<void>;
   saveProfile: (patch: Partial<Pick<Me, 'name' | 'homeCity' | 'language' | 'seniorMode' | 'cards'>> & { personaAnswers?: Record<string, string>; personaNotes?: Record<string, string> }) => Promise<Me | null>;
 }
 
 const CACHE_KEY = 'voyage.me';
 const PENDING_KEY = 'voyage.profilePending';
+const DEMO_KEY = 'voyage.demo';
+export const isDemo = () => readJson<boolean>(DEMO_KEY) === true;
+export const DEMO_OTP = '123456';
 
 const readJson = <T,>(key: string): T | null => {
   try {
@@ -66,6 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus('signedIn');
     writeJson(CACHE_KEY, next);
     await mirror(next).catch(() => undefined);
+    if (isDemo()) return; // demo: stays on this device
     // Send changes made offline, then bring down the account's trips and records.
     void replay()
       .then(pullFromServer)
@@ -87,6 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus('signedOut');
     writeJson(CACHE_KEY, null);
     writeJson(PENDING_KEY, null);
+    writeJson(DEMO_KEY, null);
     writeJson('voyage.chatConversation', null);
     try {
       sessionStorage.removeItem('voyage.chat');
@@ -98,6 +105,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const saveProfile = useCallback<AuthApi['saveProfile']>(
     async (patch) => {
+      if (isDemo()) {
+        const cur = readJson<Me>(CACHE_KEY);
+        if (!cur) return null;
+        const next = { ...cur, ...patch } as Me;
+        await accept(next);
+        return next;
+      }
       try {
         const res = await api<{ me: Me }>('PATCH', '/me', patch);
         writeJson(PENDING_KEY, null);
@@ -117,6 +131,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // On launch and whenever the connection returns: confirm the session, flush offline profile edits.
   useEffect(() => {
     const check = async () => {
+      if (isDemo()) {
+        setStatus(readJson(CACHE_KEY) ? 'signedIn' : 'signedOut');
+        return;
+      }
       if (!navigator.onLine) {
         setStatus((s) => (s === 'loading' ? (readJson(CACHE_KEY) ? 'signedIn' : 'signedOut') : s));
         return;
@@ -149,7 +167,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings.language, settings.seniorMode]);
 
+  const demoSignIn = useCallback(
+    async (contact = 'demo@voyage.app', name = 'Demo Traveller') => {
+      writeJson(DEMO_KEY, true);
+      const email = contact.includes('@') ? contact : null;
+      await signedIn({ id: 'demo-user', email, phone: email ? null : contact, contact, name: name || 'Demo Traveller', homeCity: 'Mumbai', language: settingsRef.current.language ?? 'en', seniorMode: false, personaId: null, personaAnswers: null, personaNotes: null, cards: [] } as Me);
+    },
+    [signedIn],
+  );
+
   const signOut = useCallback(async () => {
+    if (isDemo()) {
+      await resetDemo().catch(() => undefined);
+      clear();
+      return;
+    }
     // Last chance to send waiting changes, then remove this account's data from the device.
     await replay().catch(() => undefined);
     await api('POST', '/auth/logout').catch(() => undefined);
@@ -157,7 +189,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clear();
   }, [clear]);
 
-  const value = useMemo<AuthApi>(() => ({ status, me, signedIn, signOut, saveProfile }), [status, me, signedIn, signOut, saveProfile]);
+  const value = useMemo<AuthApi>(() => ({ status, me, signedIn, demoSignIn, signOut, saveProfile }), [status, me, signedIn, demoSignIn, signOut, saveProfile]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 

@@ -6,8 +6,8 @@ import { ContactField, isValidContact, type ContactMode } from './ContactField';
 import type { AuthFlowState } from './SignUp';
 import { Input } from '../../components/ui/Input';
 import { PillButton } from '../../components/ui/PillButton';
-import { useAuth } from '../../state/auth';
-import { api, ApiError, type Me, type OtpSent } from '../../api/client';
+import { DEMO_OTP, useAuth } from '../../state/auth';
+import { ApiError } from '../../api/client';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -33,15 +33,14 @@ export default function Login() {
 
   const logIn = () =>
     run(async () => {
-      const res = await api<{ me: Me }>('POST', '/auth/login', { contact, password });
-      await auth.signedIn(res.me);
+      // Demo: no server. Any contact and password sign in on this device.
+      await auth.demoSignIn(contact);
       navigate('/home', { replace: true });
     });
 
   const sendCode = (flow: 'login' | 'reset') =>
     run(async () => {
-      const sent = await api<OtpSent>('POST', '/auth/otp', { contact, purpose: flow });
-      navigate('/otp', { state: { flow, contact: sent.contact, devCode: sent.devCode } satisfies AuthFlowState });
+      navigate('/otp', { state: { flow, contact, devCode: DEMO_OTP } satisfies AuthFlowState });
     });
 
   return (
@@ -51,8 +50,22 @@ export default function Login() {
       footer={
         <>
           {error && !error.fields.contact && <p role="alert" className="mb-3 text-center text-sm text-bad">{error.message}</p>}
-          <PillButton full disabled={!validContact || password.length < 8 || busy} onClick={() => void logIn()}>
+          <PillButton full disabled={!validContact || busy} onClick={() => void logIn()}>
             {busy ? 'Please wait…' : 'Log in'}
+          </PillButton>
+          <PillButton
+            full
+            variant="ghost"
+            className="mt-3"
+            disabled={busy}
+            onClick={() =>
+              void run(async () => {
+                await auth.demoSignIn();
+                navigate('/home', { replace: true });
+              })
+            }
+          >
+            Continue as demo
           </PillButton>
           <PillButton full variant="ghost" className="mt-3" disabled={!validContact || busy} onClick={() => void sendCode('login')}>
             Use a one-time code instead

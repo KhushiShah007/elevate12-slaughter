@@ -1,11 +1,12 @@
 import { useState } from 'react';
+import { DEMO_OTP } from '../../state/auth';
 import { Link, useNavigate } from 'react-router-dom';
 import { UserRound } from 'lucide-react';
 import { OnboardingFrame } from './OnboardingFrame';
 import { ContactField, isValidContact, type ContactMode } from './ContactField';
 import { Input } from '../../components/ui/Input';
 import { PillButton } from '../../components/ui/PillButton';
-import { api, ApiError, type OtpSent } from '../../api/client';
+import { ApiError } from '../../api/client';
 
 export interface AuthFlowState {
   flow: 'signup' | 'login' | 'reset';
@@ -30,8 +31,8 @@ export default function SignUp() {
     setBusy(true);
     setError(null);
     try {
-      const sent = await api<OtpSent>('POST', '/auth/otp', { contact, purpose: 'signup' });
-      navigate('/otp', { state: { flow: 'signup', name: name.trim(), contact: sent.contact, devCode: sent.devCode } satisfies AuthFlowState });
+      // Demo: no server. The code is always 123456.
+      navigate('/otp', { state: { flow: 'signup', name: name.trim(), contact, devCode: DEMO_OTP } satisfies AuthFlowState });
     } catch (err) {
       setError(err instanceof ApiError ? err : new ApiError(0, 'unknown', 'Something went wrong. Please try again.'));
     } finally {
