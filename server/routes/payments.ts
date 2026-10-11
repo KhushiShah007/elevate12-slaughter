@@ -7,6 +7,7 @@ import { AppError, jsonBody, parse } from '../http';
 import { requireUser } from '../auth';
 import { hmacHex, MOCK_SECRET, paymentProvider } from '../payments';
 import { sendOutbound } from '../outbound';
+import { notifySafe } from '../notify/service';
 import { textPdf } from '../pdf';
 import { LOYALTY_RATE, MAX_REDEEM_SHARE } from '../../src/engines/loyalty';
 
@@ -104,6 +105,22 @@ payments.post('/payments/checkout', async (c) => {
   return c.json({ provider: provider.name, publicKey: provider.publicKey, orderId: order.orderId, amountInr: payable, bookingId: booking.id, paymentId: payment.id });
 });
 
+/** Booking confirmed, the free-cancellation deadline, and (flights) when to leave. */
+function scheduleBookingNotifications(b: typeof s.bookings.$inferSelect) {
+  const link = b.tripId ? `/trips/${b.tripId}/bookings/${b.clientId ?? b.id}` : null;
+  void notifySafe({ userId: b.userId, tripId: b.tripId, kind: 'booking_confirmed', title: 'Booking confirmed', body: `${b.title ?? 'Your booking'} is confirmed. Receipt saved in the app.`, dedupeKey: `booking:${b.id}:confirmed`, link });
+  const free = (b.cancellationPolicy as { freeCancelUntil?: string | null } | null)?.freeCancelUntil;
+  const freeAt = free ? new Date(free) : null;
+  if (freeAt && !Number.isNaN(freeAt.getTime())) {
+    const due = new Date(Math.max(Date.now(), freeAt.getTime() - 24 * 3_600_000));
+    if (freeAt.getTime() > Date.now()) void notifySafe({ userId: b.userId, tripId: b.tripId, kind: 'cancel_deadline', title: 'Free cancellation ends soon', body: `Free cancellation for ${b.title ?? 'your booking'} ends ${freeAt.toUTCString().slice(0, 22)} UTC.`, dedupeKey: `booking:${b.id}:freecancel`, dueAt: due, link });
+  }
+  if (b.kind === 'flight' && b.startsAt && b.startsAt.getTime() > Date.now() + 3 * 3_600_000) {
+    const leaveBy = new Date(b.startsAt.getTime() - 3 * 3_600_000);
+    void notifySafe({ userId: b.userId, tripId: b.tripId, kind: 'leave_by', title: 'Time to leave for the airport', body: `Leave by ${leaveBy.toISOString().slice(11, 16)} UTC for ${b.title ?? 'your flight'}.`, dedupeKey: `booking:${b.id}:leaveby`, critical: true, dueAt: new Date(leaveBy.getTime() - 60 * 60_000), leaveBy, link });
+  }
+}
+
 /** Mark an order paid (after its signature checked out): booking confirmed, receipt emailed. */
 async function markPaid(orderId: string, providerPaymentId: string, method: string | null, eventId: string | null) {
   const { db } = await getDb();
@@ -117,6 +134,7 @@ async function markPaid(orderId: string, providerPaymentId: string, method: stri
   await db.update(s.payments).set({ status: 'paid', providerPaymentId, method, updatedAt: new Date() }).where(eq(s.payments.id, p.id));
   if (p.bookingId) {
     const [b] = await db.update(s.bookings).set({ status: 'confirmed', paymentStatus: 'paid', providerRef: providerPaymentId }).where(eq(s.bookings.id, p.bookingId)).returning();
+    void scheduleBookingNotifications(b);
     const [u] = await db.select({ email: s.users.email, name: s.profiles.name }).from(s.users).leftJoin(s.profiles, eq(s.profiles.userId, s.users.id)).where(eq(s.users.id, p.userId)).limit(1);
     if (u?.email) {
       await sendOutbound({

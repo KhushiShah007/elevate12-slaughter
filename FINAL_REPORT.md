@@ -44,6 +44,7 @@ See [DECISIONS.md](DECISIONS.md).
 - Section 7 (transport): done — between cities (flight/train/bus/cab), transfers, in-city rides, rentals.
 - Section 8 (chatbot and voice): done — streaming, rule-based fallback, replan/cancel/budget/status tools, history, voice fixes.
 - Section 9 (weather and packing): done — weather for the trip dates (forecast, or same dates last year), simple packing checklist (tick, add, remove, refresh keeps ticks), synced. No suitcase animation or departure planner (out of scope).
+- Section 10 (notifications and escalation): done — in-app + push/email/WhatsApp/SMS/call channels behind consent, durable DB schedule (idempotent claims, UTC), escalation every 30 min (shorter near leave-by) until Acknowledge, max 2 calls, quiet hours, daily cost cap, STOP, masked numbers, user-visible timeline. Events: booking confirmed, free-cancel deadline, leave-by, refund updates, itinerary changes, packing reminder, demo flight alerts. All sends are Outbox dry runs unless keys + ALLOW_REAL_OUTBOUND=true.
 
 ## Pushed
 - Repo: https://github.com/KhushiShah007/elevate12-slaughter — branches `feature/complete-app` and `main`.

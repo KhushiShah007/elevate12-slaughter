@@ -6,6 +6,7 @@ import { AppError, jsonBody, parse } from '../http';
 import { requireUser } from '../auth';
 import { paymentProvider } from '../payments';
 import { sendOutbound } from '../outbound';
+import { notifySafe } from '../notify/service';
 import { complete, llmProvider } from '../ai/llm';
 import rulesJson from '../config/refund-rules.json';
 import {
@@ -80,6 +81,14 @@ async function move(requestId: string, userId: string | null, to: CancelState, a
     .returning();
   if (!next) throw new AppError(409, 'conflict', 'This cancellation changed at the same time. Reload and try again.');
   await record(requestId, 'status', actor, note, { from: r.status, to });
+  const say: Partial<Record<CancelState, string>> = {
+    acknowledged: 'The provider received your cancellation.',
+    processing: 'Your refund is being processed.',
+    refunded: `Your refund${next.refundedInr ? ` of Rs ${next.refundedInr}` : ''} has been processed.`,
+    partially_refunded: 'Part of your refund has been processed.',
+    rejected: 'The provider rejected the refund. Open Voyage to dispute it.',
+  };
+  if (say[to]) void notifySafe({ userId: next.userId, kind: 'refund_update', title: 'Refund update', body: say[to]!, dedupeKey: `refund:${requestId}:${to}`, link: `/refunds/${requestId}` });
   return next;
 }
 

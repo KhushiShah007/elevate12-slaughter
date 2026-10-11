@@ -36,3 +36,9 @@ One line each, in the order they were made.
 - Streaming: tools run first, then the final answer streams token by token (SSE); answers that need no tools are sent in word chunks. The price guard runs on the full text and replaces the reply if needed.
 - Chat tools can replan the itinerary (undoable) and start a cancellation quote, but never cancel, pay or send: confirmation stays in the UI.
 - Voice: Web Speech API with clear permission/error messages and https check; where unsupported, MediaRecorder + server STT (Deepgram or Whisper when keyed); read-aloud with stop and mute; spoken questions get spoken answers. ElevenLabs/Google TTS not wired.
+
+## Section 10: notifications
+- **Scheduler:** no Inngest/BullMQ. The `notifications` table is the durable queue (UTC `next_at`); `runDue` claims rows with a compare-and-set on `next_at`, so concurrent runners never double-send and a crash retries after 2 minutes. It is triggered by Vercel Cron (`/api/cron/tick`, daily on Hobby), a 30 s timer in the dev server, and the app's own polling of `/api/notifications` (every 15–30 s while open). No extra service or key needed.
+- **Ladder:** in-app + push (+ email) → WhatsApp (or SMS) → call → second call. 30 min per step, `leaveBy` shortens it to a third of the time left (5–30 min). Demo alerts use 1-minute steps.
+- **Consent:** every channel is off until switched on; calls never in quiet hours; ordinary notifications wait for quiet hours to end; daily cost cap with rough per-message costs; STOP (Twilio-signed inbound SMS) pauses SMS and WhatsApp until the user opts in again.
+- **Real push (FCM) and real SMS/WhatsApp/voice adapters** stay dry runs even with keys (only email has a real adapter); the timeline and Outbox show exactly what would have been sent.

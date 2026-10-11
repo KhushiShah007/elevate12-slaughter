@@ -4,6 +4,7 @@ import { and, desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { getDb, schema as s } from '../db/client';
 import { AppError, jsonBody, parse } from '../http';
+import { notifySafe } from '../notify/service';
 import { requireUser } from '../auth';
 import { buildGuide, type Guide } from '../guide';
 import { getWeather } from './live';
@@ -157,6 +158,10 @@ itinerary.post('/itineraries/:tripId/generate', async (c) => {
   });
   const before = await current(userId, tripId);
   const row = await save(userId, tripId, plan, before ? 'Rebuilt the plan' : 'First plan', before ? diffPlans(before.plan as Plan, plan) : ['Planned every day']);
+  // Packing reminder the evening before the trip (18:00 IST = 12:30 UTC).
+  const packAt = new Date(`${ctx.trip.startDate}T12:30:00Z`);
+  packAt.setUTCDate(packAt.getUTCDate() - 1);
+  if (packAt.getTime() > Date.now()) void notifySafe({ userId, tripId, kind: 'packing_reminder', title: 'Pack for tomorrow', body: `Your trip to ${ctx.dest.name} starts tomorrow. Check your packing list.`, dedupeKey: `packing:${tripId}:${ctx.trip.startDate}`, dueAt: packAt, link: `/trips/${tripId}/packing` });
   return c.json({ ...(await view(userId, tripId)), version: row.version });
 });
 
@@ -191,6 +196,7 @@ export async function adaptItinerary(userId: string, tripId: string, body: z.inf
   const r = adaptDay(row.plan as Plan, body.mode, { date: body.date, itemId: body.itemId, minutes: body.minutes, place, pool, allowance: ctx.allowance, paidEntryEstimate: ctx.paidEntryEstimate });
   if (!r.changes.length) return { changed: false, warnings: r.warnings, ...(await view(userId, tripId)) };
   await save(userId, tripId, r.plan, REASON[body.mode], r.changes, row.version);
+  void notifySafe({ userId, tripId, kind: 'itinerary_change', title: 'Itinerary updated', body: `${REASON[body.mode]}: ${r.changes.slice(0, 2).join('; ')}`.slice(0, 300), dedupeKey: `itin:${tripId}:${row.version + 1}`, link: `/trips/${tripId}/itinerary` });
   const emergency = body.mode === 'sick' ? { country: ctx.dest.country, numbers: EMERGENCY[ctx.dest.country] ?? { all: '112' }, pharmacy: `https://www.google.com/maps/search/pharmacy/@${ctx.dest.lat},${ctx.dest.lon},14z`, hospital: `https://www.google.com/maps/search/hospital/@${ctx.dest.lat},${ctx.dest.lon},14z` } : null;
   return { changed: true, changes: r.changes, warnings: r.warnings, emergency, ...(await view(userId, tripId)) };
 }

@@ -29,6 +29,9 @@ __export(schema_exports, {
   hotelsCache: () => hotelsCache,
   itineraries: () => itineraries,
   itineraryVersions: () => itineraryVersions,
+  notificationEvents: () => notificationEvents,
+  notificationPrefs: () => notificationPrefs,
+  notifications: () => notifications,
   otpCodes: () => otpCodes,
   outboundMessages: () => outboundMessages,
   passwordResets: () => passwordResets,
@@ -67,7 +70,7 @@ import {
   uniqueIndex,
   uuid
 } from "drizzle-orm/pg-core";
-var bytea, created, updated, provenance, users, profiles, sessions, passwordResets, otpCodes, airports, airlines, routes, destinations, destinationCostIndex, placeColumns, attractions, restaurants, hotelsCache, flightsCache, trips, tripDrafts, tripItems, bookings, payments, paymentEvents, cancellationRequests, refundQuotes, refundEvents, outboundMessages, providerContacts, creditShells, itineraries, itineraryVersions, savedPlaces, verificationDocuments, documentBlobs, chatConversations, chatMessages, airlineReviews, airlineSentimentScores, syncReceipts, userRecords;
+var bytea, created, updated, provenance, users, profiles, sessions, passwordResets, otpCodes, airports, airlines, routes, destinations, destinationCostIndex, placeColumns, attractions, restaurants, hotelsCache, flightsCache, trips, tripDrafts, tripItems, bookings, payments, paymentEvents, cancellationRequests, refundQuotes, refundEvents, outboundMessages, providerContacts, creditShells, itineraries, itineraryVersions, savedPlaces, verificationDocuments, documentBlobs, chatConversations, chatMessages, airlineReviews, airlineSentimentScores, syncReceipts, userRecords, notificationPrefs, notifications, notificationEvents;
 var init_schema = __esm({
   "server/db/schema.ts"() {
     "use strict";
@@ -119,7 +122,7 @@ var init_schema = __esm({
         expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
         revokedAt: timestamp("revoked_at", { withTimezone: true })
       },
-      (t) => [index("sessions_user_idx").on(t.userId)]
+      (t2) => [index("sessions_user_idx").on(t2.userId)]
     );
     passwordResets = pgTable("password_resets", {
       tokenHash: text("token_hash").primaryKey(),
@@ -142,7 +145,7 @@ var init_schema = __esm({
         usedAt: timestamp("used_at", { withTimezone: true }),
         createdAt: created()
       },
-      (t) => [index("otp_contact_idx").on(t.contact, t.purpose)]
+      (t2) => [index("otp_contact_idx").on(t2.contact, t2.purpose)]
     );
     airports = pgTable(
       "airports",
@@ -158,7 +161,7 @@ var init_schema = __esm({
         routeCount: integer("route_count").notNull().default(0),
         ...provenance
       },
-      (t) => [index("airports_city_idx").on(t.city)]
+      (t2) => [index("airports_city_idx").on(t2.city)]
     );
     airlines = pgTable("airlines", {
       iata: text("iata").primaryKey(),
@@ -178,7 +181,7 @@ var init_schema = __esm({
         equipment: text("equipment"),
         ...provenance
       },
-      (t) => [index("routes_pair_idx").on(t.srcIata, t.dstIata)]
+      (t2) => [index("routes_pair_idx").on(t2.srcIata, t2.dstIata)]
     );
     destinations = pgTable("destinations", {
       id: serial("id").primaryKey(),
@@ -217,7 +220,7 @@ var init_schema = __esm({
         activities: integer("activities").notNull(),
         ...provenance
       },
-      (t) => [primaryKey({ columns: [t.destinationId, t.style] })]
+      (t2) => [primaryKey({ columns: [t2.destinationId, t2.style] })]
     );
     placeColumns = () => ({
       id: serial("id").primaryKey(),
@@ -243,7 +246,7 @@ var init_schema = __esm({
         website: text("website"),
         phone: text("phone")
       },
-      (t) => [index("attractions_dest_idx").on(t.destinationId), uniqueIndex("attractions_ext_idx").on(t.source, t.externalId)]
+      (t2) => [index("attractions_dest_idx").on(t2.destinationId), uniqueIndex("attractions_ext_idx").on(t2.source, t2.externalId)]
     );
     restaurants = pgTable(
       "restaurants",
@@ -258,7 +261,7 @@ var init_schema = __esm({
         phone: text("phone"),
         reservation: text("reservation")
       },
-      (t) => [index("restaurants_dest_idx").on(t.destinationId), uniqueIndex("restaurants_ext_idx").on(t.source, t.externalId)]
+      (t2) => [index("restaurants_dest_idx").on(t2.destinationId), uniqueIndex("restaurants_ext_idx").on(t2.source, t2.externalId)]
     );
     hotelsCache = pgTable(
       "hotels_cache",
@@ -275,7 +278,7 @@ var init_schema = __esm({
         cancellation: text("cancellation"),
         expiresAt: timestamp("expires_at", { withTimezone: true })
       },
-      (t) => [index("hotels_dest_idx").on(t.destinationId), uniqueIndex("hotels_ext_idx").on(t.provider, t.externalId)]
+      (t2) => [index("hotels_dest_idx").on(t2.destinationId), uniqueIndex("hotels_ext_idx").on(t2.provider, t2.externalId)]
     );
     flightsCache = pgTable("flights_cache", {
       cacheKey: text("cache_key").primaryKey(),
@@ -304,7 +307,7 @@ var init_schema = __esm({
         createdAt: created(),
         updatedAt: updated()
       },
-      (t) => [index("trips_user_idx").on(t.userId)]
+      (t2) => [index("trips_user_idx").on(t2.userId)]
     );
     tripDrafts = pgTable(
       "trip_drafts",
@@ -318,7 +321,7 @@ var init_schema = __esm({
         createdAt: created(),
         updatedAt: updated()
       },
-      (t) => [index("drafts_user_idx").on(t.userId)]
+      (t2) => [index("drafts_user_idx").on(t2.userId)]
     );
     tripItems = pgTable(
       "trip_items",
@@ -335,7 +338,7 @@ var init_schema = __esm({
         details: jsonb("details").$type().notNull().default(sql`'{}'::jsonb`),
         createdAt: created()
       },
-      (t) => [index("trip_items_trip_idx").on(t.tripId)]
+      (t2) => [index("trip_items_trip_idx").on(t2.tripId)]
     );
     bookings = pgTable("bookings", {
       id: uuid("id").primaryKey().defaultRandom(),
@@ -501,7 +504,7 @@ var init_schema = __esm({
         plan: jsonb("plan").notNull(),
         createdAt: created()
       },
-      (t) => [uniqueIndex("itinerary_versions_unique").on(t.itineraryId, t.version)]
+      (t2) => [uniqueIndex("itinerary_versions_unique").on(t2.itineraryId, t2.version)]
     );
     savedPlaces = pgTable("saved_places", {
       id: uuid("id").primaryKey().defaultRandom(),
@@ -558,7 +561,7 @@ var init_schema = __esm({
         toolCalls: jsonb("tool_calls"),
         createdAt: created()
       },
-      (t) => [index("chat_messages_conv_idx").on(t.conversationId)]
+      (t2) => [index("chat_messages_conv_idx").on(t2.conversationId)]
     );
     airlineReviews = pgTable("airline_reviews", {
       id: serial("id").primaryKey(),
@@ -598,7 +601,67 @@ var init_schema = __esm({
         deleted: boolean("deleted").notNull().default(false),
         updatedAt: updated()
       },
-      (t) => [primaryKey({ columns: [t.userId, t.tbl, t.recordId] })]
+      (t2) => [primaryKey({ columns: [t2.userId, t2.tbl, t2.recordId] })]
+    );
+    notificationPrefs = pgTable("notification_prefs", {
+      userId: uuid("user_id").primaryKey().references(() => users.id, { onDelete: "cascade" }),
+      channels: jsonb("channels").notNull().default({}),
+      // { push, email, sms, whatsapp, voice: boolean }
+      phone: text("phone"),
+      email: text("email"),
+      timezone: text("timezone").notNull().default("Asia/Kolkata"),
+      quietStart: integer("quiet_start").notNull().default(1320),
+      // minutes after local midnight (22:00)
+      quietEnd: integer("quiet_end").notNull().default(420),
+      // 07:00
+      dailyCapInr: integer("daily_cap_inr").notNull().default(20),
+      smsStopped: boolean("sms_stopped").notNull().default(false),
+      // replied STOP
+      updatedAt: updated()
+    });
+    notifications = pgTable(
+      "notifications",
+      {
+        id: uuid("id").primaryKey().defaultRandom(),
+        userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+        tripId: text("trip_id"),
+        kind: text("kind").notNull(),
+        // booking_confirmed | flight_status | cancel_deadline | refund_update | itinerary_change | packing_reminder | leave_by
+        title: text("title").notNull(),
+        body: text("body").notNull(),
+        link: text("link"),
+        critical: boolean("critical").notNull().default(false),
+        dedupeKey: text("dedupe_key").notNull().unique(),
+        // idempotency: the same event is scheduled once
+        dueAt: timestamp("due_at", { withTimezone: true }).notNull(),
+        leaveBy: timestamp("leave_by", { withTimezone: true }),
+        status: text("status").notNull().default("scheduled"),
+        // scheduled | escalating | delivered | acknowledged | stopped
+        step: integer("step").notNull().default(0),
+        nextAt: timestamp("next_at", { withTimezone: true }),
+        callAttempts: integer("call_attempts").notNull().default(0),
+        fast: boolean("fast").notNull().default(false),
+        // demo: one-minute windows
+        readAt: timestamp("read_at", { withTimezone: true }),
+        ackAt: timestamp("ack_at", { withTimezone: true }),
+        createdAt: created()
+      },
+      (t2) => [index("notifications_due_idx").on(t2.status, t2.nextAt), index("notifications_user_idx").on(t2.userId, t2.dueAt)]
+    );
+    notificationEvents = pgTable(
+      "notification_events",
+      {
+        id: serial("id").primaryKey(),
+        notificationId: uuid("notification_id").notNull().references(() => notifications.id, { onDelete: "cascade" }),
+        step: integer("step").notNull().default(0),
+        channel: text("channel"),
+        action: text("action").notNull(),
+        // sent | dry_run | skipped_consent | skipped_quiet | skipped_cap | escalated | acknowledged | stopped | failed
+        detail: text("detail"),
+        costInr: real("cost_inr").notNull().default(0),
+        at: timestamp("at", { withTimezone: true }).notNull().defaultNow()
+      },
+      (t2) => [index("notification_events_n_idx").on(t2.notificationId)]
     );
   }
 });
@@ -644,10 +707,10 @@ async function connect() {
     const { default: postgres } = await import("postgres");
     const { drizzle: drizzle2 } = await import("drizzle-orm/postgres-js");
     const { migrate: migrate2 } = await import("drizzle-orm/postgres-js/migrator");
-    const sql5 = postgres(url, { max: 5, prepare: false });
-    const db2 = drizzle2(sql5, { schema: schema_exports });
+    const sql7 = postgres(url, { max: 5, prepare: false });
+    const db2 = drizzle2(sql7, { schema: schema_exports });
     await migrate2(db2, { migrationsFolder: MIGRATIONS });
-    return { db: db2, kind: "postgres", close: () => sql5.end(), migrate: () => migrate2(db2, { migrationsFolder: MIGRATIONS }) };
+    return { db: db2, kind: "postgres", close: () => sql7.end(), migrate: () => migrate2(db2, { migrationsFolder: MIGRATIONS }) };
   }
   if (process.env.VERCEL) throw new Error("DATABASE_URL is not set. Add your Supabase or Neon connection string in Vercel settings.");
   const { PGlite } = await import("@electric-sql/pglite");
@@ -852,6 +915,306 @@ var init_auth = __esm({
   }
 });
 
+// server/outbound.ts
+function maskAddress(channel, to) {
+  if (channel === "email" || channel === "push") return to;
+  const digits = to.replace(/\D/g, "");
+  return digits.length <= 4 ? "\u2022\u2022\u2022\u2022" : `${to.trim().startsWith("+") ? "+" : ""}${"\u2022".repeat(Math.max(0, digits.length - 4))}${digits.slice(-4)}`;
+}
+async function sendEmailForReal(m2) {
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { authorization: `Bearer ${process.env.RESEND_API_KEY}`, "content-type": "application/json" },
+    body: JSON.stringify({ from: process.env.EMAIL_FROM, to: [m2.to], cc: m2.cc ? [m2.cc] : void 0, reply_to: m2.replyTo ?? void 0, subject: m2.subject ?? "Voyage", text: m2.body }),
+    signal: AbortSignal.timeout(15e3)
+  });
+  if (!res.ok) throw new Error(`resend ${res.status}`);
+}
+async function sendOutbound(m2) {
+  const { db } = await getDb();
+  let status = "dry_run";
+  let provider = null;
+  if (realSendingAllowed(m2.channel)) {
+    try {
+      if (m2.channel === "email") {
+        provider = "resend";
+        await sendEmailForReal(m2);
+        status = "sent";
+      } else {
+        provider = m2.channel;
+        status = "dry_run";
+      }
+    } catch {
+      status = "failed";
+    }
+  }
+  const [row] = await db.insert(schema_exports.outboundMessages).values({
+    userId: m2.userId,
+    channel: m2.channel,
+    toAddress: maskAddress(m2.channel, m2.to),
+    cc: m2.cc ?? null,
+    replyTo: m2.replyTo ?? null,
+    subject: m2.subject ?? null,
+    body: m2.body,
+    status,
+    provider,
+    relatedType: m2.relatedType ?? null,
+    relatedId: m2.relatedId ?? null,
+    sentAt: status === "sent" ? /* @__PURE__ */ new Date() : null
+  }).returning();
+  return row;
+}
+var providerKeyFor, realSendingAllowed;
+var init_outbound = __esm({
+  "server/outbound.ts"() {
+    "use strict";
+    init_client();
+    providerKeyFor = {
+      email: () => Boolean(process.env.RESEND_API_KEY && process.env.EMAIL_FROM),
+      sms: () => Boolean(process.env.MSG91_AUTH_KEY || process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN),
+      whatsapp: () => Boolean(process.env.WHATSAPP_TOKEN && process.env.WHATSAPP_PHONE_ID),
+      voice: () => Boolean(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_FROM),
+      push: () => Boolean(process.env.FCM_SERVER_KEY)
+    };
+    realSendingAllowed = (channel) => process.env.ALLOW_REAL_OUTBOUND === "true" && providerKeyFor[channel]();
+  }
+});
+
+// server/notify/escalation.ts
+function localMinutes(now, timezone) {
+  try {
+    const parts = new Intl.DateTimeFormat("en-GB", { timeZone: timezone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(now);
+    const h = Number(parts.find((p) => p.type === "hour")?.value ?? 0);
+    const m2 = Number(parts.find((p) => p.type === "minute")?.value ?? 0);
+    return h * 60 + m2;
+  } catch {
+    return now.getUTCHours() * 60 + now.getUTCMinutes();
+  }
+}
+function inQuietHours(now, p) {
+  if (p.quietStart === p.quietEnd) return false;
+  const m2 = localMinutes(now, p.timezone);
+  return p.quietStart > p.quietEnd ? m2 >= p.quietStart || m2 < p.quietEnd : m2 >= p.quietStart && m2 < p.quietEnd;
+}
+function quietEndsAt(now, p) {
+  const m2 = localMinutes(now, p.timezone);
+  const wait = (p.quietEnd - m2 + 24 * 60) % (24 * 60) || 24 * 60;
+  return new Date(now.getTime() + wait * MIN);
+}
+function ackWindowMs(now, n) {
+  if (n.fast) return MIN;
+  if (!n.leaveBy) return 30 * MIN;
+  const left = n.leaveBy.getTime() - now.getTime();
+  return Math.min(30 * MIN, Math.max(5 * MIN, Math.round(left / 3)));
+}
+function ladder(critical) {
+  return critical ? [["push", "email"], ["whatsapp", "sms"], ["voice"], ["voice"]] : [["push", "email"]];
+}
+function planStep(n, prefs, now, spentTodayInr) {
+  const steps = ladder(n.critical);
+  const quiet = inQuietHours(now, prefs);
+  if (!n.critical && quiet) return { sends: [], skips: [], deferUntil: quietEndsAt(now, prefs), next: null };
+  const plan = { sends: [], skips: [], deferUntil: null, next: null };
+  let spent = spentTodayInr;
+  const channels = steps[n.step] ?? [];
+  for (const channel of channels) {
+    if (!prefs.channels[channel]) {
+      plan.skips.push({ channel, reason: "consent" });
+      continue;
+    }
+    const to = channel === "email" ? prefs.email : channel === "push" ? "this device" : prefs.phone;
+    if (!to) {
+      plan.skips.push({ channel, reason: "no_address" });
+      continue;
+    }
+    if ((channel === "sms" || channel === "whatsapp") && prefs.smsStopped) {
+      plan.skips.push({ channel, reason: "stopped" });
+      continue;
+    }
+    if (channel === "voice") {
+      if (n.callAttempts >= MAX_CALLS) {
+        plan.skips.push({ channel, reason: "call_limit" });
+        continue;
+      }
+      if (quiet) {
+        plan.skips.push({ channel, reason: "quiet" });
+        continue;
+      }
+    }
+    if (spent + COST_INR[channel] > prefs.dailyCapInr) {
+      plan.skips.push({ channel, reason: "cap" });
+      continue;
+    }
+    spent += COST_INR[channel];
+    plan.sends.push({ channel, to, costInr: COST_INR[channel] });
+    if (channel === "whatsapp") break;
+  }
+  if (n.critical && n.step + 1 < steps.length) plan.next = { step: n.step + 1, at: new Date(now.getTime() + ackWindowMs(now, n)) };
+  return plan;
+}
+var COST_INR, MAX_CALLS, MIN, defaultPrefs;
+var init_escalation = __esm({
+  "server/notify/escalation.ts"() {
+    "use strict";
+    COST_INR = { push: 0, email: 0, sms: 0.25, whatsapp: 0.8, voice: 3 };
+    MAX_CALLS = 2;
+    MIN = 6e4;
+    defaultPrefs = () => ({ channels: {}, phone: null, email: null, timezone: "Asia/Kolkata", quietStart: 22 * 60, quietEnd: 7 * 60, dailyCapInr: 20, smsStopped: false });
+  }
+});
+
+// server/notify/service.ts
+import { and as and5, asc as asc2, eq as eq9, gte, inArray as inArray3, isNotNull, lte, sql as sql4 } from "drizzle-orm";
+async function notify(n) {
+  const { db } = await getDb();
+  const due = n.dueAt ?? /* @__PURE__ */ new Date();
+  const [row] = await db.insert(schema_exports.notifications).values({
+    userId: n.userId,
+    kind: n.kind,
+    title: n.title.slice(0, 140),
+    body: n.body.slice(0, 600),
+    dedupeKey: n.dedupeKey,
+    critical: n.critical ?? false,
+    tripId: n.tripId ?? null,
+    link: n.link ?? null,
+    dueAt: due,
+    nextAt: due,
+    leaveBy: n.leaveBy ?? null,
+    fast: n.fast ?? false
+  }).onConflictDoNothing({ target: schema_exports.notifications.dedupeKey }).returning();
+  return row ?? null;
+}
+function notifySafe(n) {
+  return notify(n).then(() => maybeTick()).catch((err) => console.error("[notify]", err.message));
+}
+async function getPrefs(userId) {
+  const { db } = await getDb();
+  const [p] = await db.select().from(schema_exports.notificationPrefs).where(eq9(schema_exports.notificationPrefs.userId, userId)).limit(1);
+  const [u] = await db.select({ email: schema_exports.users.email, phone: schema_exports.users.phone }).from(schema_exports.users).where(eq9(schema_exports.users.id, userId)).limit(1);
+  const base2 = defaultPrefs();
+  if (!p) return { ...base2, email: u?.email ?? null, phone: u?.phone ?? null };
+  return {
+    channels: p.channels ?? {},
+    phone: p.phone ?? u?.phone ?? null,
+    email: p.email ?? u?.email ?? null,
+    timezone: p.timezone,
+    quietStart: p.quietStart,
+    quietEnd: p.quietEnd,
+    dailyCapInr: p.dailyCapInr,
+    smsStopped: p.smsStopped
+  };
+}
+function messageFor(channel, n) {
+  if (channel === "voice") return `This is an automated call from Voyage. ${n.title}. ${n.body} Press 1 to acknowledge.`;
+  if (channel === "sms") return `Voyage: ${n.title}. ${n.body}${n.critical ? " Open the app to acknowledge." : ""} Reply STOP to opt out.`;
+  if (channel === "whatsapp") return `${n.title}
+${n.body}${n.critical ? "\nReply 1 to acknowledge." : ""}`;
+  return `${n.title}
+
+${n.body}`;
+}
+async function log(notificationId, step, channel, action, detail, costInr = 0) {
+  const { db } = await getDb();
+  await db.insert(schema_exports.notificationEvents).values({ notificationId, step, channel, action, detail, costInr });
+}
+async function spentToday(userId, prefs, now) {
+  const { db } = await getDb();
+  const since = new Date(now.getTime() - localMinutes(now, prefs.timezone) * 6e4);
+  const [r] = await db.select({ total: sql4`coalesce(sum(${schema_exports.notificationEvents.costInr}), 0)` }).from(schema_exports.notificationEvents).innerJoin(schema_exports.notifications, eq9(schema_exports.notifications.id, schema_exports.notificationEvents.notificationId)).where(and5(eq9(schema_exports.notifications.userId, userId), gte(schema_exports.notificationEvents.at, since)));
+  return Number(r?.total ?? 0);
+}
+async function processOne(n, now) {
+  const { db } = await getDb();
+  const prefs = await getPrefs(n.userId);
+  const plan = planStep({ critical: n.critical, step: n.step, callAttempts: n.callAttempts, leaveBy: n.leaveBy, fast: n.fast }, prefs, now, await spentToday(n.userId, prefs, now));
+  if (plan.deferUntil) {
+    await db.update(schema_exports.notifications).set({ nextAt: plan.deferUntil }).where(eq9(schema_exports.notifications.id, n.id));
+    await log(n.id, n.step, null, "deferred", "Quiet hours: delivered when they end");
+    return;
+  }
+  if (n.step === 0) await log(n.id, 0, "in_app", "sent", "Shown in the app");
+  else await log(n.id, n.step, null, "escalated", "No acknowledgement yet: trying the next channel");
+  let calls = n.callAttempts;
+  for (const send of plan.sends) {
+    const row = await sendOutbound({ userId: n.userId, channel: outboundChannel[send.channel], to: send.to, subject: n.title, body: messageFor(send.channel, n), relatedType: "notification", relatedId: n.id });
+    if (send.channel === "voice") calls += 1;
+    await log(n.id, n.step, send.channel, row.status, `${row.status === "dry_run" ? "Demo mode: logged to Outbox" : row.status === "sent" ? "Sent" : "Failed"} \xB7 to ${maskAddress(outboundChannel[send.channel], send.to)}`, send.costInr);
+  }
+  for (const skip of plan.skips) await log(n.id, n.step, skip.channel, `skipped_${skip.reason}`, REASON[skip.reason]);
+  if (plan.next) {
+    await db.update(schema_exports.notifications).set({ status: "escalating", step: plan.next.step, nextAt: plan.next.at, callAttempts: calls }).where(eq9(schema_exports.notifications.id, n.id));
+    await log(n.id, n.step, null, "waiting", `Waiting for Acknowledge until ${plan.next.at.toISOString()}`);
+  } else {
+    await db.update(schema_exports.notifications).set({ status: "delivered", nextAt: null, callAttempts: calls }).where(eq9(schema_exports.notifications.id, n.id));
+    if (n.critical) await log(n.id, n.step, null, "finished", "All reminder steps used");
+  }
+}
+async function runDue(now = /* @__PURE__ */ new Date(), userId) {
+  const { db } = await getDb();
+  const due = await db.select().from(schema_exports.notifications).where(and5(inArray3(schema_exports.notifications.status, ["scheduled", "escalating"]), isNotNull(schema_exports.notifications.nextAt), lte(schema_exports.notifications.nextAt, now), userId ? eq9(schema_exports.notifications.userId, userId) : void 0)).orderBy(asc2(schema_exports.notifications.nextAt)).limit(25);
+  let processed = 0;
+  for (const n of due) {
+    const [claimed] = await db.update(schema_exports.notifications).set({ nextAt: new Date(now.getTime() + 2 * 6e4) }).where(and5(eq9(schema_exports.notifications.id, n.id), eq9(schema_exports.notifications.nextAt, n.nextAt), inArray3(schema_exports.notifications.status, ["scheduled", "escalating"]))).returning();
+    if (!claimed) continue;
+    try {
+      await processOne(n, now);
+      processed++;
+    } catch (err) {
+      await log(n.id, n.step, null, "failed", "Will retry").catch(() => {
+      });
+      console.error("[notify] step failed", err.message);
+    }
+  }
+  return processed;
+}
+async function maybeTick(userId) {
+  if (t.__voyageTick && Date.now() - t.__voyageTick < 2e4) return 0;
+  t.__voyageTick = Date.now();
+  return runDue(/* @__PURE__ */ new Date(), userId).catch(() => 0);
+}
+function startDevScheduler() {
+  if (process.env.VERCEL || process.env.VITEST || t.__voyageTimer) return;
+  t.__voyageTimer = setInterval(() => void maybeTick(), 3e4);
+  t.__voyageTimer.unref?.();
+}
+async function acknowledge(userId, id2, via) {
+  const { db } = await getDb();
+  const [n] = await db.update(schema_exports.notifications).set({ status: "acknowledged", ackAt: /* @__PURE__ */ new Date(), nextAt: null, readAt: /* @__PURE__ */ new Date() }).where(and5(eq9(schema_exports.notifications.id, id2), eq9(schema_exports.notifications.userId, userId), inArray3(schema_exports.notifications.status, ["scheduled", "escalating", "delivered"]))).returning();
+  if (n) await log(n.id, n.step, via, "acknowledged", via === "voice" ? "Pressed 1 on the call" : "Tapped Acknowledge");
+  return n ?? null;
+}
+async function stopMessages(phone) {
+  const { db } = await getDb();
+  const digits = phone.replace(/\D/g, "").slice(-10);
+  if (digits.length < 10) return 0;
+  const users2 = await db.select({ id: schema_exports.users.id }).from(schema_exports.users).where(sql4`right(regexp_replace(coalesce(${schema_exports.users.phone}, ''), '[^0-9]', '', 'g'), 10) = ${digits}`);
+  const prefs = await db.select({ userId: schema_exports.notificationPrefs.userId }).from(schema_exports.notificationPrefs).where(sql4`right(regexp_replace(coalesce(${schema_exports.notificationPrefs.phone}, ''), '[^0-9]', '', 'g'), 10) = ${digits}`);
+  const ids = [...new Set([...users2, ...prefs].map((u) => u.id ?? u.userId))];
+  for (const userId of ids) {
+    await db.insert(schema_exports.notificationPrefs).values({ userId, smsStopped: true }).onConflictDoUpdate({ target: schema_exports.notificationPrefs.userId, set: { smsStopped: true, updatedAt: /* @__PURE__ */ new Date() } });
+  }
+  return ids.length;
+}
+var outboundChannel, REASON, t;
+var init_service = __esm({
+  "server/notify/service.ts"() {
+    "use strict";
+    init_client();
+    init_outbound();
+    init_escalation();
+    outboundChannel = { push: "push", email: "email", sms: "sms", whatsapp: "whatsapp", voice: "voice" };
+    REASON = {
+      consent: "not switched on",
+      quiet: "quiet hours",
+      cap: "daily limit reached",
+      stopped: "you replied STOP",
+      no_address: "no number or email saved",
+      call_limit: "already called twice"
+    };
+    t = globalThis;
+  }
+});
+
 // server/ai/llm.ts
 var llm_exports = {};
 __export(llm_exports, {
@@ -939,7 +1302,7 @@ var init_llm = __esm({
 });
 
 // server/payments.ts
-import { createHmac as createHmac2, randomBytes as randomBytes3, timingSafeEqual as timingSafeEqual3 } from "node:crypto";
+import { createHmac as createHmac3, randomBytes as randomBytes3, timingSafeEqual as timingSafeEqual4 } from "node:crypto";
 function razorpay() {
   const keyId = process.env.RAZORPAY_KEY_ID;
   const secret = process.env.RAZORPAY_KEY_SECRET;
@@ -990,76 +1353,11 @@ var init_payments = __esm({
     safeEqualHex = (a, b) => {
       const x = Buffer.from(a, "hex");
       const y = Buffer.from(b, "hex");
-      return x.length === y.length && x.length > 0 && timingSafeEqual3(x, y);
+      return x.length === y.length && x.length > 0 && timingSafeEqual4(x, y);
     };
-    hmacHex = (secret, data) => createHmac2("sha256", secret).update(data).digest("hex");
+    hmacHex = (secret, data) => createHmac3("sha256", secret).update(data).digest("hex");
     MOCK_SECRET = process.env.MOCK_PAYMENT_SECRET ?? "voyage-demo-payments";
     paymentProvider = () => process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET ? razorpay() : mock();
-  }
-});
-
-// server/outbound.ts
-function maskAddress(channel, to) {
-  if (channel === "email" || channel === "push") return to;
-  const digits = to.replace(/\D/g, "");
-  return digits.length <= 4 ? "\u2022\u2022\u2022\u2022" : `${to.trim().startsWith("+") ? "+" : ""}${"\u2022".repeat(Math.max(0, digits.length - 4))}${digits.slice(-4)}`;
-}
-async function sendEmailForReal(m2) {
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { authorization: `Bearer ${process.env.RESEND_API_KEY}`, "content-type": "application/json" },
-    body: JSON.stringify({ from: process.env.EMAIL_FROM, to: [m2.to], cc: m2.cc ? [m2.cc] : void 0, reply_to: m2.replyTo ?? void 0, subject: m2.subject ?? "Voyage", text: m2.body }),
-    signal: AbortSignal.timeout(15e3)
-  });
-  if (!res.ok) throw new Error(`resend ${res.status}`);
-}
-async function sendOutbound(m2) {
-  const { db } = await getDb();
-  let status = "dry_run";
-  let provider = null;
-  if (realSendingAllowed(m2.channel)) {
-    try {
-      if (m2.channel === "email") {
-        provider = "resend";
-        await sendEmailForReal(m2);
-        status = "sent";
-      } else {
-        provider = m2.channel;
-        status = "dry_run";
-      }
-    } catch {
-      status = "failed";
-    }
-  }
-  const [row] = await db.insert(schema_exports.outboundMessages).values({
-    userId: m2.userId,
-    channel: m2.channel,
-    toAddress: maskAddress(m2.channel, m2.to),
-    cc: m2.cc ?? null,
-    replyTo: m2.replyTo ?? null,
-    subject: m2.subject ?? null,
-    body: m2.body,
-    status,
-    provider,
-    relatedType: m2.relatedType ?? null,
-    relatedId: m2.relatedId ?? null,
-    sentAt: status === "sent" ? /* @__PURE__ */ new Date() : null
-  }).returning();
-  return row;
-}
-var providerKeyFor, realSendingAllowed;
-var init_outbound = __esm({
-  "server/outbound.ts"() {
-    "use strict";
-    init_client();
-    providerKeyFor = {
-      email: () => Boolean(process.env.RESEND_API_KEY && process.env.EMAIL_FROM),
-      sms: () => Boolean(process.env.MSG91_AUTH_KEY || process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN),
-      whatsapp: () => Boolean(process.env.WHATSAPP_TOKEN && process.env.WHATSAPP_PHONE_ID),
-      voice: () => Boolean(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_FROM),
-      push: () => Boolean(process.env.FCM_SERVER_KEY)
-    };
-    realSendingAllowed = (channel) => process.env.ALLOW_REAL_OUTBOUND === "true" && providerKeyFor[channel]();
   }
 });
 
@@ -1146,7 +1444,7 @@ function estimateRefund(policy2, now, rules2, method = "card") {
       };
     }
     const tiers = [...policy2.feeTiers ?? rules2.defaultFlightFeeTiers].sort((a, b) => b.hoursBeforeAtLeast - a.hoursBeforeAtLeast);
-    let fee = (tiers.find((t) => hours >= t.hoursBeforeAtLeast) ?? tiers[tiers.length - 1]).feeInr;
+    let fee = (tiers.find((t2) => hours >= t2.hoursBeforeAtLeast) ?? tiers[tiers.length - 1]).feeInr;
     if (rules2.feeCappedAtBaseFare) fee = Math.min(fee, policy2.baseFareInr);
     const baseBack = policy2.baseFareInr - fee;
     notes.push("Cancellation fee depends on how close to departure you cancel.");
@@ -1242,9 +1540,9 @@ __export(cancellations_exports, {
   readReply: () => readReply,
   runFollowUps: () => runFollowUps
 });
-import { Hono as Hono9 } from "hono";
-import { and as and7, asc as asc3, desc as desc5, eq as eq12, inArray as inArray3 } from "drizzle-orm";
-import { z as z9 } from "zod";
+import { Hono as Hono10 } from "hono";
+import { and as and9, asc as asc5, desc as desc6, eq as eq14, inArray as inArray4 } from "drizzle-orm";
+import { z as z10 } from "zod";
 function defaultPolicy(b, now) {
   const starts = b.startsAt ?? new Date(now.getTime() + 14 * 864e5).toISOString();
   if (b.kind === "flight") {
@@ -1264,19 +1562,27 @@ async function record(requestId, type, actor, note, extra = {}) {
 }
 async function move(requestId, userId, to, actor, note, patch = {}) {
   const { db } = await getDb();
-  const [r] = await db.select().from(schema_exports.cancellationRequests).where(eq12(schema_exports.cancellationRequests.id, requestId)).limit(1);
+  const [r] = await db.select().from(schema_exports.cancellationRequests).where(eq14(schema_exports.cancellationRequests.id, requestId)).limit(1);
   if (!r || userId && r.userId !== userId) throw new AppError(404, "not_found", "We could not find that cancellation.");
-  const t = transition(r.status, to);
-  if (!t.ok) throw new AppError(409, "bad_transition", t.error);
-  if (!t.changed) return r;
-  const [next] = await db.update(schema_exports.cancellationRequests).set({ ...patch, status: to, version: r.version + 1, statusChangedAt: /* @__PURE__ */ new Date(), updatedAt: /* @__PURE__ */ new Date() }).where(and7(eq12(schema_exports.cancellationRequests.id, requestId), eq12(schema_exports.cancellationRequests.version, r.version))).returning();
+  const t2 = transition(r.status, to);
+  if (!t2.ok) throw new AppError(409, "bad_transition", t2.error);
+  if (!t2.changed) return r;
+  const [next] = await db.update(schema_exports.cancellationRequests).set({ ...patch, status: to, version: r.version + 1, statusChangedAt: /* @__PURE__ */ new Date(), updatedAt: /* @__PURE__ */ new Date() }).where(and9(eq14(schema_exports.cancellationRequests.id, requestId), eq14(schema_exports.cancellationRequests.version, r.version))).returning();
   if (!next) throw new AppError(409, "conflict", "This cancellation changed at the same time. Reload and try again.");
   await record(requestId, "status", actor, note, { from: r.status, to });
+  const say = {
+    acknowledged: "The provider received your cancellation.",
+    processing: "Your refund is being processed.",
+    refunded: `Your refund${next.refundedInr ? ` of Rs ${next.refundedInr}` : ""} has been processed.`,
+    partially_refunded: "Part of your refund has been processed.",
+    rejected: "The provider rejected the refund. Open Voyage to dispute it."
+  };
+  if (say[to]) void notifySafe({ userId: next.userId, kind: "refund_update", title: "Refund update", body: say[to], dedupeKey: `refund:${requestId}:${to}`, link: `/refunds/${requestId}` });
   return next;
 }
 async function applyRefundResult(requestId, outcome, amountInr) {
   const { db } = await getDb();
-  const [r] = await db.select().from(schema_exports.cancellationRequests).where(eq12(schema_exports.cancellationRequests.id, requestId)).limit(1);
+  const [r] = await db.select().from(schema_exports.cancellationRequests).where(eq14(schema_exports.cancellationRequests.id, requestId)).limit(1);
   if (!r) return;
   if (outcome === "failed") {
     await record(requestId, "note", "provider", "The refund failed at the payment provider. We will help you follow up.");
@@ -1285,17 +1591,17 @@ async function applyRefundResult(requestId, outcome, amountInr) {
   const expected = r.booking.quotedRefund ?? amountInr;
   const to = amountInr >= expected ? "refunded" : "partially_refunded";
   await move(requestId, null, to, "provider", `Refund of Rs ${amountInr} processed.`, { refundedInr: amountInr });
-  if (r.bookingId) await db.update(schema_exports.bookings).set({ refundedInr: amountInr, paymentStatus: "refunded" }).where(eq12(schema_exports.bookings.id, r.bookingId));
+  if (r.bookingId) await db.update(schema_exports.bookings).set({ refundedInr: amountInr, paymentStatus: "refunded" }).where(eq14(schema_exports.bookings.id, r.bookingId));
 }
 async function createQuote(userId, body) {
   const { db } = await getDb();
   let snap;
   let bookingId = null;
   if (body.bookingId) {
-    const [b] = await db.select().from(schema_exports.bookings).where(and7(eq12(schema_exports.bookings.id, body.bookingId), eq12(schema_exports.bookings.userId, userId))).limit(1);
+    const [b] = await db.select().from(schema_exports.bookings).where(and9(eq14(schema_exports.bookings.id, body.bookingId), eq14(schema_exports.bookings.userId, userId))).limit(1);
     if (!b) throw new AppError(404, "not_found", "We could not find that booking.");
     if (b.status === "cancelled") throw new AppError(409, "already_cancelled", "This booking is already cancelled.");
-    const [p] = b.paymentId ? await db.select().from(schema_exports.payments).where(eq12(schema_exports.payments.id, b.paymentId)).limit(1) : [];
+    const [p] = b.paymentId ? await db.select().from(schema_exports.payments).where(eq14(schema_exports.payments.id, b.paymentId)).limit(1) : [];
     bookingId = b.id;
     snap = {
       clientId: b.clientId ?? b.id,
@@ -1314,19 +1620,19 @@ async function createQuote(userId, body) {
   } else if (body.booking) {
     snap = { ...body.booking, source: "external" };
   } else throw new AppError(400, "invalid_input", "Choose a booking to cancel.");
-  const open = await db.select().from(schema_exports.cancellationRequests).where(and7(eq12(schema_exports.cancellationRequests.userId, userId), inArray3(schema_exports.cancellationRequests.status, ["draft", "quoted"])));
+  const open = await db.select().from(schema_exports.cancellationRequests).where(and9(eq14(schema_exports.cancellationRequests.userId, userId), inArray4(schema_exports.cancellationRequests.status, ["draft", "quoted"])));
   const existing = open.find((r) => r.booking.clientId === snap.clientId);
   const now = /* @__PURE__ */ new Date();
   const pol = snap.policy ?? defaultPolicy(snap, now);
   const est = estimateRefund(pol, now, rules, snap.paymentMethod);
-  const [prof] = await db.select({ name: schema_exports.profiles.name }).from(schema_exports.profiles).where(eq12(schema_exports.profiles.userId, userId)).limit(1);
+  const [prof] = await db.select({ name: schema_exports.profiles.name }).from(schema_exports.profiles).where(eq14(schema_exports.profiles.userId, userId)).limit(1);
   const stored = { ...snap, policy: pol, policyIsEstimate: !snap.policy, quotedRefund: est.refundInr, travellerName: prof?.name ?? "Traveller" };
   let request = existing;
   if (!request) {
     [request] = await db.insert(schema_exports.cancellationRequests).values({ userId, bookingId, booking: stored, reason: body.reason ?? null, status: "draft" }).returning();
     await record(request.id, "status", "user", "Cancellation started", { to: "draft" });
   } else {
-    await db.update(schema_exports.cancellationRequests).set({ booking: stored, reason: body.reason ?? request.reason }).where(eq12(schema_exports.cancellationRequests.id, request.id));
+    await db.update(schema_exports.cancellationRequests).set({ booking: stored, reason: body.reason ?? request.reason }).where(eq14(schema_exports.cancellationRequests.id, request.id));
   }
   await db.insert(schema_exports.refundQuotes).values({ requestId: request.id, refundInr: est.refundInr, feeInr: est.feeInr, components: est.components, method: est.method, days: est.days, source: snap.source === "in_app" ? paymentProvider().name : "rules", notes: est.notes });
   request = await move(request.id, userId, "quoted", "system", `Estimate: Rs ${est.refundInr} back, fee Rs ${est.feeInr}`, { refundMethod: est.method });
@@ -1359,14 +1665,14 @@ function templateEmail(snap, reason, kind) {
 }
 async function runFollowUps(now = /* @__PURE__ */ new Date()) {
   const { db } = await getDb();
-  const open = await db.select().from(schema_exports.cancellationRequests).where(inArray3(schema_exports.cancellationRequests.status, ["submitted", "acknowledged", "processing"]));
+  const open = await db.select().from(schema_exports.cancellationRequests).where(inArray4(schema_exports.cancellationRequests.status, ["submitted", "acknowledged", "processing"]));
   let drafted = 0;
   for (const r of open) {
     if (!followUpDue(r.status, r.statusChangedAt.toISOString(), now)) continue;
-    const events = await db.select().from(schema_exports.refundEvents).where(and7(eq12(schema_exports.refundEvents.requestId, r.id), eq12(schema_exports.refundEvents.type, "followup")));
+    const events = await db.select().from(schema_exports.refundEvents).where(and9(eq14(schema_exports.refundEvents.requestId, r.id), eq14(schema_exports.refundEvents.type, "followup")));
     if (events.some((e) => Date.parse(e.createdAt.toISOString()) > Date.parse(r.statusChangedAt.toISOString()))) continue;
     const draft = templateEmail(r.booking, r.reason, "followup");
-    const lastEmail = (await db.select().from(schema_exports.outboundMessages).where(and7(eq12(schema_exports.outboundMessages.relatedType, "cancellation"), eq12(schema_exports.outboundMessages.relatedId, r.id))).orderBy(desc5(schema_exports.outboundMessages.createdAt)).limit(1))[0];
+    const lastEmail = (await db.select().from(schema_exports.outboundMessages).where(and9(eq14(schema_exports.outboundMessages.relatedType, "cancellation"), eq14(schema_exports.outboundMessages.relatedId, r.id))).orderBy(desc6(schema_exports.outboundMessages.createdAt)).limit(1))[0];
     if (r.autoFollowUp && lastEmail) {
       const msg = await sendOutbound({ userId: r.userId, channel: "email", to: lastEmail.toAddress, cc: lastEmail.cc, replyTo: lastEmail.replyTo, ...draft, relatedType: "cancellation", relatedId: r.id });
       await record(r.id, "followup", "system", msg.status === "sent" ? "Follow-up sent automatically (you opted in)." : "Follow-up written to your Outbox (demo mode).", { data: { outboxId: msg.id } });
@@ -1393,68 +1699,69 @@ var init_cancellations = __esm({
     init_auth();
     init_payments();
     init_outbound();
+    init_service();
     init_llm();
     init_refund_rules();
     init_refund();
-    cancellations = new Hono9();
+    cancellations = new Hono10();
     cancellations.use("/cancellations", requireUser);
     cancellations.use("/cancellations/*", requireUser);
     cancellations.use("/providers/*", requireUser);
     rules = refund_rules_default;
-    snapshot = z9.object({
-      clientId: z9.string().min(1).max(100),
-      kind: z9.enum(["flight", "hotel", "experience", "transport"]),
-      title: z9.string().trim().min(1).max(160),
-      amountInr: z9.number().int().min(0).max(1e7),
-      provider: z9.string().max(80).nullable().optional(),
-      pnr: z9.string().max(40).nullable().optional(),
-      startsAt: z9.string().nullable().optional(),
-      endsAt: z9.string().nullable().optional(),
-      bookedAt: z9.string().nullable().optional(),
-      paymentMethod: z9.enum(["card", "upi", "netbanking", "cash", "agent", "creditShell"]).default("card"),
-      policy: z9.record(z9.string(), z9.unknown()).nullable().optional()
+    snapshot = z10.object({
+      clientId: z10.string().min(1).max(100),
+      kind: z10.enum(["flight", "hotel", "experience", "transport"]),
+      title: z10.string().trim().min(1).max(160),
+      amountInr: z10.number().int().min(0).max(1e7),
+      provider: z10.string().max(80).nullable().optional(),
+      pnr: z10.string().max(40).nullable().optional(),
+      startsAt: z10.string().nullable().optional(),
+      endsAt: z10.string().nullable().optional(),
+      bookedAt: z10.string().nullable().optional(),
+      paymentMethod: z10.enum(["card", "upi", "netbanking", "cash", "agent", "creditShell"]).default("card"),
+      policy: z10.record(z10.string(), z10.unknown()).nullable().optional()
     });
-    quoteBody = z9.object({ bookingId: z9.string().uuid().optional(), booking: snapshot.optional(), reason: z9.string().max(300).optional() });
+    quoteBody = z10.object({ bookingId: z10.string().uuid().optional(), booking: snapshot.optional(), reason: z10.string().max(300).optional() });
     cancellations.post("/cancellations/quote", async (c) => {
       const body = await jsonBody(c, quoteBody);
       return c.json(await createQuote(c.get("userId"), body));
     });
     cancellations.post("/cancellations/:id/confirm", async (c) => {
-      const id = parse(z9.string().uuid(), c.req.param("id"));
-      const { autoFollowUp } = await jsonBody(c, z9.object({ autoFollowUp: z9.boolean().default(false), confirm: z9.literal(true) }));
+      const id2 = parse(z10.string().uuid(), c.req.param("id"));
+      const { autoFollowUp } = await jsonBody(c, z10.object({ autoFollowUp: z10.boolean().default(false), confirm: z10.literal(true) }));
       const userId = c.get("userId");
       const { db } = await getDb();
-      const [r] = await db.select().from(schema_exports.cancellationRequests).where(and7(eq12(schema_exports.cancellationRequests.id, id), eq12(schema_exports.cancellationRequests.userId, userId))).limit(1);
+      const [r] = await db.select().from(schema_exports.cancellationRequests).where(and9(eq14(schema_exports.cancellationRequests.id, id2), eq14(schema_exports.cancellationRequests.userId, userId))).limit(1);
       if (!r) throw new AppError(404, "not_found", "We could not find that cancellation.");
       if (r.status !== "quoted" && r.status !== "user_confirmed") return c.json({ request: r });
-      const [quote] = await db.select().from(schema_exports.refundQuotes).where(eq12(schema_exports.refundQuotes.requestId, id)).orderBy(desc5(schema_exports.refundQuotes.id)).limit(1);
+      const [quote] = await db.select().from(schema_exports.refundQuotes).where(eq14(schema_exports.refundQuotes.requestId, id2)).orderBy(desc6(schema_exports.refundQuotes.id)).limit(1);
       const snap = r.booking;
       const expectedBy = new Date(Date.now() + (quote?.days ?? 7) * 864e5);
-      let next = await move(id, userId, "user_confirmed", "user", "You confirmed the cancellation.", { autoFollowUp, expectedBy });
+      let next = await move(id2, userId, "user_confirmed", "user", "You confirmed the cancellation.", { autoFollowUp, expectedBy });
       if (snap.source === "in_app" && r.bookingId) {
-        const [b] = await db.select().from(schema_exports.bookings).where(eq12(schema_exports.bookings.id, r.bookingId)).limit(1);
-        const [p] = b?.paymentId ? await db.select().from(schema_exports.payments).where(eq12(schema_exports.payments.id, b.paymentId)).limit(1) : [];
-        await db.update(schema_exports.bookings).set({ status: "cancelled" }).where(eq12(schema_exports.bookings.id, r.bookingId));
+        const [b] = await db.select().from(schema_exports.bookings).where(eq14(schema_exports.bookings.id, r.bookingId)).limit(1);
+        const [p] = b?.paymentId ? await db.select().from(schema_exports.payments).where(eq14(schema_exports.payments.id, b.paymentId)).limit(1) : [];
+        await db.update(schema_exports.bookings).set({ status: "cancelled" }).where(eq14(schema_exports.bookings.id, r.bookingId));
         const refundInr = Math.min(quote?.refundInr ?? 0, p?.amountInr ?? 0);
         if (p?.providerPaymentId && refundInr > 0) {
-          const res = await paymentProvider().refund(p.providerPaymentId, refundInr * 100, { request: id });
-          next = await move(id, userId, "submitted", "system", `Refund of Rs ${refundInr} requested from ${p.provider === "mock" ? "the demo payment provider" : "Razorpay"}.`, { providerRef: res.refundId });
-          await db.update(schema_exports.payments).set({ status: refundInr < p.amountInr ? "partially_refunded" : "refunded", updatedAt: /* @__PURE__ */ new Date() }).where(eq12(schema_exports.payments.id, p.id));
-          if (res.status === "processed") await applyRefundResult(id, "processed", refundInr);
+          const res = await paymentProvider().refund(p.providerPaymentId, refundInr * 100, { request: id2 });
+          next = await move(id2, userId, "submitted", "system", `Refund of Rs ${refundInr} requested from ${p.provider === "mock" ? "the demo payment provider" : "Razorpay"}.`, { providerRef: res.refundId });
+          await db.update(schema_exports.payments).set({ status: refundInr < p.amountInr ? "partially_refunded" : "refunded", updatedAt: /* @__PURE__ */ new Date() }).where(eq14(schema_exports.payments.id, p.id));
+          if (res.status === "processed") await applyRefundResult(id2, "processed", refundInr);
         } else {
-          next = await move(id, userId, "submitted", "system", "Booking cancelled. No money is due back under the policy.");
+          next = await move(id2, userId, "submitted", "system", "Booking cancelled. No money is due back under the policy.");
         }
       }
-      const [fresh] = await db.select().from(schema_exports.cancellationRequests).where(eq12(schema_exports.cancellationRequests.id, id)).limit(1);
+      const [fresh] = await db.select().from(schema_exports.cancellationRequests).where(eq14(schema_exports.cancellationRequests.id, id2)).limit(1);
       return c.json({ request: fresh ?? next });
     });
     alias = (requestId) => `refunds+${requestId.slice(0, 8)}@${process.env.INBOUND_EMAIL_DOMAIN ?? "voyage.example"}`;
     cancellations.post("/cancellations/:id/email/draft", async (c) => {
-      const id = parse(z9.string().uuid(), c.req.param("id"));
-      const { kind } = await jsonBody(c, z9.object({ kind: z9.enum(["cancel", "followup", "escalate"]).default("cancel") }));
+      const id2 = parse(z10.string().uuid(), c.req.param("id"));
+      const { kind } = await jsonBody(c, z10.object({ kind: z10.enum(["cancel", "followup", "escalate"]).default("cancel") }));
       const userId = c.get("userId");
       const { db } = await getDb();
-      const [r] = await db.select().from(schema_exports.cancellationRequests).where(and7(eq12(schema_exports.cancellationRequests.id, id), eq12(schema_exports.cancellationRequests.userId, userId))).limit(1);
+      const [r] = await db.select().from(schema_exports.cancellationRequests).where(and9(eq14(schema_exports.cancellationRequests.id, id2), eq14(schema_exports.cancellationRequests.userId, userId))).limit(1);
       if (!r) throw new AppError(404, "not_found", "We could not find that cancellation.");
       const snap = r.booking;
       let draft = templateEmail(snap, r.reason, kind);
@@ -1471,7 +1778,7 @@ var init_cancellations = __esm({
             { json: true, maxTokens: 600, temperature: 0.2 }
           );
           const j = JSON.parse(out.message.content ?? "{}");
-          const keeps = (t) => [snap.pnr, String(snap.amountInr.toLocaleString("en-IN"))].filter(Boolean).every((v) => t.includes(v));
+          const keeps = (t2) => [snap.pnr, String(snap.amountInr.toLocaleString("en-IN"))].filter(Boolean).every((v) => t2.includes(v));
           if (j.subject && j.body && keeps(j.body)) {
             draft = { subject: j.subject, body: j.body };
             by = "ai";
@@ -1479,8 +1786,8 @@ var init_cancellations = __esm({
         } catch {
         }
       }
-      const [contact2] = snap.provider ? await db.select().from(schema_exports.providerContacts).where(eq12(schema_exports.providerContacts.provider, snap.provider.toLowerCase())).limit(1) : [];
-      const [u] = await db.select({ email: schema_exports.users.email }).from(schema_exports.users).where(eq12(schema_exports.users.id, userId)).limit(1);
+      const [contact2] = snap.provider ? await db.select().from(schema_exports.providerContacts).where(eq14(schema_exports.providerContacts.provider, snap.provider.toLowerCase())).limit(1) : [];
+      const [u] = await db.select({ email: schema_exports.users.email }).from(schema_exports.users).where(eq14(schema_exports.users.id, userId)).limit(1);
       return c.json({
         ...draft,
         by,
@@ -1488,64 +1795,64 @@ var init_cancellations = __esm({
         supportUrl: contact2?.supportUrl ?? null,
         replyTo: u?.email ?? null,
         cc: u?.email ?? null,
-        alias: alias(id),
+        alias: alias(id2),
         note: contact2?.verified ? null : "We only use support emails verified on the provider\u2019s own website. Enter the address from their support page."
       });
     });
     cancellations.post("/cancellations/:id/email/send", async (c) => {
-      const id = parse(z9.string().uuid(), c.req.param("id"));
+      const id2 = parse(z10.string().uuid(), c.req.param("id"));
       const body = await jsonBody(
         c,
-        z9.object({
-          to: z9.string().trim().email("Enter the provider\u2019s support email."),
-          subject: z9.string().trim().min(3).max(200),
-          body: z9.string().trim().min(20).max(6e3),
-          kind: z9.enum(["cancel", "followup", "escalate"]).default("cancel"),
+        z10.object({
+          to: z10.string().trim().email("Enter the provider\u2019s support email."),
+          subject: z10.string().trim().min(3).max(200),
+          body: z10.string().trim().min(20).max(6e3),
+          kind: z10.enum(["cancel", "followup", "escalate"]).default("cancel"),
           // Must be true: sent only on the traveller's explicit tap.
-          confirm: z9.literal(true)
+          confirm: z10.literal(true)
         })
       );
       const userId = c.get("userId");
       const { db } = await getDb();
-      const [r] = await db.select().from(schema_exports.cancellationRequests).where(and7(eq12(schema_exports.cancellationRequests.id, id), eq12(schema_exports.cancellationRequests.userId, userId))).limit(1);
+      const [r] = await db.select().from(schema_exports.cancellationRequests).where(and9(eq14(schema_exports.cancellationRequests.id, id2), eq14(schema_exports.cancellationRequests.userId, userId))).limit(1);
       if (!r) throw new AppError(404, "not_found", "We could not find that cancellation.");
-      const [u] = await db.select({ email: schema_exports.users.email }).from(schema_exports.users).where(eq12(schema_exports.users.id, userId)).limit(1);
-      const msg = await sendOutbound({ userId, channel: "email", to: body.to, cc: u?.email ?? null, replyTo: u?.email ?? alias(id), subject: body.subject, body: body.body, relatedType: "cancellation", relatedId: id });
-      await record(id, "email", "user", msg.status === "sent" ? `Email sent to ${body.to}` : `Email saved to your Outbox (demo mode: not sent) for ${body.to}`, { data: { outboxId: msg.id, kind: body.kind } });
-      if (r.status === "quoted") await move(id, userId, "user_confirmed", "user", "You confirmed the cancellation.");
-      const [now] = await db.select().from(schema_exports.cancellationRequests).where(eq12(schema_exports.cancellationRequests.id, id)).limit(1);
-      if (now.status === "user_confirmed") await move(id, userId, "submitted", "user", "Cancellation request sent to the provider.");
-      const [fresh] = await db.select().from(schema_exports.cancellationRequests).where(eq12(schema_exports.cancellationRequests.id, id)).limit(1);
+      const [u] = await db.select({ email: schema_exports.users.email }).from(schema_exports.users).where(eq14(schema_exports.users.id, userId)).limit(1);
+      const msg = await sendOutbound({ userId, channel: "email", to: body.to, cc: u?.email ?? null, replyTo: u?.email ?? alias(id2), subject: body.subject, body: body.body, relatedType: "cancellation", relatedId: id2 });
+      await record(id2, "email", "user", msg.status === "sent" ? `Email sent to ${body.to}` : `Email saved to your Outbox (demo mode: not sent) for ${body.to}`, { data: { outboxId: msg.id, kind: body.kind } });
+      if (r.status === "quoted") await move(id2, userId, "user_confirmed", "user", "You confirmed the cancellation.");
+      const [now] = await db.select().from(schema_exports.cancellationRequests).where(eq14(schema_exports.cancellationRequests.id, id2)).limit(1);
+      if (now.status === "user_confirmed") await move(id2, userId, "submitted", "user", "Cancellation request sent to the provider.");
+      const [fresh] = await db.select().from(schema_exports.cancellationRequests).where(eq14(schema_exports.cancellationRequests.id, id2)).limit(1);
       return c.json({ request: fresh, outbox: msg });
     });
     cancellations.post("/cancellations/:id/status", async (c) => {
-      const id = parse(z9.string().uuid(), c.req.param("id"));
-      const body = await jsonBody(c, z9.object({ to: z9.enum(["acknowledged", "processing", "refunded", "partially_refunded", "rejected", "disputed"]), amountInr: z9.number().int().min(0).max(1e7).optional(), note: z9.string().max(300).optional(), creditShell: z9.object({ code: z9.string().max(40).optional(), expiresOn: z9.string().optional() }).optional() }));
+      const id2 = parse(z10.string().uuid(), c.req.param("id"));
+      const body = await jsonBody(c, z10.object({ to: z10.enum(["acknowledged", "processing", "refunded", "partially_refunded", "rejected", "disputed"]), amountInr: z10.number().int().min(0).max(1e7).optional(), note: z10.string().max(300).optional(), creditShell: z10.object({ code: z10.string().max(40).optional(), expiresOn: z10.string().optional() }).optional() }));
       const userId = c.get("userId");
       const { db } = await getDb();
-      const r = await move(id, userId, body.to, "user", body.note ?? null, body.amountInr != null ? { refundedInr: body.amountInr } : {});
+      const r = await move(id2, userId, body.to, "user", body.note ?? null, body.amountInr != null ? { refundedInr: body.amountInr } : {});
       const snap = r.booking;
       if (body.creditShell) {
         await db.insert(schema_exports.creditShells).values({ userId, bookingId: r.bookingId, provider: snap.provider ?? snap.title, amountInr: body.amountInr ?? 0, code: body.creditShell.code ?? null, expiresOn: body.creditShell.expiresOn ?? null });
-        await record(id, "note", "user", "Credit shell / voucher recorded.");
+        await record(id2, "note", "user", "Credit shell / voucher recorded.");
       }
       return c.json({ request: r });
     });
     cancellations.get("/cancellations", async (c) => {
       const { db } = await getDb();
-      const rows = await db.select().from(schema_exports.cancellationRequests).where(eq12(schema_exports.cancellationRequests.userId, c.get("userId"))).orderBy(desc5(schema_exports.cancellationRequests.updatedAt));
+      const rows = await db.select().from(schema_exports.cancellationRequests).where(eq14(schema_exports.cancellationRequests.userId, c.get("userId"))).orderBy(desc6(schema_exports.cancellationRequests.updatedAt));
       const now = /* @__PURE__ */ new Date();
       return c.json({ requests: rows.map((r) => ({ ...r, followUpDue: followUpDue(r.status, r.statusChangedAt.toISOString(), now), overdue: !!r.expectedBy && r.expectedBy < now && !["refunded", "rejected"].includes(r.status) })) });
     });
     cancellations.get("/cancellations/:id", async (c) => {
-      const id = parse(z9.string().uuid(), c.req.param("id"));
+      const id2 = parse(z10.string().uuid(), c.req.param("id"));
       const { db } = await getDb();
-      const [r] = await db.select().from(schema_exports.cancellationRequests).where(and7(eq12(schema_exports.cancellationRequests.id, id), eq12(schema_exports.cancellationRequests.userId, c.get("userId")))).limit(1);
+      const [r] = await db.select().from(schema_exports.cancellationRequests).where(and9(eq14(schema_exports.cancellationRequests.id, id2), eq14(schema_exports.cancellationRequests.userId, c.get("userId")))).limit(1);
       if (!r) throw new AppError(404, "not_found", "We could not find that cancellation.");
       const [events, quotes, emails] = await Promise.all([
-        db.select().from(schema_exports.refundEvents).where(eq12(schema_exports.refundEvents.requestId, id)).orderBy(asc3(schema_exports.refundEvents.id)),
-        db.select().from(schema_exports.refundQuotes).where(eq12(schema_exports.refundQuotes.requestId, id)).orderBy(desc5(schema_exports.refundQuotes.id)).limit(1),
-        db.select().from(schema_exports.outboundMessages).where(and7(eq12(schema_exports.outboundMessages.relatedType, "cancellation"), eq12(schema_exports.outboundMessages.relatedId, id))).orderBy(desc5(schema_exports.outboundMessages.createdAt))
+        db.select().from(schema_exports.refundEvents).where(eq14(schema_exports.refundEvents.requestId, id2)).orderBy(asc5(schema_exports.refundEvents.id)),
+        db.select().from(schema_exports.refundQuotes).where(eq14(schema_exports.refundQuotes.requestId, id2)).orderBy(desc6(schema_exports.refundQuotes.id)).limit(1),
+        db.select().from(schema_exports.outboundMessages).where(and9(eq14(schema_exports.outboundMessages.relatedType, "cancellation"), eq14(schema_exports.outboundMessages.relatedId, id2))).orderBy(desc6(schema_exports.outboundMessages.createdAt))
       ]);
       const now = /* @__PURE__ */ new Date();
       const snap = r.booking;
@@ -1578,11 +1885,11 @@ var init_cancellations = __esm({
     });
     cancellations.get("/providers/contacts", async (c) => {
       const { db } = await getDb();
-      return c.json({ contacts: await db.select().from(schema_exports.providerContacts).orderBy(asc3(schema_exports.providerContacts.name)) });
+      return c.json({ contacts: await db.select().from(schema_exports.providerContacts).orderBy(asc5(schema_exports.providerContacts.name)) });
     });
     cancellations.get("/outbox", requireUser, async (c) => {
       const { db } = await getDb();
-      const rows = await db.select().from(schema_exports.outboundMessages).where(eq12(schema_exports.outboundMessages.userId, c.get("userId"))).orderBy(desc5(schema_exports.outboundMessages.createdAt)).limit(100);
+      const rows = await db.select().from(schema_exports.outboundMessages).where(eq14(schema_exports.outboundMessages.userId, c.get("userId"))).orderBy(desc6(schema_exports.outboundMessages.createdAt)).limit(100);
       return c.json({ messages: rows, realSending: process.env.ALLOW_REAL_OUTBOUND === "true" });
     });
   }
@@ -1593,7 +1900,7 @@ import { handle } from "@hono/node-server/vercel";
 
 // server/app.ts
 init_client();
-import { Hono as Hono14 } from "hono";
+import { Hono as Hono15 } from "hono";
 import { secureHeaders } from "hono/secure-headers";
 import { count as count2 } from "drizzle-orm";
 
@@ -1845,11 +2152,11 @@ var OTHER_KEYWORDS = {
 };
 var MATCH_ORDER = { food: ["jain", "nonveg", "veg"] };
 function matchOther(question, text2) {
-  const t = ` ${text2.toLowerCase().replace(/[^a-z0-9 -]+/g, " ")} `;
+  const t2 = ` ${text2.toLowerCase().replace(/[^a-z0-9 -]+/g, " ")} `;
   const table = OTHER_KEYWORDS[question];
   const order = MATCH_ORDER[question] ?? Object.keys(table);
   for (const option of order) {
-    if (table[option].some((w) => t.includes(w))) return option;
+    if (table[option].some((w) => t2.includes(w))) return option;
   }
   return null;
 }
@@ -1862,7 +2169,7 @@ function resolveAnswers(answers, notes = {}) {
 }
 function derivePersona(answers, notes = {}) {
   const a = resolveAnswers(answers, notes);
-  const id = a.mix === "family" ? "family" : a.pace === "slow" ? "slow" : a.interests === "food" ? "foodie" : a.interests === "culture" ? "culture" : a.interests === "nature" ? "nature" : a.style === "planner" ? "planner" : a.budget === "saver" ? "saver" : "easy";
+  const id2 = a.mix === "family" ? "family" : a.pace === "slow" ? "slow" : a.interests === "food" ? "foodie" : a.interests === "culture" ? "culture" : a.interests === "nature" ? "nature" : a.style === "planner" ? "planner" : a.budget === "saver" ? "saver" : "easy";
   const emoji = {
     family: "\u{1F468}\u200D\u{1F469}\u200D\u{1F467}",
     slow: "\u2615",
@@ -1874,8 +2181,8 @@ function derivePersona(answers, notes = {}) {
     easy: "\u{1F9ED}"
   };
   return {
-    id,
-    emoji: emoji[id],
+    id: id2,
+    emoji: emoji[id2],
     valueOfHourInr: a.budget === "saver" ? 300 : a.budget === "treat" ? 1e3 : 600,
     activitiesPerDay: a.pace === "slow" || a.mix === "family" ? 2 : a.pace === "packed" ? 4 : 3,
     vegFirst: a.food === "veg" || a.food === "jain",
@@ -1897,7 +2204,7 @@ var destinationTags = {
   easy: ["luxury", "beach", "honeymoon"]
 };
 function destinationFit(personaTags, persona) {
-  return destinationTags[persona.id].filter((t) => personaTags.includes(t)).length;
+  return destinationTags[persona.id].filter((t2) => personaTags.includes(t2)).length;
 }
 
 // src/engines/budget.ts
@@ -2108,7 +2415,7 @@ async function readJson(name) {
 async function inChunks(rows, size, run) {
   for (let i = 0; i < rows.length; i += size) await run(rows.slice(i, i + size));
 }
-async function seedAll(db, log = console.log) {
+async function seedAll(db, log2 = console.log) {
   const airports2 = await readJson("airports.json");
   if (airports2) {
     await inChunks(
@@ -2116,7 +2423,7 @@ async function seedAll(db, log = console.log) {
       500,
       (chunk) => db.insert(airports).values(chunk.map((a) => ({ ...a, ...OPENFLIGHTS }))).onConflictDoUpdate({ target: airports.iata, set: { name: sql2`excluded.name`, city: sql2`excluded.city`, routeCount: sql2`excluded.route_count` } })
     );
-    log(`airports: ${airports2.length}`);
+    log2(`airports: ${airports2.length}`);
   }
   const airlines2 = await readJson("airlines.json");
   if (airlines2) {
@@ -2125,7 +2432,7 @@ async function seedAll(db, log = console.log) {
       500,
       (chunk) => db.insert(airlines).values(chunk.map((a) => ({ ...a, ...OPENFLIGHTS }))).onConflictDoNothing()
     );
-    log(`airlines: ${airlines2.length}`);
+    log2(`airlines: ${airlines2.length}`);
   }
   const routes2 = process.env.SEED_LIGHT ? null : await readJson("routes.json");
   if (routes2) {
@@ -2135,7 +2442,7 @@ async function seedAll(db, log = console.log) {
       2e3,
       (chunk) => db.insert(routes).values(chunk.map(([airlineIata, srcIata, dstIata, stops, equipment]) => ({ airlineIata, srcIata, dstIata, stops, equipment, ...OPENFLIGHTS })))
     );
-    log(`routes: ${routes2.length}`);
+    log2(`routes: ${routes2.length}`);
   }
   const dests = await readJson("destinations.json");
   if (dests) {
@@ -2166,13 +2473,13 @@ async function seedAll(db, log = console.log) {
       };
       await db.insert(destinations).values(row).onConflictDoUpdate({ target: destinations.slug, set: row });
     }
-    log(`destinations: ${dests.length}`);
-    log(`cost index: ${await refreshCostIndex(db)} rows`);
-    log(`provider contacts: ${await seedProviderContacts(db)}`);
+    log2(`destinations: ${dests.length}`);
+    log2(`cost index: ${await refreshCostIndex(db)} rows`);
+    log2(`provider contacts: ${await seedProviderContacts(db)}`);
   }
-  await seedPlaces(db, log);
+  await seedPlaces(db, log2);
 }
-async function seedPlaces(db, log = console.log) {
+async function seedPlaces(db, log2 = console.log) {
   const places = await readJson("places.json");
   if (places) {
     const ids = new Map((await db.select({ id: destinations.id, slug: destinations.slug }).from(destinations)).map((d) => [d.slug, d.id]));
@@ -2219,9 +2526,9 @@ async function seedPlaces(db, log = console.log) {
       300,
       (chunk) => db.insert(restaurants).values(chunk.map((p) => ({ ...common(p), cuisine: p.cuisine, vegetarian: p.vegetarian, openingHours: p.openingHours, diets: p.diets ?? [], website: p.website ?? null, phone: p.phone ?? null, reservation: p.reservation ?? null }))).onConflictDoUpdate({ target: [restaurants.source, restaurants.externalId], set: { diets: sql2`excluded.diets`, website: sql2`excluded.website`, phone: sql2`excluded.phone`, reservation: sql2`excluded.reservation` } })
     );
-    log(`places: ${places.hotels.length} hotels, ${places.attractions.length} attractions, ${places.restaurants.length} restaurants`);
+    log2(`places: ${places.hotels.length} hotels, ${places.attractions.length} attractions, ${places.restaurants.length} restaurants`);
   } else {
-    log("places: none yet (run npm run pipeline:places)");
+    log2("places: none yet (run npm run pipeline:places)");
   }
 }
 async function seedProviderContacts(db) {
@@ -2232,19 +2539,19 @@ async function seedProviderContacts(db) {
   }
   return rows.length;
 }
-async function ensureSeeded(db, log = console.log) {
+async function ensureSeeded(db, log2 = console.log) {
   const [{ n }] = await db.select({ n: count() }).from(destinations);
   if (n > 0) {
     const [{ c }] = await db.select({ c: count() }).from(destinationCostIndex);
-    if (c === 0) log(`cost index: ${await refreshCostIndex(db)} rows`);
+    if (c === 0) log2(`cost index: ${await refreshCostIndex(db)} rows`);
     const [{ f }] = await db.select({ f: count() }).from(attractions).where(sql2`${attractions.famous} = true`);
-    if (f === 0) await seedPlaces(db, log);
+    if (f === 0) await seedPlaces(db, log2);
     const [{ p }] = await db.select({ p: count() }).from(providerContacts);
-    if (p === 0) log(`provider contacts: ${await seedProviderContacts(db)}`);
+    if (p === 0) log2(`provider contacts: ${await seedProviderContacts(db)}`);
     return false;
   }
-  log("Empty database: loading seed data\u2026");
-  await seedAll(db, log);
+  log2("Empty database: loading seed data\u2026");
+  await seedAll(db, log2);
   return true;
 }
 
@@ -2332,12 +2639,12 @@ async function metNorway(lat, lon) {
   const series = r.properties.timeseries;
   const first = series[0];
   const byDay = /* @__PURE__ */ new Map();
-  for (const t of series) {
-    const date3 = t.time.slice(0, 10);
+  for (const t2 of series) {
+    const date3 = t2.time.slice(0, 10);
     const day2 = byDay.get(date3) ?? { temps: [] };
-    day2.temps.push(t.data.instant.details.air_temperature);
-    const sym = t.data.next_6_hours?.summary.symbol_code ?? t.data.next_1_hours?.summary.symbol_code;
-    if (sym && (!day2.noon || t.time.slice(11, 13) === "12")) day2.noon = sym;
+    day2.temps.push(t2.data.instant.details.air_temperature);
+    const sym = t2.data.next_6_hours?.summary.symbol_code ?? t2.data.next_1_hours?.summary.symbol_code;
+    if (sym && (!day2.noon || t2.time.slice(11, 13) === "12")) day2.noon = sym;
     byDay.set(date3, day2);
   }
   return {
@@ -2441,9 +2748,9 @@ async function tripWeather(slug2, start, end) {
       return {
         kind: "typical",
         source: "Open-Meteo archive (same dates last year)",
-        days: r.daily.time.map((t, i) => {
+        days: r.daily.time.map((t2, i) => {
           const rain = r.daily.precipitation_sum[i] ?? 0;
-          return { date: `${start.slice(0, 4)}${t.slice(4)}`, maxC: Math.round(r.daily.temperature_2m_max[i]), minC: Math.round(r.daily.temperature_2m_min[i]), summary: rain >= 5 ? "Rain" : rain > 0.5 ? "Showers" : "Dry", rainy: rain >= 2 };
+          return { date: `${start.slice(0, 4)}${t2.slice(4)}`, maxC: Math.round(r.daily.temperature_2m_max[i]), minC: Math.round(r.daily.temperature_2m_min[i]), summary: rain >= 5 ? "Rain" : rain > 0.5 ? "Showers" : "Dry", rainy: rain >= 2 };
         })
       };
     });
@@ -2838,7 +3145,7 @@ var tripPayload = z4.object({
   travellers: z4.number().int().min(1).max(20).default(1),
   destinationSlug: z4.string().max(60).nullish(),
   budgetInr: z4.number().int().min(0).max(1e8).nullish()
-}).passthrough().refine((t) => t.endDate.slice(0, 10) >= t.startDate.slice(0, 10), { message: "The return date is before the start date.", path: ["endDate"] });
+}).passthrough().refine((t2) => t2.endDate.slice(0, 10) >= t2.startDate.slice(0, 10), { message: "The return date is before the start date.", path: ["endDate"] });
 var pushBody = z4.object({
   key: z4.string().min(8).max(100),
   table: z4.enum(SYNC_TABLES),
@@ -2852,24 +3159,24 @@ async function mirrorTrip(db, userId, op, recordId, payload) {
     await db.delete(schema_exports.trips).where(and4(eq8(schema_exports.trips.id, recordId), eq8(schema_exports.trips.userId, userId)));
     return;
   }
-  const t = tripPayload.parse(payload);
-  const [dest] = t.destinationSlug ? await db.select({ id: schema_exports.destinations.id }).from(schema_exports.destinations).where(eq8(schema_exports.destinations.slug, t.destinationSlug)).limit(1) : [];
+  const t2 = tripPayload.parse(payload);
+  const [dest] = t2.destinationSlug ? await db.select({ id: schema_exports.destinations.id }).from(schema_exports.destinations).where(eq8(schema_exports.destinations.slug, t2.destinationSlug)).limit(1) : [];
   const row = {
     userId,
-    title: t.title,
-    origin: t.from || null,
+    title: t2.title,
+    origin: t2.from || null,
     destinationId: dest?.id ?? null,
-    destinationName: t.to,
-    startDate: t.startDate.slice(0, 10),
-    endDate: t.endDate.slice(0, 10),
-    travellers: t.travellers,
-    budgetInr: t.budgetInr ?? null,
-    status: t.status,
+    destinationName: t2.to,
+    startDate: t2.startDate.slice(0, 10),
+    endDate: t2.endDate.slice(0, 10),
+    travellers: t2.travellers,
+    budgetInr: t2.budgetInr ?? null,
+    status: t2.status,
     updatedAt: /* @__PURE__ */ new Date()
   };
-  const [existing] = await db.select({ userId: schema_exports.trips.userId }).from(schema_exports.trips).where(eq8(schema_exports.trips.id, t.id)).limit(1);
+  const [existing] = await db.select({ userId: schema_exports.trips.userId }).from(schema_exports.trips).where(eq8(schema_exports.trips.id, t2.id)).limit(1);
   if (existing && existing.userId !== userId) throw new AppError(409, "id_taken", "That trip id belongs to someone else.");
-  await db.insert(schema_exports.trips).values({ id: t.id, ...row }).onConflictDoUpdate({ target: schema_exports.trips.id, set: row });
+  await db.insert(schema_exports.trips).values({ id: t2.id, ...row }).onConflictDoUpdate({ target: schema_exports.trips.id, set: row });
 }
 async function applyChange(userId, change, force = false) {
   const { db } = await getDb();
@@ -2935,10 +3242,10 @@ trips2.put("/trips/draft", async (c) => {
   return c.json({ draft });
 });
 trips2.delete("/trips/draft/:id", async (c) => {
-  const id = z4.string().uuid().safeParse(c.req.param("id"));
-  if (id.success) {
+  const id2 = z4.string().uuid().safeParse(c.req.param("id"));
+  if (id2.success) {
     const { db } = await getDb();
-    await db.delete(schema_exports.tripDrafts).where(and4(eq8(schema_exports.tripDrafts.id, id.data), eq8(schema_exports.tripDrafts.userId, c.get("userId"))));
+    await db.delete(schema_exports.tripDrafts).where(and4(eq8(schema_exports.tripDrafts.id, id2.data), eq8(schema_exports.tripDrafts.userId, c.get("userId"))));
   }
   return c.json({ ok: true });
 });
@@ -2948,17 +3255,174 @@ trips2.get("/trips", async (c) => {
   return c.json({ trips: rows });
 });
 
+// server/routes/notifications.ts
+init_client();
+init_http();
+init_auth();
+init_service();
+import { createHmac, timingSafeEqual as timingSafeEqual2 } from "node:crypto";
+import { Hono as Hono5 } from "hono";
+import { and as and6, asc as asc3, desc as desc3, eq as eq10, isNull as isNull2, sql as sql5 } from "drizzle-orm";
+import { z as z5 } from "zod";
+var notifications2 = new Hono5();
+notifications2.use("/notifications", requireUser);
+notifications2.use("/notifications/me/*", requireUser);
+var id = z5.string().uuid();
+notifications2.get("/notifications", async (c) => {
+  const userId = c.get("userId");
+  await runDue(/* @__PURE__ */ new Date(), userId).catch(() => 0);
+  const { db } = await getDb();
+  const rows = await db.select().from(schema_exports.notifications).where(eq10(schema_exports.notifications.userId, userId)).orderBy(desc3(schema_exports.notifications.dueAt)).limit(60);
+  const now = Date.now();
+  const visible = rows.filter((r) => r.dueAt.getTime() <= now || r.status !== "scheduled");
+  const upcoming = rows.filter((r) => r.dueAt.getTime() > now && r.status === "scheduled");
+  return c.json({
+    notifications: visible,
+    upcoming: upcoming.sort((a, b) => a.dueAt.getTime() - b.dueAt.getTime()),
+    unread: visible.filter((r) => !r.readAt).length,
+    needsAck: visible.filter((r) => r.critical && (r.status === "escalating" || r.status === "delivered") && !r.ackAt).length
+  });
+});
+notifications2.get("/notifications/me/:id/events", async (c) => {
+  const nid = parse(id, c.req.param("id"));
+  const { db } = await getDb();
+  const [n] = await db.select({ id: schema_exports.notifications.id }).from(schema_exports.notifications).where(and6(eq10(schema_exports.notifications.id, nid), eq10(schema_exports.notifications.userId, c.get("userId")))).limit(1);
+  if (!n) throw new AppError(404, "not_found", "Notification not found.");
+  const events = await db.select().from(schema_exports.notificationEvents).where(eq10(schema_exports.notificationEvents.notificationId, nid)).orderBy(asc3(schema_exports.notificationEvents.at), asc3(schema_exports.notificationEvents.id));
+  return c.json({ events });
+});
+notifications2.post("/notifications/me/:id/ack", async (c) => {
+  const n = await acknowledge(c.get("userId"), parse(id, c.req.param("id")), "in_app");
+  return c.json({ ok: true, notification: n });
+});
+notifications2.post("/notifications/me/read-all", async (c) => {
+  const { db } = await getDb();
+  await db.update(schema_exports.notifications).set({ readAt: /* @__PURE__ */ new Date() }).where(and6(eq10(schema_exports.notifications.userId, c.get("userId")), isNull2(schema_exports.notifications.readAt)));
+  return c.json({ ok: true });
+});
+notifications2.get("/notifications/me/prefs", async (c) => c.json({ prefs: await getPrefs(c.get("userId")) }));
+var validTz = (tz) => {
+  try {
+    new Intl.DateTimeFormat("en", { timeZone: tz });
+    return true;
+  } catch {
+    return false;
+  }
+};
+var prefsBody = z5.object({
+  channels: z5.object({ push: z5.boolean(), email: z5.boolean(), sms: z5.boolean(), whatsapp: z5.boolean(), voice: z5.boolean() }),
+  phone: z5.string().trim().regex(/^\+?[0-9 ]{10,16}$/, "Enter a mobile number with country code").nullable(),
+  email: z5.string().trim().email().max(200).nullable(),
+  timezone: z5.string().max(60).refine(validTz, "Unknown time zone"),
+  quietStart: z5.number().int().min(0).max(1439),
+  quietEnd: z5.number().int().min(0).max(1439),
+  dailyCapInr: z5.number().int().min(0).max(500)
+});
+notifications2.put("/notifications/me/prefs", async (c) => {
+  const b = await jsonBody(c, prefsBody);
+  const userId = c.get("userId");
+  const { db } = await getDb();
+  const prev = await getPrefs(userId);
+  const reOptIn = b.channels.sms && !prev.channels.sms || b.channels.whatsapp && !prev.channels.whatsapp;
+  const values = { channels: b.channels, phone: b.phone, email: b.email, timezone: b.timezone, quietStart: b.quietStart, quietEnd: b.quietEnd, dailyCapInr: b.dailyCapInr, smsStopped: reOptIn ? false : prev.smsStopped, updatedAt: /* @__PURE__ */ new Date() };
+  await db.insert(schema_exports.notificationPrefs).values({ userId, ...values }).onConflictDoUpdate({ target: schema_exports.notificationPrefs.userId, set: values });
+  return c.json({ prefs: await getPrefs(userId) });
+});
+var SCENARIOS = {
+  flight_delay: { kind: "flight_status", title: "Flight delayed by 1 h 40 min", body: "Your flight now leaves at 21:15. Gate unchanged." },
+  gate_change: { kind: "flight_status", title: "Gate changed to 42B", body: "Your boarding gate moved. Boarding starts in 35 minutes." },
+  flight_cancelled: { kind: "flight_status", title: "Flight cancelled", body: "The airline cancelled your flight. Open Voyage to rebook or claim a refund." },
+  leave_by: { kind: "leave_by", title: "Leave for the airport by 18:30", body: "Traffic is heavy. Leave by 18:30 to reach with check-in time to spare." }
+};
+notifications2.post("/notifications/me/demo", async (c) => {
+  const b = await jsonBody(c, z5.object({ scenario: z5.enum(["flight_delay", "gate_change", "flight_cancelled", "leave_by"]), fast: z5.boolean().default(true) }));
+  const sc = SCENARIOS[b.scenario];
+  const userId = c.get("userId");
+  const row = await notify({
+    userId,
+    kind: sc.kind,
+    title: sc.title,
+    body: `${sc.body} (Demo alert)`,
+    critical: true,
+    dedupeKey: `demo:${userId}:${b.scenario}:${Date.now()}`,
+    leaveBy: b.scenario === "leave_by" ? new Date(Date.now() + 90 * 6e4) : null,
+    fast: b.fast
+  });
+  await runDue(/* @__PURE__ */ new Date(), userId);
+  return c.json({ notification: row });
+});
+notifications2.get("/cron/tick", async (c) => {
+  const secret = process.env.CRON_SECRET;
+  const auth2 = c.req.header("authorization") ?? "";
+  if (!secret || !safeEqual(auth2, `Bearer ${secret}`)) throw new AppError(401, "unauthenticated", "Not allowed.");
+  return c.json({ processed: await runDue() });
+});
+function safeEqual(a, b) {
+  const x = Buffer.from(a);
+  const y = Buffer.from(b);
+  return x.length === y.length && timingSafeEqual2(x, y);
+}
+function twilioSignature(token3, url, params) {
+  const data = url + Object.keys(params).sort().map((k) => k + params[k]).join("");
+  return createHmac("sha1", token3).update(data).digest("base64");
+}
+async function verifiedTwilioForm(c) {
+  const token3 = process.env.TWILIO_AUTH_TOKEN;
+  if (!token3) throw new AppError(403, "forbidden", "Twilio is not configured.");
+  const form = Object.fromEntries(Object.entries(await c.req.parseBody()).map(([k, v]) => [k, String(v)]));
+  const u = new URL(c.req.url);
+  const proto = c.req.header("x-forwarded-proto") ?? u.protocol.replace(":", "");
+  const host = c.req.header("x-forwarded-host") ?? c.req.header("host") ?? u.host;
+  const url = `${proto}://${host}${u.pathname}${u.search}`;
+  if (!safeEqual(c.req.header("x-twilio-signature") ?? "", twilioSignature(token3, url, form))) throw new AppError(403, "forbidden", "Bad signature.");
+  return form;
+}
+var twiml = (c, inner = "") => c.body(`<?xml version="1.0" encoding="UTF-8"?><Response>${inner}</Response>`, 200, { "content-type": "text/xml" });
+notifications2.post("/notifications/inbound/sms", async (c) => {
+  const form = await verifiedTwilioForm(c);
+  const text2 = (form.Body ?? "").trim().toUpperCase();
+  if (/^(STOP|UNSUBSCRIBE|CANCEL|END|QUIT)$/.test(text2)) {
+    await stopMessages(form.From ?? "");
+    return twiml(c, "<Message>You will get no more Voyage SMS or WhatsApp messages. Turn them back on in the app.</Message>");
+  }
+  if (text2 === "1") await ackLatestFor(form.From ?? "", "sms");
+  return twiml(c);
+});
+notifications2.post("/notifications/inbound/voice", async (c) => {
+  const form = await verifiedTwilioForm(c);
+  const nid = parse(id, c.req.query("n"));
+  if (form.Digits === "1") {
+    const { db } = await getDb();
+    const [n] = await db.select({ userId: schema_exports.notifications.userId }).from(schema_exports.notifications).where(eq10(schema_exports.notifications.id, nid)).limit(1);
+    if (n) await acknowledge(n.userId, nid, "voice");
+    return twiml(c, "<Say>Thank you. Acknowledged.</Say>");
+  }
+  return twiml(c, "<Say>No problem. We will try again later.</Say>");
+});
+async function ackLatestFor(phone, via) {
+  const digits = phone.replace(/\D/g, "").slice(-10);
+  if (digits.length < 10) return;
+  const { db } = await getDb();
+  const [user] = await db.select({ id: schema_exports.users.id }).from(schema_exports.users).where(sql5`right(regexp_replace(coalesce(${schema_exports.users.phone}, ''), '[^0-9]', '', 'g'), 10) = ${digits}`).limit(1);
+  if (!user) return;
+  const [n] = await db.select({ id: schema_exports.notifications.id }).from(schema_exports.notifications).where(and6(eq10(schema_exports.notifications.userId, user.id), eq10(schema_exports.notifications.critical, true), eq10(schema_exports.notifications.status, "escalating"))).orderBy(desc3(schema_exports.notifications.dueAt)).limit(1);
+  if (n) await acknowledge(user.id, n.id, via);
+}
+
+// server/app.ts
+init_service();
+
 // server/routes/flights.ts
 init_http();
 init_auth();
-import { Hono as Hono5 } from "hono";
-import { z as z5 } from "zod";
-var flights = new Hono5();
-var query = z5.object({
-  from: z5.string().trim().toUpperCase().pipe(z5.string().regex(/^[A-Z]{3}$/, "Use a 3-letter airport code.")),
-  to: z5.string().trim().toUpperCase().pipe(z5.string().regex(/^[A-Z]{3}$/, "Use a 3-letter airport code.")),
-  date: z5.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Pick a date.").refine((d) => d >= (/* @__PURE__ */ new Date()).toISOString().slice(0, 10), "That date has passed."),
-  adults: z5.coerce.number().int().min(1).max(9).default(1)
+import { Hono as Hono6 } from "hono";
+import { z as z6 } from "zod";
+var flights = new Hono6();
+var query = z6.object({
+  from: z6.string().trim().toUpperCase().pipe(z6.string().regex(/^[A-Z]{3}$/, "Use a 3-letter airport code.")),
+  to: z6.string().trim().toUpperCase().pipe(z6.string().regex(/^[A-Z]{3}$/, "Use a 3-letter airport code.")),
+  date: z6.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Pick a date.").refine((d) => d >= (/* @__PURE__ */ new Date()).toISOString().slice(0, 10), "That date has passed."),
+  adults: z6.coerce.number().int().min(1).max(9).default(1)
 });
 flights.get("/flights/search", requireUser, async (c) => {
   const q = parse(query, c.req.query());
@@ -2970,16 +3434,16 @@ flights.get("/flights/providers", (c) => c.json({ live: amadeusProvider.availabl
 // server/routes/hotels.ts
 init_http();
 init_auth();
-import { Hono as Hono6 } from "hono";
-import { z as z6 } from "zod";
-var hotels = new Hono6();
-var date2 = z6.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Pick a date.");
-var query2 = z6.object({
-  slug: z6.string().regex(/^[a-z0-9-]{1,60}$/, "Pick a destination."),
+import { Hono as Hono7 } from "hono";
+import { z as z7 } from "zod";
+var hotels = new Hono7();
+var date2 = z7.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Pick a date.");
+var query2 = z7.object({
+  slug: z7.string().regex(/^[a-z0-9-]{1,60}$/, "Pick a destination."),
   checkIn: date2.refine((d) => d >= (/* @__PURE__ */ new Date()).toISOString().slice(0, 10), "That date has passed."),
   checkOut: date2,
-  adults: z6.coerce.number().int().min(1).max(20).default(1),
-  rooms: z6.coerce.number().int().min(1).max(10).default(1)
+  adults: z7.coerce.number().int().min(1).max(20).default(1),
+  rooms: z7.coerce.number().int().min(1).max(10).default(1)
 }).refine((q) => nightsBetween(q.checkIn, q.checkOut) >= 1, { message: "Check-out must be after check-in.", path: ["checkOut"] }).refine((q) => nightsBetween(q.checkIn, q.checkOut) <= 30, { message: "Search up to 30 nights at a time.", path: ["checkOut"] });
 hotels.get("/hotels/search", requireUser, async (c) => {
   const q = parse(query2, c.req.query());
@@ -2992,12 +3456,12 @@ hotels.get("/hotels/search", requireUser, async (c) => {
 init_client();
 init_http();
 init_auth();
-import { Hono as Hono7 } from "hono";
-import { and as and5, desc as desc3, eq as eq9 } from "drizzle-orm";
-import { z as z7 } from "zod";
+import { Hono as Hono8 } from "hono";
+import { and as and7, desc as desc4, eq as eq11 } from "drizzle-orm";
+import { z as z8 } from "zod";
 
 // server/documents.ts
-import { createCipheriv, createDecipheriv, createHmac, randomBytes as randomBytes2, timingSafeEqual as timingSafeEqual2 } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHmac as createHmac2, randomBytes as randomBytes2, timingSafeEqual as timingSafeEqual3 } from "node:crypto";
 import fs3 from "node:fs";
 import path3 from "node:path";
 var cachedKey = null;
@@ -3020,7 +3484,7 @@ function documentKey() {
   }
   return cachedKey;
 }
-var subKey = (purpose) => createHmac("sha256", documentKey()).update(purpose).digest();
+var subKey = (purpose) => createHmac2("sha256", documentKey()).update(purpose).digest();
 function encrypt(plain) {
   const iv = randomBytes2(12);
   const cipher = createCipheriv("aes-256-gcm", subKey("encrypt"), iv);
@@ -3035,15 +3499,15 @@ function decrypt(box) {
 var LINK_SECONDS = 300;
 function signLink(docId, now = Date.now()) {
   const exp = Math.floor(now / 1e3) + LINK_SECONDS;
-  const sig = createHmac("sha256", subKey("link")).update(`${docId}.${exp}`).digest("base64url");
+  const sig = createHmac2("sha256", subKey("link")).update(`${docId}.${exp}`).digest("base64url");
   return { url: `/api/files/${docId}?exp=${exp}&sig=${sig}`, expiresAt: new Date(exp * 1e3).toISOString() };
 }
 function checkLink(docId, exp, sig, now = Date.now()) {
   const e = Number(exp);
   if (!Number.isFinite(e) || e * 1e3 < now) return false;
-  const want = createHmac("sha256", subKey("link")).update(`${docId}.${e}`).digest();
+  const want = createHmac2("sha256", subKey("link")).update(`${docId}.${e}`).digest();
   const got = Buffer.from(sig, "base64url");
-  return got.length === want.length && timingSafeEqual2(got, want);
+  return got.length === want.length && timingSafeEqual3(got, want);
 }
 var MAX_BYTES = 4 * 1024 * 1024;
 function sniffMime(buf) {
@@ -3101,17 +3565,17 @@ function maskIdNumber(kind, raw) {
 }
 
 // server/routes/documents.ts
-var documents = new Hono7();
+var documents = new Hono8();
 documents.use("/documents/*", requireUser);
 documents.use("/documents", requireUser);
-var meta = z7.object({
-  kind: z7.enum(["passport", "visa", "boarding-pass", "insurance", "hotel", "id", "other"]),
-  idType: z7.enum(["aadhaar", "pan", "driving_licence", "voter", "other"]).optional(),
-  title: z7.string().trim().min(1, "Give it a name.").max(80),
-  holder: z7.string().trim().max(80).optional(),
-  number: z7.string().max(40).optional(),
-  expires: z7.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z7.literal("").transform(() => void 0)),
-  tripId: z7.string().max(80).optional()
+var meta = z8.object({
+  kind: z8.enum(["passport", "visa", "boarding-pass", "insurance", "hotel", "id", "other"]),
+  idType: z8.enum(["aadhaar", "pan", "driving_licence", "voter", "other"]).optional(),
+  title: z8.string().trim().min(1, "Give it a name.").max(80),
+  holder: z8.string().trim().max(80).optional(),
+  number: z8.string().max(40).optional(),
+  expires: z8.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z8.literal("").transform(() => void 0)),
+  tripId: z8.string().max(80).optional()
 });
 var view = (d) => ({
   id: d.id,
@@ -3167,13 +3631,13 @@ documents.post("/documents", async (c) => {
 });
 documents.get("/documents", async (c) => {
   const { db } = await getDb();
-  const rows = await db.select().from(schema_exports.verificationDocuments).where(eq9(schema_exports.verificationDocuments.userId, c.get("userId"))).orderBy(desc3(schema_exports.verificationDocuments.createdAt));
+  const rows = await db.select().from(schema_exports.verificationDocuments).where(eq11(schema_exports.verificationDocuments.userId, c.get("userId"))).orderBy(desc4(schema_exports.verificationDocuments.createdAt));
   return c.json({ documents: rows.map(view) });
 });
-async function ownDoc(userId, id) {
-  const docId = parse(z7.string().uuid(), id);
+async function ownDoc(userId, id2) {
+  const docId = parse(z8.string().uuid(), id2);
   const { db } = await getDb();
-  const [doc] = await db.select().from(schema_exports.verificationDocuments).where(and5(eq9(schema_exports.verificationDocuments.id, docId), eq9(schema_exports.verificationDocuments.userId, userId))).limit(1);
+  const [doc] = await db.select().from(schema_exports.verificationDocuments).where(and7(eq11(schema_exports.verificationDocuments.id, docId), eq11(schema_exports.verificationDocuments.userId, userId))).limit(1);
   if (!doc) throw new AppError(404, "not_found", "We could not find that document.");
   return doc;
 }
@@ -3184,17 +3648,17 @@ documents.post("/documents/:id/link", async (c) => {
 documents.delete("/documents/:id", async (c) => {
   const doc = await ownDoc(c.get("userId"), c.req.param("id"));
   const { db } = await getDb();
-  await db.delete(schema_exports.verificationDocuments).where(eq9(schema_exports.verificationDocuments.id, doc.id));
+  await db.delete(schema_exports.verificationDocuments).where(eq11(schema_exports.verificationDocuments.id, doc.id));
   return c.json({ ok: true });
 });
 documents.get("/files/:id", async (c) => {
-  const id = c.req.param("id");
+  const id2 = c.req.param("id");
   const { exp = "", sig = "" } = c.req.query();
-  if (!z7.string().uuid().safeParse(id).success || !documentKey() || !checkLink(id, exp, sig)) {
+  if (!z8.string().uuid().safeParse(id2).success || !documentKey() || !checkLink(id2, exp, sig)) {
     throw new AppError(403, "link_expired", "This link has expired. Open the document again from your wallet.");
   }
   const { db } = await getDb();
-  const [row] = await db.select({ mime: schema_exports.verificationDocuments.mime, title: schema_exports.verificationDocuments.title, iv: schema_exports.documentBlobs.iv, tag: schema_exports.documentBlobs.tag, data: schema_exports.documentBlobs.data }).from(schema_exports.documentBlobs).innerJoin(schema_exports.verificationDocuments, eq9(schema_exports.verificationDocuments.id, schema_exports.documentBlobs.docId)).where(eq9(schema_exports.documentBlobs.docId, id)).limit(1);
+  const [row] = await db.select({ mime: schema_exports.verificationDocuments.mime, title: schema_exports.verificationDocuments.title, iv: schema_exports.documentBlobs.iv, tag: schema_exports.documentBlobs.tag, data: schema_exports.documentBlobs.data }).from(schema_exports.documentBlobs).innerJoin(schema_exports.verificationDocuments, eq11(schema_exports.verificationDocuments.id, schema_exports.documentBlobs.docId)).where(eq11(schema_exports.documentBlobs.docId, id2)).limit(1);
   if (!row) throw new AppError(404, "not_found", "That document was deleted.");
   const body = decrypt(row);
   const ext = row.mime === "application/pdf" ? "pdf" : row.mime.split("/")[1];
@@ -3214,29 +3678,30 @@ init_client();
 init_http();
 init_auth();
 init_llm();
-import { Hono as Hono10 } from "hono";
-import { and as and9, asc as asc5, desc as desc7, eq as eq14 } from "drizzle-orm";
-import { z as z10 } from "zod";
+import { Hono as Hono11 } from "hono";
+import { and as and11, asc as asc7, desc as desc8, eq as eq16 } from "drizzle-orm";
+import { z as z11 } from "zod";
 
 // server/ai/chat.ts
 init_llm();
 
 // server/ai/tools.ts
 init_client();
-import { and as and8, asc as asc4, desc as desc6, eq as eq13, ilike as ilike2, or as or2 } from "drizzle-orm";
+import { and as and10, asc as asc6, desc as desc7, eq as eq15, ilike as ilike2, or as or2 } from "drizzle-orm";
 
 // server/routes/itinerary.ts
 init_client();
 init_http();
+init_service();
 init_auth();
-import { Hono as Hono8 } from "hono";
+import { Hono as Hono9 } from "hono";
 import { streamSSE } from "hono/streaming";
-import { and as and6, desc as desc4, eq as eq11 } from "drizzle-orm";
-import { z as z8 } from "zod";
+import { and as and8, desc as desc5, eq as eq13 } from "drizzle-orm";
+import { z as z9 } from "zod";
 
 // server/guide.ts
 init_client();
-import { asc as asc2, eq as eq10 } from "drizzle-orm";
+import { asc as asc4, eq as eq12 } from "drizzle-orm";
 var round50 = (n) => Math.max(50, Math.round(n / 50) * 50);
 function mealCost(cost, style2, kind) {
   const base2 = cost[style2] * 0.12 * (kind === "cafe" ? 0.55 : kind === "quick" ? 0.5 : 1);
@@ -3297,12 +3762,12 @@ async function googleRating(name, city, lat, lon) {
 }
 async function buildGuide(slug2, style2) {
   const { db } = await getDb();
-  const [d] = await db.select().from(schema_exports.destinations).where(eq10(schema_exports.destinations.slug, slug2)).limit(1);
+  const [d] = await db.select().from(schema_exports.destinations).where(eq12(schema_exports.destinations.slug, slug2)).limit(1);
   if (!d) return null;
   const cost = d.dailyCostInr ?? { shoestring: 2e3, moderate: 4500, comfort: 9e3, luxury: 25e3 };
   const [attractions2, restaurants2] = await Promise.all([
-    db.select().from(schema_exports.attractions).where(eq10(schema_exports.attractions.destinationId, d.id)).orderBy(asc2(schema_exports.attractions.id)),
-    db.select().from(schema_exports.restaurants).where(eq10(schema_exports.restaurants.destinationId, d.id)).orderBy(asc2(schema_exports.restaurants.id))
+    db.select().from(schema_exports.attractions).where(eq12(schema_exports.attractions.destinationId, d.id)).orderBy(asc4(schema_exports.attractions.id)),
+    db.select().from(schema_exports.restaurants).where(eq12(schema_exports.restaurants.destinationId, d.id)).orderBy(asc4(schema_exports.restaurants.id))
   ]);
   const unique = (rows) => rows.filter((r, i) => rows.findIndex((x) => x.name.toLowerCase() === r.name.toLowerCase()) === i);
   const see = unique(attractions2).map((a) => ({
@@ -3536,8 +4001,8 @@ var DURATION2 = { museum: 90, gallery: 60, monument: 45, attraction: 60, castle:
 var intensityOf = (p) => p.kind === "eat" ? 1 : INTENSITY2[p.category ?? ""] ?? 2;
 var indoorOf = (p) => p.kind === "eat" ? true : INDOOR2.has(p.category ?? "");
 var durationOf = (p) => p.kind === "eat" ? p.category === "cafe" ? 45 : 75 : DURATION2[p.category ?? ""] ?? 60;
-var toMin = (t) => {
-  const [h, m2] = t.split(":").map(Number);
+var toMin = (t2) => {
+  const [h, m2] = t2.split(":").map(Number);
   return h * 60 + m2;
 };
 var toTime = (m2) => `${String(Math.floor(m2 / 60) % 24).padStart(2, "0")}:${String(m2 % 60).padStart(2, "0")}`;
@@ -3872,7 +4337,7 @@ var EMERGENCY = {
 };
 
 // server/routes/itinerary.ts
-var itinerary = new Hono8();
+var itinerary = new Hono9();
 itinerary.use("/itineraries/*", requireUser);
 var listeners = /* @__PURE__ */ new Map();
 function publish(tripId, msg) {
@@ -3897,17 +4362,17 @@ itinerary.get("/itineraries/:tripId/events", (c) => {
 });
 async function tripContext(userId, tripId) {
   const { db } = await getDb();
-  const [trip] = await db.select().from(schema_exports.trips).where(and6(eq11(schema_exports.trips.id, tripId), eq11(schema_exports.trips.userId, userId))).limit(1);
+  const [trip] = await db.select().from(schema_exports.trips).where(and8(eq13(schema_exports.trips.id, tripId), eq13(schema_exports.trips.userId, userId))).limit(1);
   if (!trip) throw new AppError(404, "not_found", "Save the trip first, then the itinerary can be built.");
-  const [dest] = trip.destinationId ? await db.select().from(schema_exports.destinations).where(eq11(schema_exports.destinations.id, trip.destinationId)).limit(1) : await db.select().from(schema_exports.destinations).where(eq11(schema_exports.destinations.name, trip.destinationName)).limit(1);
+  const [dest] = trip.destinationId ? await db.select().from(schema_exports.destinations).where(eq13(schema_exports.destinations.id, trip.destinationId)).limit(1) : await db.select().from(schema_exports.destinations).where(eq13(schema_exports.destinations.name, trip.destinationName)).limit(1);
   if (!dest) throw new AppError(404, "no_guide", `We do not have a city guide for ${trip.destinationName} yet.`);
-  const [profile] = await db.select({ answers: schema_exports.profiles.personaAnswers, notes: schema_exports.profiles.personaNotes }).from(schema_exports.profiles).where(eq11(schema_exports.profiles.userId, userId)).limit(1);
+  const [profile] = await db.select({ answers: schema_exports.profiles.personaAnswers, notes: schema_exports.profiles.personaNotes }).from(schema_exports.profiles).where(eq13(schema_exports.profiles.userId, userId)).limit(1);
   const persona = profile?.answers ? derivePersona(profile.answers, profile.notes ?? {}) : defaultPersona();
   const onGround = trip.budgetInr ? trip.budgetInr * 0.65 / tripDays(trip.startDate, trip.endDate) / trip.travellers : null;
   const styles = ["luxury", "comfort", "moderate", "shoestring"];
   const style2 = onGround && dest.dailyCostInr ? styles.find((st) => dest.dailyCostInr[st] <= onGround) ?? "shoestring" : budgetStyle(persona);
   const guide2 = await buildGuide(dest.slug, style2);
-  const [rec] = await db.select({ payload: schema_exports.userRecords.payload }).from(schema_exports.userRecords).where(and6(eq11(schema_exports.userRecords.userId, userId), eq11(schema_exports.userRecords.tbl, "trips"), eq11(schema_exports.userRecords.recordId, tripId))).limit(1);
+  const [rec] = await db.select({ payload: schema_exports.userRecords.payload }).from(schema_exports.userRecords).where(and8(eq13(schema_exports.userRecords.userId, userId), eq13(schema_exports.userRecords.tbl, "trips"), eq13(schema_exports.userRecords.recordId, tripId))).limit(1);
   const split = rec?.payload?.budgetSplit ?? DEFAULT_SPLIT;
   const days = tripDays(trip.startDate, trip.endDate);
   const idx = dest.dailyCostInr?.[style2] ?? 4e3;
@@ -3934,13 +4399,13 @@ async function rainDates(slug2) {
 }
 async function save(userId, tripId, plan, reason, changes, baseVersion) {
   const { db } = await getDb();
-  const [cur] = await db.select().from(schema_exports.itineraries).where(eq11(schema_exports.itineraries.tripId, tripId)).limit(1);
+  const [cur] = await db.select().from(schema_exports.itineraries).where(eq13(schema_exports.itineraries.tripId, tripId)).limit(1);
   if (cur && cur.userId !== userId) throw new AppError(404, "not_found", "Not your itinerary.");
   if (cur && baseVersion != null && baseVersion !== cur.version) throw new AppError(409, "stale", "The itinerary changed on another device. It has been refreshed.");
   let row;
   if (!cur) [row] = await db.insert(schema_exports.itineraries).values({ userId, tripId, plan, version: 1 }).returning();
   else {
-    [row] = await db.update(schema_exports.itineraries).set({ plan, version: cur.version + 1, updatedAt: /* @__PURE__ */ new Date() }).where(and6(eq11(schema_exports.itineraries.id, cur.id), eq11(schema_exports.itineraries.version, cur.version))).returning();
+    [row] = await db.update(schema_exports.itineraries).set({ plan, version: cur.version + 1, updatedAt: /* @__PURE__ */ new Date() }).where(and8(eq13(schema_exports.itineraries.id, cur.id), eq13(schema_exports.itineraries.version, cur.version))).returning();
     if (!row) throw new AppError(409, "stale", "The itinerary changed on another device. It has been refreshed.");
   }
   await db.insert(schema_exports.itineraryVersions).values({ itineraryId: row.id, version: row.version, reason, changes, plan });
@@ -3949,14 +4414,14 @@ async function save(userId, tripId, plan, reason, changes, baseVersion) {
 }
 async function current(userId, tripId) {
   const { db } = await getDb();
-  const [row] = await db.select().from(schema_exports.itineraries).where(and6(eq11(schema_exports.itineraries.tripId, tripId), eq11(schema_exports.itineraries.userId, userId))).limit(1);
+  const [row] = await db.select().from(schema_exports.itineraries).where(and8(eq13(schema_exports.itineraries.tripId, tripId), eq13(schema_exports.itineraries.userId, userId))).limit(1);
   return row ?? null;
 }
 async function view2(userId, tripId) {
   const { db } = await getDb();
   const row = await current(userId, tripId);
   if (!row) return { itinerary: null };
-  const versions = await db.select({ version: schema_exports.itineraryVersions.version, reason: schema_exports.itineraryVersions.reason, changes: schema_exports.itineraryVersions.changes, createdAt: schema_exports.itineraryVersions.createdAt }).from(schema_exports.itineraryVersions).where(eq11(schema_exports.itineraryVersions.itineraryId, row.id)).orderBy(desc4(schema_exports.itineraryVersions.version)).limit(20);
+  const versions = await db.select({ version: schema_exports.itineraryVersions.version, reason: schema_exports.itineraryVersions.reason, changes: schema_exports.itineraryVersions.changes, createdAt: schema_exports.itineraryVersions.createdAt }).from(schema_exports.itineraryVersions).where(eq13(schema_exports.itineraryVersions.itineraryId, row.id)).orderBy(desc5(schema_exports.itineraryVersions.version)).limit(20);
   return { itinerary: { tripId, version: row.version, plan: row.plan, updatedAt: row.updatedAt }, versions };
 }
 itinerary.get("/itineraries/:tripId", async (c) => c.json(await view2(c.get("userId"), c.req.param("tripId"))));
@@ -3978,17 +4443,20 @@ itinerary.post("/itineraries/:tripId/generate", async (c) => {
   });
   const before = await current(userId, tripId);
   const row = await save(userId, tripId, plan, before ? "Rebuilt the plan" : "First plan", before ? diffPlans(before.plan, plan) : ["Planned every day"]);
+  const packAt = /* @__PURE__ */ new Date(`${ctx.trip.startDate}T12:30:00Z`);
+  packAt.setUTCDate(packAt.getUTCDate() - 1);
+  if (packAt.getTime() > Date.now()) void notifySafe({ userId, tripId, kind: "packing_reminder", title: "Pack for tomorrow", body: `Your trip to ${ctx.dest.name} starts tomorrow. Check your packing list.`, dedupeKey: `packing:${tripId}:${ctx.trip.startDate}`, dueAt: packAt, link: `/trips/${tripId}/packing` });
   return c.json({ ...await view2(userId, tripId), version: row.version });
 });
-var adaptBody = z8.object({
-  mode: z8.enum(["sick", "tired", "lighter", "rain", "late", "skip", "add", "overspend"]),
-  date: z8.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  itemId: z8.string().max(120).optional(),
-  minutes: z8.number().int().min(5).max(360).optional(),
-  placeId: z8.string().regex(/^(see|eat)-\d+$/).optional(),
-  baseVersion: z8.number().int().min(1)
+var adaptBody = z9.object({
+  mode: z9.enum(["sick", "tired", "lighter", "rain", "late", "skip", "add", "overspend"]),
+  date: z9.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  itemId: z9.string().max(120).optional(),
+  minutes: z9.number().int().min(5).max(360).optional(),
+  placeId: z9.string().regex(/^(see|eat)-\d+$/).optional(),
+  baseVersion: z9.number().int().min(1)
 });
-var REASON = {
+var REASON2 = {
   sick: "Feeling sick",
   tired: "Tired / low energy",
   lighter: "Wanted a lighter day",
@@ -4008,7 +4476,8 @@ async function adaptItinerary(userId, tripId, body) {
   if (body.mode === "add" && !place) throw new AppError(400, "invalid_input", "Pick a place to add.");
   const r = adaptDay(row.plan, body.mode, { date: body.date, itemId: body.itemId, minutes: body.minutes, place, pool, allowance: ctx.allowance, paidEntryEstimate: ctx.paidEntryEstimate });
   if (!r.changes.length) return { changed: false, warnings: r.warnings, ...await view2(userId, tripId) };
-  await save(userId, tripId, r.plan, REASON[body.mode], r.changes, row.version);
+  await save(userId, tripId, r.plan, REASON2[body.mode], r.changes, row.version);
+  void notifySafe({ userId, tripId, kind: "itinerary_change", title: "Itinerary updated", body: `${REASON2[body.mode]}: ${r.changes.slice(0, 2).join("; ")}`.slice(0, 300), dedupeKey: `itin:${tripId}:${row.version + 1}`, link: `/trips/${tripId}/itinerary` });
   const emergency = body.mode === "sick" ? { country: ctx.dest.country, numbers: EMERGENCY[ctx.dest.country] ?? { all: "112" }, pharmacy: `https://www.google.com/maps/search/pharmacy/@${ctx.dest.lat},${ctx.dest.lon},14z`, hospital: `https://www.google.com/maps/search/hospital/@${ctx.dest.lat},${ctx.dest.lon},14z` } : null;
   return { changed: true, changes: r.changes, warnings: r.warnings, emergency, ...await view2(userId, tripId) };
 }
@@ -4017,19 +4486,19 @@ itinerary.post("/itineraries/:tripId/adapt", async (c) => {
   return c.json(await adaptItinerary(c.get("userId"), c.req.param("tripId"), body));
 });
 itinerary.post("/itineraries/:tripId/undo", async (c) => {
-  const { baseVersion } = await jsonBody(c, z8.object({ baseVersion: z8.number().int().min(2) }));
+  const { baseVersion } = await jsonBody(c, z9.object({ baseVersion: z9.number().int().min(2) }));
   const userId = c.get("userId");
   const tripId = c.req.param("tripId");
   const row = await current(userId, tripId);
   if (!row || row.version !== baseVersion) throw new AppError(409, "stale", "The itinerary changed on another device. It has been refreshed.");
   const { db } = await getDb();
-  const [prev] = await db.select().from(schema_exports.itineraryVersions).where(and6(eq11(schema_exports.itineraryVersions.itineraryId, row.id), eq11(schema_exports.itineraryVersions.version, row.version - 1))).limit(1);
+  const [prev] = await db.select().from(schema_exports.itineraryVersions).where(and8(eq13(schema_exports.itineraryVersions.itineraryId, row.id), eq13(schema_exports.itineraryVersions.version, row.version - 1))).limit(1);
   if (!prev) throw new AppError(400, "nothing_to_undo", "Nothing to undo.");
   await save(userId, tripId, prev.plan, "Undo", diffPlans(row.plan, prev.plan), row.version);
   return c.json(await view2(userId, tripId));
 });
 itinerary.post("/itineraries/:tripId/lock", async (c) => {
-  const body = await jsonBody(c, z8.object({ itemId: z8.string().max(120), locked: z8.boolean(), baseVersion: z8.number().int().min(1) }));
+  const body = await jsonBody(c, z9.object({ itemId: z9.string().max(120), locked: z9.boolean(), baseVersion: z9.number().int().min(1) }));
   const userId = c.get("userId");
   const tripId = c.req.param("tripId");
   const row = await current(userId, tripId);
@@ -4042,7 +4511,7 @@ itinerary.post("/itineraries/:tripId/lock", async (c) => {
   return c.json(await view2(userId, tripId));
 });
 itinerary.get("/itineraries/:tripId/export/:fmt", async (c) => {
-  const fmt = parse(z8.enum(["pdf", "ics"]), c.req.param("fmt"));
+  const fmt = parse(z9.enum(["pdf", "ics"]), c.req.param("fmt"));
   const v = await view2(c.get("userId"), c.req.param("tripId"));
   if (!v.itinerary) throw new AppError(404, "not_found", "Build the itinerary first.");
   const plan = v.itinerary.plan;
@@ -4054,8 +4523,8 @@ itinerary.get("/itineraries/:tripId/export/:fmt", async (c) => {
     }
     return new Response(textPdf(lines), { headers: { "content-type": "application/pdf", "content-disposition": 'attachment; filename="itinerary.pdf"' } });
   }
-  const stamp = (date3, t) => `${date3.replace(/-/g, "")}T${t.replace(":", "")}00`;
-  const esc2 = (t) => t.replace(/[,;\\]/g, (m2) => `\\${m2}`).replace(/\n/g, "\\n");
+  const stamp = (date3, t2) => `${date3.replace(/-/g, "")}T${t2.replace(":", "")}00`;
+  const esc2 = (t2) => t2.replace(/[,;\\]/g, (m2) => `\\${m2}`).replace(/\n/g, "\\n");
   const events = plan.days.flatMap(
     (d) => d.items.filter((i) => i.status === "planned").map((i) => ["BEGIN:VEVENT", `UID:${i.id}@voyage`, `DTSTAMP:${stamp(d.date, "00:00")}`, `DTSTART:${stamp(d.date, i.start)}`, `DTEND:${stamp(d.date, i.end)}`, `SUMMARY:${esc2(i.title)}`, ...i.link ? [`URL:${i.link}`] : [], "END:VEVENT"].join("\r\n"))
   );
@@ -4198,33 +4667,33 @@ async function runTool(userId, name, rawArgs) {
   const { db } = await getDb();
   switch (name) {
     case "list_my_trips": {
-      const trips3 = await db.select().from(schema_exports.trips).where(eq13(schema_exports.trips.userId, userId)).orderBy(asc4(schema_exports.trips.startDate)).limit(20);
-      const saved = await db.select({ payload: schema_exports.userRecords.payload }).from(schema_exports.userRecords).where(and8(eq13(schema_exports.userRecords.userId, userId), eq13(schema_exports.userRecords.tbl, "bookings"), eq13(schema_exports.userRecords.deleted, false)));
+      const trips3 = await db.select().from(schema_exports.trips).where(eq15(schema_exports.trips.userId, userId)).orderBy(asc6(schema_exports.trips.startDate)).limit(20);
+      const saved = await db.select({ payload: schema_exports.userRecords.payload }).from(schema_exports.userRecords).where(and10(eq15(schema_exports.userRecords.userId, userId), eq15(schema_exports.userRecords.tbl, "bookings"), eq15(schema_exports.userRecords.deleted, false)));
       const options = saved.map((r) => r.payload).filter((b) => b.status === "suggested");
       return {
         data: {
           today: today(),
-          trips: trips3.map((t) => ({
-            id: t.id,
-            title: t.title,
-            from: t.origin,
-            to: t.destinationName,
-            startDate: t.startDate,
-            endDate: t.endDate,
-            travellers: t.travellers,
-            budgetInr: t.budgetInr,
-            savedOptions: options.filter((o) => o.tripId === t.id).map((o) => ({ kind: o.kind, title: o.title, totalInr: o.amount, priceIsEstimate: !!o.details?.priceIsEstimate, when: o.details?.summary }))
+          trips: trips3.map((t2) => ({
+            id: t2.id,
+            title: t2.title,
+            from: t2.origin,
+            to: t2.destinationName,
+            startDate: t2.startDate,
+            endDate: t2.endDate,
+            travellers: t2.travellers,
+            budgetInr: t2.budgetInr,
+            savedOptions: options.filter((o) => o.tripId === t2.id).map((o) => ({ kind: o.kind, title: o.title, totalInr: o.amount, priceIsEstimate: !!o.details?.priceIsEstimate, when: o.details?.summary }))
           }))
         },
-        links: trips3.slice(0, 3).map((t) => ({ label: t.title, to: `/trips/${t.id}` }))
+        links: trips3.slice(0, 3).map((t2) => ({ label: t2.title, to: `/trips/${t2.id}` }))
       };
     }
     case "get_destination": {
       const d = await findDestination(str("name"));
       if (!d) return notFound(str("name") || "That place");
       const [sights, eats] = await Promise.all([
-        db.select({ name: schema_exports.attractions.name, category: schema_exports.attractions.category }).from(schema_exports.attractions).where(eq13(schema_exports.attractions.destinationId, d.id)).orderBy(asc4(schema_exports.attractions.id)).limit(6),
-        db.select({ name: schema_exports.restaurants.name, cuisine: schema_exports.restaurants.cuisine, vegetarian: schema_exports.restaurants.vegetarian }).from(schema_exports.restaurants).where(eq13(schema_exports.restaurants.destinationId, d.id)).orderBy(asc4(schema_exports.restaurants.id)).limit(5)
+        db.select({ name: schema_exports.attractions.name, category: schema_exports.attractions.category }).from(schema_exports.attractions).where(eq15(schema_exports.attractions.destinationId, d.id)).orderBy(asc6(schema_exports.attractions.id)).limit(6),
+        db.select({ name: schema_exports.restaurants.name, cuisine: schema_exports.restaurants.cuisine, vegetarian: schema_exports.restaurants.vegetarian }).from(schema_exports.restaurants).where(eq15(schema_exports.restaurants.destinationId, d.id)).orderBy(asc6(schema_exports.restaurants.id)).limit(5)
       ]);
       return {
         data: { name: d.name, country: d.country, description: d.description, bestTime: d.bestTime, idealDays: d.idealDays, dailyCostPerPersonInr: d.dailyCostInr, airport: d.airportIata, placesToSee: sights, placesToEat: eats },
@@ -4232,7 +4701,7 @@ async function runTool(userId, name, rawArgs) {
       };
     }
     case "suggest_destinations": {
-      const rows = await db.select().from(schema_exports.destinations).orderBy(desc6(schema_exports.destinations.featured), asc4(schema_exports.destinations.name));
+      const rows = await db.select().from(schema_exports.destinations).orderBy(desc7(schema_exports.destinations.featured), asc6(schema_exports.destinations.name));
       const tag = str("tag").toLowerCase();
       const max = typeof args.maxDailyCostInr === "number" ? args.maxDailyCostInr : null;
       const picks = rows.filter((d) => !tag || d.personaTags.includes(tag) || d.tags.includes(tag)).filter((d) => typeof args.domestic === "boolean" ? d.isDomestic === args.domestic : true).filter((d) => max ? (d.dailyCostInr?.shoestring ?? Infinity) <= max : true).slice(0, 6);
@@ -4280,7 +4749,7 @@ async function runTool(userId, name, rawArgs) {
       }
     }
     case "list_my_documents": {
-      const docs = await db.select().from(schema_exports.verificationDocuments).where(eq13(schema_exports.verificationDocuments.userId, userId)).limit(30);
+      const docs = await db.select().from(schema_exports.verificationDocuments).where(eq15(schema_exports.verificationDocuments.userId, userId)).limit(30);
       return {
         data: { today: today(), documents: docs.map((d) => ({ kind: d.docType, title: d.title, holder: d.holder, expires: d.expiresOn, number: d.maskedNumber })) },
         links: [{ label: "Open wallet", to: "/wallet" }]
@@ -4289,10 +4758,10 @@ async function runTool(userId, name, rawArgs) {
     case "replan_itinerary": {
       const mode = str("mode");
       if (!["sick", "tired", "lighter", "rain", "late"].includes(mode)) return { data: { error: "Unknown mode." }, links: [] };
-      const its = await db.select().from(schema_exports.itineraries).where(eq13(schema_exports.itineraries.userId, userId));
-      const trips3 = its.length ? await db.select().from(schema_exports.trips).where(eq13(schema_exports.trips.userId, userId)) : [];
+      const its = await db.select().from(schema_exports.itineraries).where(eq15(schema_exports.itineraries.userId, userId));
+      const trips3 = its.length ? await db.select().from(schema_exports.trips).where(eq15(schema_exports.trips.userId, userId)) : [];
       const today2 = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
-      const pick = its.map((i) => ({ i, t: trips3.find((t) => t.id === i.tripId) })).filter((x) => x.t && x.t.endDate >= today2).sort((a, b) => a.t.startDate.localeCompare(b.t.startDate))[0];
+      const pick = its.map((i) => ({ i, t: trips3.find((t2) => t2.id === i.tripId) })).filter((x) => x.t && x.t.endDate >= today2).sort((a, b) => a.t.startDate.localeCompare(b.t.startDate))[0];
       if (!pick) return { data: { error: "No upcoming trip has an itinerary yet. Open a trip and its Itinerary first." }, links: [] };
       const plan = pick.i.plan;
       const date3 = str("date") || plan.days.find((d) => d.date === today2)?.date || plan.days.find((d) => d.kind === "full")?.date || plan.days[0].date;
@@ -4305,7 +4774,7 @@ async function runTool(userId, name, rawArgs) {
     case "start_cancellation": {
       const q = str("booking").toLowerCase().trim();
       if (q.length < 2) return { data: { error: "Say which booking." }, links: [] };
-      const server = (await db.select().from(schema_exports.bookings).where(and8(eq13(schema_exports.bookings.userId, userId), eq13(schema_exports.bookings.status, "confirmed")))).find(
+      const server = (await db.select().from(schema_exports.bookings).where(and10(eq15(schema_exports.bookings.userId, userId), eq15(schema_exports.bookings.status, "confirmed")))).find(
         (b) => (b.title ?? "").toLowerCase().includes(q) || (b.pnr ?? "").toLowerCase() === q
       );
       if (server) {
@@ -4315,35 +4784,35 @@ async function runTool(userId, name, rawArgs) {
           links: [{ label: "Review and confirm", to: `/refunds/${r.request.id}` }]
         };
       }
-      const recs = await db.select({ payload: schema_exports.userRecords.payload }).from(schema_exports.userRecords).where(and8(eq13(schema_exports.userRecords.userId, userId), eq13(schema_exports.userRecords.tbl, "bookings"), eq13(schema_exports.userRecords.deleted, false)));
+      const recs = await db.select({ payload: schema_exports.userRecords.payload }).from(schema_exports.userRecords).where(and10(eq15(schema_exports.userRecords.userId, userId), eq15(schema_exports.userRecords.tbl, "bookings"), eq15(schema_exports.userRecords.deleted, false)));
       const ext = recs.map((r) => r.payload).find((b) => b.status === "confirmed" && (b.title.toLowerCase().includes(q) || b.pnr?.toLowerCase() === q));
       if (!ext) return { data: { error: "No confirmed booking matches that." }, links: [] };
       return { data: { booking: ext.title, note: "Open the booking to see the refund estimate and confirm." }, links: [{ label: `Cancel ${ext.title}`, to: `/trips/${ext.tripId}/bookings/${ext.id}` }] };
     }
     case "trip_budget": {
-      const trips3 = await db.select().from(schema_exports.trips).where(eq13(schema_exports.trips.userId, userId)).orderBy(asc4(schema_exports.trips.startDate));
+      const trips3 = await db.select().from(schema_exports.trips).where(eq15(schema_exports.trips.userId, userId)).orderBy(asc6(schema_exports.trips.startDate));
       const q = str("trip").toLowerCase();
       const today2 = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
-      const t = trips3.find((x) => q && (x.title.toLowerCase().includes(q) || x.destinationName.toLowerCase().includes(q))) ?? trips3.find((x) => x.endDate >= today2);
-      if (!t) return { data: { error: "No trip found." }, links: [] };
-      const recs = await db.select({ tbl: schema_exports.userRecords.tbl, payload: schema_exports.userRecords.payload }).from(schema_exports.userRecords).where(and8(eq13(schema_exports.userRecords.userId, userId), eq13(schema_exports.userRecords.deleted, false)));
-      const bookings2 = recs.filter((r) => r.tbl === "bookings").map((r) => r.payload).filter((b) => b.tripId === t.id);
-      const expenses = recs.filter((r) => r.tbl === "expenses").map((r) => r.payload).filter((e) => e.tripId === t.id);
+      const t2 = trips3.find((x) => q && (x.title.toLowerCase().includes(q) || x.destinationName.toLowerCase().includes(q))) ?? trips3.find((x) => x.endDate >= today2);
+      if (!t2) return { data: { error: "No trip found." }, links: [] };
+      const recs = await db.select({ tbl: schema_exports.userRecords.tbl, payload: schema_exports.userRecords.payload }).from(schema_exports.userRecords).where(and10(eq15(schema_exports.userRecords.userId, userId), eq15(schema_exports.userRecords.deleted, false)));
+      const bookings2 = recs.filter((r) => r.tbl === "bookings").map((r) => r.payload).filter((b) => b.tripId === t2.id);
+      const expenses = recs.filter((r) => r.tbl === "expenses").map((r) => r.payload).filter((e) => e.tripId === t2.id);
       return {
         data: {
-          trip: t.title,
-          budgetInr: t.budgetInr,
+          trip: t2.title,
+          budgetInr: t2.budgetInr,
           bookedInr: bookings2.filter((b) => b.status === "confirmed").reduce((x, b) => x + b.amount, 0),
           savedOptionsInr: bookings2.filter((b) => b.status === "suggested").reduce((x, b) => x + b.amount, 0),
           refundedInr: bookings2.reduce((x, b) => x + (b.refundInr ?? 0), 0),
           spentInr: expenses.reduce((x, e) => x + e.amount, 0)
         },
-        links: [{ label: "Open the budget", to: `/trips/${t.id}/budget` }]
+        links: [{ label: "Open the budget", to: `/trips/${t2.id}/budget` }]
       };
     }
     case "flight_status": {
       const q = str("flight").toUpperCase().replace(/\s+/g, "");
-      const recs = await db.select({ payload: schema_exports.userRecords.payload }).from(schema_exports.userRecords).where(and8(eq13(schema_exports.userRecords.userId, userId), eq13(schema_exports.userRecords.tbl, "flights"), eq13(schema_exports.userRecords.deleted, false)));
+      const recs = await db.select({ payload: schema_exports.userRecords.payload }).from(schema_exports.userRecords).where(and10(eq15(schema_exports.userRecords.userId, userId), eq15(schema_exports.userRecords.tbl, "flights"), eq15(schema_exports.userRecords.deleted, false)));
       const f = recs.map((r) => r.payload).find((x) => x.flightNo.toUpperCase().replace(/\s+/g, "") === q);
       return {
         data: f ? { flight: f.flightNo, route: `${f.fromCode}-${f.toCode}`, scheduledDeparture: f.depart, scheduledArrival: f.arrive, status: "scheduled (demo: no live status provider)", note: "Live delays and gates need an AeroDataBox or AviationStack key." } : { error: "That flight is not in your trips.", note: "Live status needs an AeroDataBox or AviationStack key." },
@@ -4476,22 +4945,22 @@ async function runChatStream(p, userId, system, history, userText, emit) {
 
 // server/ai/rules.ts
 init_client();
-var has = (t, words) => words.some((w) => t.includes(w));
+var has = (t2, words) => words.some((w) => t2.includes(w));
 var inr = (n) => `\u20B9${Math.round(n).toLocaleString("en-IN")}`;
 async function destinationIn(text2) {
   const { db } = await getDb();
   const all = await db.select({ name: schema_exports.destinations.name }).from(schema_exports.destinations);
-  const t = text2.toLowerCase();
-  return all.find((d) => t.includes(d.name.toLowerCase()))?.name ?? null;
+  const t2 = text2.toLowerCase();
+  return all.find((d) => t2.includes(d.name.toLowerCase()))?.name ?? null;
 }
 async function answerByRules(userId, message) {
-  const t = message.toLowerCase();
+  const t2 = message.toLowerCase();
   const used = [];
   const call = async (name, args = {}) => {
     used.push(name);
     return runTool(userId, name, JSON.stringify(args));
   };
-  const mode = has(t, ["sick", "unwell", "fever", "ill ", "bimar", "\u0924\u092C\u0940\u092F\u0924", "\u092C\u0940\u092E\u093E\u0930"]) ? "sick" : has(t, ["tired", "exhausted", "thak", "\u0925\u0915"]) ? "tired" : has(t, ["lighter", "easy day", "relax today"]) ? "lighter" : has(t, ["raining", "rain today", "baarish", "\u092C\u093E\u0930\u093F\u0936"]) ? "rain" : has(t, ["running late", "late today", "der ho gayi"]) ? "late" : null;
+  const mode = has(t2, ["sick", "unwell", "fever", "ill ", "bimar", "\u0924\u092C\u0940\u092F\u0924", "\u092C\u0940\u092E\u093E\u0930"]) ? "sick" : has(t2, ["tired", "exhausted", "thak", "\u0925\u0915"]) ? "tired" : has(t2, ["lighter", "easy day", "relax today"]) ? "lighter" : has(t2, ["raining", "rain today", "baarish", "\u092C\u093E\u0930\u093F\u0936"]) ? "rain" : has(t2, ["running late", "late today", "der ho gayi"]) ? "late" : null;
   if (mode) {
     const r = await call("replan_itinerary", { mode });
     const d = r.data;
@@ -4499,7 +4968,7 @@ async function answerByRules(userId, message) {
     const care = d.emergency ? ` If you need help, the emergency number there is ${d.emergency.numbers.all ?? d.emergency.numbers.ambulance}. The itinerary shows the nearest pharmacy and hospital.` : "";
     return { reply: `I have changed ${d.date} of ${d.trip}: ${(d.changes ?? []).join("; ")}.${care} You can undo this in the itinerary.`, links: r.links, toolsUsed: used };
   }
-  if (has(t, ["cancel", "refund", "radd"])) {
+  if (has(t2, ["cancel", "refund", "radd"])) {
     const what = message.replace(/.*?(cancel|refund)\s*(my|the)?\s*/i, "").trim();
     if (what.length < 2) return { reply: 'Which booking should I start cancelling? Say its name or PNR, for example "cancel Santana Beach Resort".', links: [], toolsUsed: used };
     const r = await call("start_cancellation", { booking: what });
@@ -4511,14 +4980,14 @@ async function answerByRules(userId, message) {
       toolsUsed: used
     };
   }
-  if (has(t, ["flight status", "status of", "is my flight", "delayed", "on time"])) {
+  if (has(t2, ["flight status", "status of", "is my flight", "delayed", "on time"])) {
     const flight = message.match(/\b([A-Z0-9]{2})\s?-?(\d{2,4})\b/i);
     if (!flight) return { reply: 'Tell me the flight number, for example "status of 6E 5321".', links: [], toolsUsed: used };
     const r = await call("flight_status", { flight: `${flight[1]} ${flight[2]}` });
     const d = r.data;
     return { reply: d.error ? `${d.error} ${d.note}` : `${d.flight} is ${d.status}, departing ${d.scheduledDeparture?.replace("T", " ").slice(0, 16)}. ${d.note}`, links: r.links, toolsUsed: used };
   }
-  if (has(t, ["budget", "spent", "kharcha", "kitna", "cost of my trip", "\u0916\u0930\u094D\u091A"])) {
+  if (has(t2, ["budget", "spent", "kharcha", "kitna", "cost of my trip", "\u0916\u0930\u094D\u091A"])) {
     const r = await call("trip_budget");
     const d = r.data;
     if (d.error) return { reply: d.error, links: [], toolsUsed: used };
@@ -4529,7 +4998,7 @@ async function answerByRules(userId, message) {
     };
   }
   const place = await destinationIn(message);
-  if (place && has(t, ["weather", "mausam", "rain", "temperature", "\u092E\u094C\u0938\u092E"])) {
+  if (place && has(t2, ["weather", "mausam", "rain", "temperature", "\u092E\u094C\u0938\u092E"])) {
     const r = await call("get_weather", { destination: place });
     const d = r.data;
     if (d.error || !d.now) return { reply: d.error ?? "Weather is not available right now.", links: r.links, toolsUsed: used };
@@ -4544,18 +5013,18 @@ async function answerByRules(userId, message) {
       toolsUsed: used
     };
   }
-  if (has(t, ["where can i go", "suggest", "recommend", "kahan ja", "weekend"])) {
-    const r = await call("suggest_destinations", { tag: has(t, ["beach"]) ? "beach" : has(t, ["mountain", "hill", "nature"]) ? "nature" : has(t, ["cheap", "budget", "sasta"]) ? "budget" : "", domestic: has(t, ["abroad", "international"]) ? false : has(t, ["india"]) ? true : void 0 });
+  if (has(t2, ["where can i go", "suggest", "recommend", "kahan ja", "weekend"])) {
+    const r = await call("suggest_destinations", { tag: has(t2, ["beach"]) ? "beach" : has(t2, ["mountain", "hill", "nature"]) ? "nature" : has(t2, ["cheap", "budget", "sasta"]) ? "budget" : "", domestic: has(t2, ["abroad", "international"]) ? false : has(t2, ["india"]) ? true : void 0 });
     const d = r.data;
     return { reply: d.destinations.length ? `Some ideas: ${d.destinations.slice(0, 4).map((x) => `${x.name} (best ${x.bestTime ?? "any time"})`).join(", ")}. For a budget, try "Where can I go?" on Home.` : 'Try "Where can I go?" on Home with your budget.', links: r.links, toolsUsed: used };
   }
-  if (has(t, ["document", "passport", "visa", "aadhaar", "expire"])) {
+  if (has(t2, ["document", "passport", "visa", "aadhaar", "expire"])) {
     const r = await call("list_my_documents");
     const d = r.data;
     const soon = d.documents.filter((x) => x.expires && x.expires <= new Date(Date.parse(d.today) + 180 * 864e5).toISOString().slice(0, 10));
     return { reply: d.documents.length ? `You have ${d.documents.length} saved document${d.documents.length === 1 ? "" : "s"}.${soon.length ? ` Expiring within 6 months: ${soon.map((x) => `${x.title} (${x.expires})`).join(", ")}.` : " None expire in the next 6 months."}` : "No documents saved on your account yet. Add them in the Wallet.", links: r.links, toolsUsed: used };
   }
-  if (has(t, ["trip", "plan", "yatra", "safar"])) {
+  if (has(t2, ["trip", "plan", "yatra", "safar"])) {
     const r = await call("list_my_trips");
     const d = r.data;
     return { reply: d.trips.length ? `Your trips: ${d.trips.map((x) => `${x.title} (${x.startDate} to ${x.endDate}, ${x.travellers} ${x.travellers === 1 ? "person" : "people"})`).join("; ")}.` : "No trips yet. Tap New trip on Home to plan one.", links: r.links, toolsUsed: used };
@@ -4573,7 +5042,7 @@ import { streamSSE as streamSSE2 } from "hono/streaming";
 // server/ai/booking.ts
 init_client();
 init_llm();
-import { inArray as inArray4 } from "drizzle-orm";
+import { inArray as inArray5 } from "drizzle-orm";
 var MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
 var pad = (n) => String(n).padStart(2, "0");
 function datesIn(text2) {
@@ -4606,14 +5075,14 @@ function timesIn(text2) {
   }
   return out;
 }
-var norm = (t) => t.toUpperCase().replace(/[\s-]/g, "");
+var norm = (t2) => t2.toUpperCase().replace(/[\s-]/g, "");
 async function parseByRules(text2) {
   const upper = text2.toUpperCase();
   const pnr = upper.match(/\b(?:PNR|BOOKING\s*(?:REF(?:ERENCE)?|ID|CODE)|CONFIRMATION\s*(?:CODE|NO\.?|NUMBER)?)\s*[:#-]?\s*([A-Z0-9]{5,8})\b/)?.[1] ?? null;
   const flight = upper.match(/\bFLIGHT\s*(?:NO\.?|NUMBER)?\s*[:#-]?\s*([A-Z0-9]{2})\s?-?(\d{2,4})\b/) ?? upper.match(/\b(6E|AI|SG|IX|QP|UK|EK|SQ|TG|QR|EY|LH|BA|AF|MH|CX|KL)\s?-?(\d{2,4})\b/);
   const candidates = [...new Set([...upper.matchAll(/\b([A-Z]{3})\b/g)].map((m2) => m2[1]))].filter((c) => !["PNR", "THE", "AND", "FOR", "YOU", "INR", "TOTAL", "NON", "AIR", "PAX"].includes(c));
   const { db } = await getDb();
-  const known = candidates.length ? new Set((await db.select({ iata: schema_exports.airports.iata }).from(schema_exports.airports).where(inArray4(schema_exports.airports.iata, candidates))).map((a) => a.iata)) : /* @__PURE__ */ new Set();
+  const known = candidates.length ? new Set((await db.select({ iata: schema_exports.airports.iata }).from(schema_exports.airports).where(inArray5(schema_exports.airports.iata, candidates))).map((a) => a.iata)) : /* @__PURE__ */ new Set();
   const codes = candidates.filter((c) => known.has(c));
   const dates = datesIn(text2);
   const times = timesIn(text2);
@@ -4708,23 +5177,23 @@ async function parseBooking(text2, p) {
 }
 
 // server/routes/assistant.ts
-var assistant = new Hono10();
+var assistant = new Hono11();
 assistant.use("/assistant/*", requireUser);
 assistant.get("/assistant/status", (c) => {
   const p = llmProvider();
   return c.json({ provider: p?.name ?? null, model: p?.model ?? null, fallback: "rules" });
 });
-var chatBody = z10.object({
-  conversationId: z10.string().uuid().optional(),
-  message: z10.string().trim().min(1, "Type a message.").max(1e3),
-  lang: z10.enum(["en", "hi", "hinglish", "mr", "ta", "bn"]).default("en")
+var chatBody = z11.object({
+  conversationId: z11.string().uuid().optional(),
+  message: z11.string().trim().min(1, "Type a message.").max(1e3),
+  lang: z11.enum(["en", "hi", "hinglish", "mr", "ta", "bn"]).default("en")
 });
 async function conversation(userId, conversationId, firstMessage) {
   const { db } = await getDb();
   if (conversationId) {
-    const [conv2] = await db.select().from(schema_exports.chatConversations).where(and9(eq14(schema_exports.chatConversations.id, conversationId), eq14(schema_exports.chatConversations.userId, userId))).limit(1);
+    const [conv2] = await db.select().from(schema_exports.chatConversations).where(and11(eq16(schema_exports.chatConversations.id, conversationId), eq16(schema_exports.chatConversations.userId, userId))).limit(1);
     if (!conv2) throw new AppError(404, "not_found", "That conversation was deleted.");
-    const rows = await db.select().from(schema_exports.chatMessages).where(eq14(schema_exports.chatMessages.conversationId, conversationId)).orderBy(asc5(schema_exports.chatMessages.createdAt));
+    const rows = await db.select().from(schema_exports.chatMessages).where(eq16(schema_exports.chatMessages.conversationId, conversationId)).orderBy(asc7(schema_exports.chatMessages.createdAt));
     return { id: conversationId, history: rows.filter((r) => r.role === "user" || r.role === "assistant").map((r) => ({ role: r.role, content: r.content })) };
   }
   const [conv] = await db.insert(schema_exports.chatConversations).values({ userId, title: firstMessage.slice(0, 60) }).returning();
@@ -4732,7 +5201,7 @@ async function conversation(userId, conversationId, firstMessage) {
 }
 async function systemFor(userId, lang) {
   const { db } = await getDb();
-  const [profile] = await db.select({ name: schema_exports.profiles.name, personaId: schema_exports.profiles.personaId }).from(schema_exports.profiles).where(eq14(schema_exports.profiles.userId, userId)).limit(1);
+  const [profile] = await db.select({ name: schema_exports.profiles.name, personaId: schema_exports.profiles.personaId }).from(schema_exports.profiles).where(eq16(schema_exports.profiles.userId, userId)).limit(1);
   return systemPrompt({ name: profile?.name ?? "Traveller", persona: profile?.personaId ?? null, lang, today: (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) });
 }
 async function remember(conversationId, message, turn) {
@@ -4741,7 +5210,7 @@ async function remember(conversationId, message, turn) {
     { conversationId, role: "user", content: message },
     { conversationId, role: "assistant", content: turn.reply, toolCalls: { links: turn.links, tools: turn.toolsUsed, model: turn.model } }
   ]);
-  await db.update(schema_exports.chatConversations).set({ updatedAt: /* @__PURE__ */ new Date() }).where(eq14(schema_exports.chatConversations.id, conversationId));
+  await db.update(schema_exports.chatConversations).set({ updatedAt: /* @__PURE__ */ new Date() }).where(eq16(schema_exports.chatConversations.id, conversationId));
 }
 assistant.post("/assistant/chat", async (c) => {
   const body = await jsonBody(c, chatBody);
@@ -4789,33 +5258,33 @@ assistant.post("/assistant/chat/stream", async (c) => {
 });
 assistant.delete("/assistant/conversations", async (c) => {
   const { db } = await getDb();
-  await db.delete(schema_exports.chatConversations).where(eq14(schema_exports.chatConversations.userId, c.get("userId")));
+  await db.delete(schema_exports.chatConversations).where(eq16(schema_exports.chatConversations.userId, c.get("userId")));
   return c.json({ ok: true });
 });
 assistant.get("/assistant/conversations", async (c) => {
   const { db } = await getDb();
-  const rows = await db.select({ id: schema_exports.chatConversations.id, title: schema_exports.chatConversations.title, updatedAt: schema_exports.chatConversations.updatedAt }).from(schema_exports.chatConversations).where(eq14(schema_exports.chatConversations.userId, c.get("userId"))).orderBy(desc7(schema_exports.chatConversations.updatedAt)).limit(30);
+  const rows = await db.select({ id: schema_exports.chatConversations.id, title: schema_exports.chatConversations.title, updatedAt: schema_exports.chatConversations.updatedAt }).from(schema_exports.chatConversations).where(eq16(schema_exports.chatConversations.userId, c.get("userId"))).orderBy(desc8(schema_exports.chatConversations.updatedAt)).limit(30);
   return c.json({ conversations: rows });
 });
 assistant.get("/assistant/conversations/:id", async (c) => {
-  const id = parse(z10.string().uuid(), c.req.param("id"));
+  const id2 = parse(z11.string().uuid(), c.req.param("id"));
   const { db } = await getDb();
-  const [conv] = await db.select().from(schema_exports.chatConversations).where(and9(eq14(schema_exports.chatConversations.id, id), eq14(schema_exports.chatConversations.userId, c.get("userId")))).limit(1);
+  const [conv] = await db.select().from(schema_exports.chatConversations).where(and11(eq16(schema_exports.chatConversations.id, id2), eq16(schema_exports.chatConversations.userId, c.get("userId")))).limit(1);
   if (!conv) throw new AppError(404, "not_found", "That conversation was deleted.");
-  const rows = await db.select().from(schema_exports.chatMessages).where(eq14(schema_exports.chatMessages.conversationId, id)).orderBy(asc5(schema_exports.chatMessages.createdAt));
+  const rows = await db.select().from(schema_exports.chatMessages).where(eq16(schema_exports.chatMessages.conversationId, id2)).orderBy(asc7(schema_exports.chatMessages.createdAt));
   return c.json({
     conversation: { id: conv.id, title: conv.title },
     messages: rows.map((r) => ({ role: r.role, text: r.content, links: r.toolCalls?.links ?? [] }))
   });
 });
 assistant.delete("/assistant/conversations/:id", async (c) => {
-  const id = parse(z10.string().uuid(), c.req.param("id"));
+  const id2 = parse(z11.string().uuid(), c.req.param("id"));
   const { db } = await getDb();
-  await db.delete(schema_exports.chatConversations).where(and9(eq14(schema_exports.chatConversations.id, id), eq14(schema_exports.chatConversations.userId, c.get("userId"))));
+  await db.delete(schema_exports.chatConversations).where(and11(eq16(schema_exports.chatConversations.id, id2), eq16(schema_exports.chatConversations.userId, c.get("userId"))));
   return c.json({ ok: true });
 });
 assistant.post("/assistant/parse-booking", async (c) => {
-  const { text: text2 } = await jsonBody(c, z10.object({ text: z10.string().trim().min(20, "Paste the whole confirmation.").max(8e3) }));
+  const { text: text2 } = await jsonBody(c, z11.object({ text: z11.string().trim().min(20, "Paste the whole confirmation.").max(8e3) }));
   return c.json(await parseBooking(text2, llmProvider()));
 });
 var sttProvider = () => process.env.DEEPGRAM_API_KEY ? "deepgram" : process.env.OPENAI_API_KEY ? "whisper" : null;
@@ -4854,13 +5323,13 @@ assistant.post("/assistant/stt", async (c) => {
 // server/routes/guide.ts
 init_client();
 init_http();
-import { Hono as Hono11 } from "hono";
-import { eq as eq15 } from "drizzle-orm";
-import { z as z11 } from "zod";
+import { Hono as Hono12 } from "hono";
+import { eq as eq17 } from "drizzle-orm";
+import { z as z12 } from "zod";
 
 // server/transport.ts
 init_client();
-import { inArray as inArray5 } from "drizzle-orm";
+import { inArray as inArray6 } from "drizzle-orm";
 var slug = (city) => city.toLowerCase().replace(/[^a-z]+/g, "-").replace(/^-|-$/g, "");
 var roadKm2 = (a, b) => {
   const r = Math.PI / 180;
@@ -4869,7 +5338,7 @@ var roadKm2 = (a, b) => {
 };
 async function intercity(from, to, date3, travellers) {
   const { db } = await getDb();
-  const ports = await db.select().from(schema_exports.airports).where(inArray5(schema_exports.airports.iata, [from, to]));
+  const ports = await db.select().from(schema_exports.airports).where(inArray6(schema_exports.airports.iata, [from, to]));
   const a = ports.find((p) => p.iata === from);
   const b = ports.find((p) => p.iata === to);
   if (!a || !b) return null;
@@ -4958,44 +5427,44 @@ function carRental(city, india) {
 
 // server/routes/guide.ts
 init_auth();
-var guide = new Hono11();
+var guide = new Hono12();
 guide.get("/destinations/:slug/guide", async (c) => {
-  const slug2 = parse(z11.string().regex(/^[a-z0-9-]{1,60}$/), c.req.param("slug"));
-  const { style: style2 } = parse(z11.object({ style: z11.enum(["shoestring", "moderate", "comfort", "luxury"]).default("moderate") }), c.req.query());
+  const slug2 = parse(z12.string().regex(/^[a-z0-9-]{1,60}$/), c.req.param("slug"));
+  const { style: style2 } = parse(z12.object({ style: z12.enum(["shoestring", "moderate", "comfort", "luxury"]).default("moderate") }), c.req.query());
   const g2 = await buildGuide(slug2, style2);
   if (!g2) throw new AppError(404, "not_found", "We could not find that destination.");
   return c.json(g2);
 });
-var point = z11.string().max(160).transform((v, ctx) => {
+var point = z12.string().max(160).transform((v, ctx) => {
   const [lat, lon, ...name] = v.split(",");
   const p = { lat: Number(lat), lon: Number(lon), name: decodeURIComponent(name.join(",") || "Pin") };
   if (!Number.isFinite(p.lat) || !Number.isFinite(p.lon) || Math.abs(p.lat) > 90 || Math.abs(p.lon) > 180) {
     ctx.addIssue({ code: "custom", message: "Use lat,lon,name." });
-    return z11.NEVER;
+    return z12.NEVER;
   }
   return p;
 });
 guide.get("/transport/options", async (c) => {
-  const q = parse(z11.object({ from: point, to: point, india: z11.enum(["0", "1"]).default("1"), travellers: z11.coerce.number().int().min(1).max(20).default(1) }), c.req.query());
+  const q = parse(z12.object({ from: point, to: point, india: z12.enum(["0", "1"]).default("1"), travellers: z12.coerce.number().int().min(1).max(20).default(1) }), c.req.query());
   return c.json({ ...rideOptions(q.from, q.to, { india: q.india === "1", travellers: q.travellers }), note: "Fares are estimates without surge or tolls. The app you open shows the real price." });
 });
 guide.get("/airports/:iata", async (c) => {
-  const iata2 = parse(z11.string().regex(/^[A-Z]{3}$/), c.req.param("iata").toUpperCase());
+  const iata2 = parse(z12.string().regex(/^[A-Z]{3}$/), c.req.param("iata").toUpperCase());
   const { db } = await getDb();
-  const [a] = await db.select({ iata: schema_exports.airports.iata, name: schema_exports.airports.name, city: schema_exports.airports.city, lat: schema_exports.airports.lat, lon: schema_exports.airports.lon }).from(schema_exports.airports).where(eq15(schema_exports.airports.iata, iata2)).limit(1);
+  const [a] = await db.select({ iata: schema_exports.airports.iata, name: schema_exports.airports.name, city: schema_exports.airports.city, lat: schema_exports.airports.lat, lon: schema_exports.airports.lon }).from(schema_exports.airports).where(eq17(schema_exports.airports.iata, iata2)).limit(1);
   if (!a) throw new AppError(404, "not_found", "Unknown airport.");
   return c.json({ airport: a });
 });
 guide.get("/transport/intercity", requireUser, async (c) => {
-  const iata2 = z11.string().trim().toUpperCase().pipe(z11.string().regex(/^[A-Z]{3}$/, "Use a 3-letter airport code."));
-  const q = parse(z11.object({ from: iata2, to: iata2, date: z11.string().regex(/^\d{4}-\d{2}-\d{2}$/), travellers: z11.coerce.number().int().min(1).max(20).default(1) }), c.req.query());
+  const iata2 = z12.string().trim().toUpperCase().pipe(z12.string().regex(/^[A-Z]{3}$/, "Use a 3-letter airport code."));
+  const q = parse(z12.object({ from: iata2, to: iata2, date: z12.string().regex(/^\d{4}-\d{2}-\d{2}$/), travellers: z12.coerce.number().int().min(1).max(20).default(1) }), c.req.query());
   if (q.from === q.to) throw new AppError(400, "invalid_input", "From and to are the same city.");
   const out = await intercity(q.from, q.to, q.date < (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) ? (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) : q.date, q.travellers);
   if (!out) throw new AppError(404, "not_found", "Unknown airport code.");
   return c.json(out);
 });
 guide.get("/transport/rentals", (c) => {
-  const { city, india } = parse(z11.object({ city: z11.string().trim().min(2).max(60), india: z11.enum(["0", "1"]).default("1") }), c.req.query());
+  const { city, india } = parse(z12.object({ city: z12.string().trim().min(2).max(60), india: z12.enum(["0", "1"]).default("1") }), c.req.query());
   return c.json({ options: carRental(city, india === "1") });
 });
 
@@ -5003,20 +5472,20 @@ guide.get("/transport/rentals", (c) => {
 init_client();
 init_http();
 init_auth();
-import { Hono as Hono12 } from "hono";
-import { eq as eq16 } from "drizzle-orm";
-import { z as z12 } from "zod";
-var budget = new Hono12();
-var style = z12.enum(["shoestring", "moderate", "comfort", "luxury"]).default("moderate");
-var iata = z12.string().trim().toUpperCase().pipe(z12.string().regex(/^[A-Z]{3}$/, "Use a 3-letter airport code."));
-var day = z12.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+import { Hono as Hono13 } from "hono";
+import { eq as eq18 } from "drizzle-orm";
+import { z as z13 } from "zod";
+var budget = new Hono13();
+var style = z13.enum(["shoestring", "moderate", "comfort", "luxury"]).default("moderate");
+var iata = z13.string().trim().toUpperCase().pipe(z13.string().regex(/^[A-Z]{3}$/, "Use a 3-letter airport code."));
+var day = z13.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 budget.get("/budget/where", async (c) => {
   const q = parse(
-    z12.object({
-      budget: z12.coerce.number().int().min(1e3).max(1e8),
+    z13.object({
+      budget: z13.coerce.number().int().min(1e3).max(1e8),
       origin: iata.default("BOM"),
-      days: z12.coerce.number().int().min(1).max(60).default(4),
-      travellers: z12.coerce.number().int().min(1).max(20).default(2),
+      days: z13.coerce.number().int().min(1).max(60).default(4),
+      travellers: z13.coerce.number().int().min(1).max(20).default(2),
       style,
       date: day.optional()
     }),
@@ -5026,7 +5495,7 @@ budget.get("/budget/where", async (c) => {
   const userId = await sessionUserId(c);
   if (userId) {
     const { db } = await getDb();
-    const [p] = await db.select({ answers: schema_exports.profiles.personaAnswers }).from(schema_exports.profiles).where(eq16(schema_exports.profiles.userId, userId)).limit(1);
+    const [p] = await db.select({ answers: schema_exports.profiles.personaAnswers }).from(schema_exports.profiles).where(eq18(schema_exports.profiles.userId, userId)).limit(1);
     persona = personaFrom(p?.answers ?? null);
   }
   const daysAhead = q.date ? Math.max(0, Math.round((Date.parse(q.date) - Date.now()) / 864e5)) : 30;
@@ -5035,19 +5504,19 @@ budget.get("/budget/where", async (c) => {
   return c.json({ ...out, budget: q.budget, note: "Estimated totals: return flights (distance model), stay, food, local travel, activities and a 5% buffer." });
 });
 budget.get("/budget/dates", async (c) => {
-  const q = parse(z12.object({ origin: iata, dest: iata, date: day, travellers: z12.coerce.number().int().min(1).max(20).default(1) }), c.req.query());
+  const q = parse(z13.object({ origin: iata, dest: iata, date: day, travellers: z13.coerce.number().int().min(1).max(20).default(1) }), c.req.query());
   const cal = await cheapestDates(q.origin, q.dest, q.date, q.travellers);
   if (!cal) throw new AppError(404, "not_found", "Unknown airport.");
   return c.json(cal);
 });
 budget.get("/budget/cuts", async (c) => {
   const q = parse(
-    z12.object({
-      slug: z12.string().regex(/^[a-z0-9-]{1,60}$/),
-      budget: z12.coerce.number().int().min(1e3),
+    z13.object({
+      slug: z13.string().regex(/^[a-z0-9-]{1,60}$/),
+      budget: z13.coerce.number().int().min(1e3),
       origin: iata.default("BOM"),
-      days: z12.coerce.number().int().min(1).max(60).default(4),
-      travellers: z12.coerce.number().int().min(1).max(20).default(2),
+      days: z13.coerce.number().int().min(1).max(60).default(4),
+      travellers: z13.coerce.number().int().min(1).max(20).default(2),
       style,
       date: day.optional()
     }),
@@ -5064,17 +5533,18 @@ init_http();
 init_auth();
 init_payments();
 init_outbound();
-import { Hono as Hono13 } from "hono";
-import { and as and10, eq as eq17, sql as sql4 } from "drizzle-orm";
+init_service();
+import { Hono as Hono14 } from "hono";
+import { and as and12, eq as eq19, sql as sql6 } from "drizzle-orm";
 import { randomBytes as randomBytes4 } from "node:crypto";
-import { z as z13 } from "zod";
+import { z as z14 } from "zod";
 
 // src/engines/loyalty.ts
 var LOYALTY_RATE = 0.03;
 var MAX_REDEEM_SHARE = 0.2;
 
 // server/routes/payments.ts
-var payments2 = new Hono13();
+var payments2 = new Hono14();
 payments2.use("/payments/checkout", requireUser);
 payments2.use("/payments/verify", requireUser);
 payments2.use("/payments/demo-pay", requireUser);
@@ -5082,25 +5552,25 @@ payments2.use("/bookings", requireUser);
 payments2.use("/bookings/*", requireUser);
 async function pointsBalance(userId) {
   const { db } = await getDb();
-  const [server] = await db.select({ spend: sql4`coalesce(sum(${schema_exports.bookings.amountInr}), 0)`, used: sql4`coalesce(sum(${schema_exports.bookings.pointsUsed}), 0)` }).from(schema_exports.bookings).where(and10(eq17(schema_exports.bookings.userId, userId), eq17(schema_exports.bookings.source, "in_app"), eq17(schema_exports.bookings.status, "confirmed")));
-  const recs = await db.select({ payload: schema_exports.userRecords.payload }).from(schema_exports.userRecords).where(and10(eq17(schema_exports.userRecords.userId, userId), eq17(schema_exports.userRecords.tbl, "bookings"), eq17(schema_exports.userRecords.deleted, false)));
+  const [server] = await db.select({ spend: sql6`coalesce(sum(${schema_exports.bookings.amountInr}), 0)`, used: sql6`coalesce(sum(${schema_exports.bookings.pointsUsed}), 0)` }).from(schema_exports.bookings).where(and12(eq19(schema_exports.bookings.userId, userId), eq19(schema_exports.bookings.source, "in_app"), eq19(schema_exports.bookings.status, "confirmed")));
+  const recs = await db.select({ payload: schema_exports.userRecords.payload }).from(schema_exports.userRecords).where(and12(eq19(schema_exports.userRecords.userId, userId), eq19(schema_exports.userRecords.tbl, "bookings"), eq19(schema_exports.userRecords.deleted, false)));
   const deviceSpend = recs.map((r) => r.payload).filter((b) => b.bookedViaApp && b.status === "confirmed" && !b.sample && !b.serverBookingId).reduce((sum, b) => sum + (b.amount ?? 0), 0);
   return Math.max(0, Math.floor((Number(server.spend) + deviceSpend) * LOYALTY_RATE) - Number(server.used));
 }
-var policy = z13.record(z13.string(), z13.unknown()).nullable().optional();
-var checkoutBody = z13.object({
-  idempotencyKey: z13.string().min(8).max(100),
-  pointsToUse: z13.number().int().min(0).default(0),
-  booking: z13.object({
-    clientId: z13.string().min(1).max(100),
-    tripId: z13.string().max(100).nullable().optional(),
-    kind: z13.enum(["flight", "hotel", "experience", "transport"]),
-    title: z13.string().trim().min(1).max(160),
-    amountInr: z13.number().int().min(1).max(1e7),
-    startsAt: z13.string().datetime({ offset: true }).nullable().optional(),
-    pnr: z13.string().max(40).nullable().optional(),
-    provider: z13.string().max(60).nullable().optional(),
-    details: z13.record(z13.string(), z13.unknown()).nullable().optional(),
+var policy = z14.record(z14.string(), z14.unknown()).nullable().optional();
+var checkoutBody = z14.object({
+  idempotencyKey: z14.string().min(8).max(100),
+  pointsToUse: z14.number().int().min(0).default(0),
+  booking: z14.object({
+    clientId: z14.string().min(1).max(100),
+    tripId: z14.string().max(100).nullable().optional(),
+    kind: z14.enum(["flight", "hotel", "experience", "transport"]),
+    title: z14.string().trim().min(1).max(160),
+    amountInr: z14.number().int().min(1).max(1e7),
+    startsAt: z14.string().datetime({ offset: true }).nullable().optional(),
+    pnr: z14.string().max(40).nullable().optional(),
+    provider: z14.string().max(60).nullable().optional(),
+    details: z14.record(z14.string(), z14.unknown()).nullable().optional(),
     cancellationPolicy: policy
   })
 });
@@ -5108,7 +5578,7 @@ payments2.post("/payments/checkout", async (c) => {
   const body = await jsonBody(c, checkoutBody);
   const userId = c.get("userId");
   const { db } = await getDb();
-  const [again] = await db.select().from(schema_exports.payments).where(eq17(schema_exports.payments.idempotencyKey, body.idempotencyKey)).limit(1);
+  const [again] = await db.select().from(schema_exports.payments).where(eq19(schema_exports.payments.idempotencyKey, body.idempotencyKey)).limit(1);
   const provider = paymentProvider();
   if (again) {
     if (again.userId !== userId) throw new AppError(409, "key_taken", "Try again.");
@@ -5118,7 +5588,7 @@ payments2.post("/payments/checkout", async (c) => {
   const balance = await pointsBalance(userId);
   if (body.pointsToUse > Math.min(cap, balance)) throw new AppError(400, "invalid_input", `You can use up to ${Math.min(cap, balance)} points on this booking.`, { pointsToUse: "Too many points." });
   const payable = body.booking.amountInr - body.pointsToUse;
-  const [trip] = body.booking.tripId ? await db.select({ id: schema_exports.trips.id }).from(schema_exports.trips).where(and10(eq17(schema_exports.trips.id, body.booking.tripId), eq17(schema_exports.trips.userId, userId))).limit(1) : [];
+  const [trip] = body.booking.tripId ? await db.select({ id: schema_exports.trips.id }).from(schema_exports.trips).where(and12(eq19(schema_exports.trips.id, body.booking.tripId), eq19(schema_exports.trips.userId, userId))).limit(1) : [];
   const [booking] = await db.insert(schema_exports.bookings).values({
     userId,
     tripId: trip?.id ?? null,
@@ -5138,23 +5608,38 @@ payments2.post("/payments/checkout", async (c) => {
   if (booking.userId !== userId) throw new AppError(409, "id_taken", "That booking belongs to someone else.");
   const order = await provider.createOrder(payable * 100, booking.id);
   const [payment] = await db.insert(schema_exports.payments).values({ userId, bookingId: booking.id, provider: provider.name, providerOrderId: order.orderId, amountInr: payable, idempotencyKey: body.idempotencyKey }).returning();
-  await db.update(schema_exports.bookings).set({ paymentId: payment.id, paymentStatus: "created" }).where(eq17(schema_exports.bookings.id, booking.id));
+  await db.update(schema_exports.bookings).set({ paymentId: payment.id, paymentStatus: "created" }).where(eq19(schema_exports.bookings.id, booking.id));
   await db.insert(schema_exports.paymentEvents).values({ paymentId: payment.id, type: "order.created", payload: { orderId: order.orderId, amountInr: payable } });
   return c.json({ provider: provider.name, publicKey: provider.publicKey, orderId: order.orderId, amountInr: payable, bookingId: booking.id, paymentId: payment.id });
 });
+function scheduleBookingNotifications(b) {
+  const link = b.tripId ? `/trips/${b.tripId}/bookings/${b.clientId ?? b.id}` : null;
+  void notifySafe({ userId: b.userId, tripId: b.tripId, kind: "booking_confirmed", title: "Booking confirmed", body: `${b.title ?? "Your booking"} is confirmed. Receipt saved in the app.`, dedupeKey: `booking:${b.id}:confirmed`, link });
+  const free = b.cancellationPolicy?.freeCancelUntil;
+  const freeAt = free ? new Date(free) : null;
+  if (freeAt && !Number.isNaN(freeAt.getTime())) {
+    const due = new Date(Math.max(Date.now(), freeAt.getTime() - 24 * 36e5));
+    if (freeAt.getTime() > Date.now()) void notifySafe({ userId: b.userId, tripId: b.tripId, kind: "cancel_deadline", title: "Free cancellation ends soon", body: `Free cancellation for ${b.title ?? "your booking"} ends ${freeAt.toUTCString().slice(0, 22)} UTC.`, dedupeKey: `booking:${b.id}:freecancel`, dueAt: due, link });
+  }
+  if (b.kind === "flight" && b.startsAt && b.startsAt.getTime() > Date.now() + 3 * 36e5) {
+    const leaveBy = new Date(b.startsAt.getTime() - 3 * 36e5);
+    void notifySafe({ userId: b.userId, tripId: b.tripId, kind: "leave_by", title: "Time to leave for the airport", body: `Leave by ${leaveBy.toISOString().slice(11, 16)} UTC for ${b.title ?? "your flight"}.`, dedupeKey: `booking:${b.id}:leaveby`, critical: true, dueAt: new Date(leaveBy.getTime() - 60 * 6e4), leaveBy, link });
+  }
+}
 async function markPaid(orderId, providerPaymentId, method, eventId) {
   const { db } = await getDb();
-  const [p] = await db.select().from(schema_exports.payments).where(eq17(schema_exports.payments.providerOrderId, orderId)).limit(1);
+  const [p] = await db.select().from(schema_exports.payments).where(eq19(schema_exports.payments.providerOrderId, orderId)).limit(1);
   if (!p) throw new AppError(404, "not_found", "Unknown order.");
   if (eventId) {
     const inserted = await db.insert(schema_exports.paymentEvents).values({ paymentId: p.id, providerEventId: eventId, type: "payment.captured", payload: { providerPaymentId } }).onConflictDoNothing().returning();
     if (!inserted.length) return p;
   }
   if (p.status === "paid") return p;
-  await db.update(schema_exports.payments).set({ status: "paid", providerPaymentId, method, updatedAt: /* @__PURE__ */ new Date() }).where(eq17(schema_exports.payments.id, p.id));
+  await db.update(schema_exports.payments).set({ status: "paid", providerPaymentId, method, updatedAt: /* @__PURE__ */ new Date() }).where(eq19(schema_exports.payments.id, p.id));
   if (p.bookingId) {
-    const [b] = await db.update(schema_exports.bookings).set({ status: "confirmed", paymentStatus: "paid", providerRef: providerPaymentId }).where(eq17(schema_exports.bookings.id, p.bookingId)).returning();
-    const [u] = await db.select({ email: schema_exports.users.email, name: schema_exports.profiles.name }).from(schema_exports.users).leftJoin(schema_exports.profiles, eq17(schema_exports.profiles.userId, schema_exports.users.id)).where(eq17(schema_exports.users.id, p.userId)).limit(1);
+    const [b] = await db.update(schema_exports.bookings).set({ status: "confirmed", paymentStatus: "paid", providerRef: providerPaymentId }).where(eq19(schema_exports.bookings.id, p.bookingId)).returning();
+    void scheduleBookingNotifications(b);
+    const [u] = await db.select({ email: schema_exports.users.email, name: schema_exports.profiles.name }).from(schema_exports.users).leftJoin(schema_exports.profiles, eq19(schema_exports.profiles.userId, schema_exports.users.id)).where(eq19(schema_exports.users.id, p.userId)).limit(1);
     if (u?.email) {
       await sendOutbound({
         userId: p.userId,
@@ -5178,26 +5663,26 @@ Voyage`,
   return p;
 }
 payments2.post("/payments/verify", async (c) => {
-  const body = await jsonBody(c, z13.object({ orderId: z13.string().max(80), paymentId: z13.string().max(80), signature: z13.string().max(200), method: z13.string().max(30).optional() }));
+  const body = await jsonBody(c, z14.object({ orderId: z14.string().max(80), paymentId: z14.string().max(80), signature: z14.string().max(200), method: z14.string().max(30).optional() }));
   const { db } = await getDb();
-  const [p] = await db.select().from(schema_exports.payments).where(and10(eq17(schema_exports.payments.providerOrderId, body.orderId), eq17(schema_exports.payments.userId, c.get("userId")))).limit(1);
+  const [p] = await db.select().from(schema_exports.payments).where(and12(eq19(schema_exports.payments.providerOrderId, body.orderId), eq19(schema_exports.payments.userId, c.get("userId")))).limit(1);
   if (!p) throw new AppError(404, "not_found", "Unknown order.");
   if (!paymentProvider().verifyPayment(body.orderId, body.paymentId, body.signature)) {
     await db.insert(schema_exports.paymentEvents).values({ paymentId: p.id, type: "signature.invalid", payload: { paymentId: body.paymentId } });
     throw new AppError(400, "bad_signature", "Payment could not be verified. You were not charged by Voyage.");
   }
   await markPaid(body.orderId, body.paymentId, body.method ?? null, null);
-  const [b] = await db.select().from(schema_exports.bookings).where(eq17(schema_exports.bookings.id, p.bookingId)).limit(1);
+  const [b] = await db.select().from(schema_exports.bookings).where(eq19(schema_exports.bookings.id, p.bookingId)).limit(1);
   return c.json({ booking: b });
 });
 payments2.post("/payments/demo-pay", async (c) => {
   if (paymentProvider().name !== "mock") throw new AppError(400, "not_demo", "Demo payments are off: Razorpay is configured.");
-  const body = await jsonBody(c, z13.object({ orderId: z13.string().max(80), outcome: z13.enum(["success", "failure"]), method: z13.enum(["card", "upi", "netbanking"]).default("upi") }));
+  const body = await jsonBody(c, z14.object({ orderId: z14.string().max(80), outcome: z14.enum(["success", "failure"]), method: z14.enum(["card", "upi", "netbanking"]).default("upi") }));
   const { db } = await getDb();
-  const [p] = await db.select().from(schema_exports.payments).where(and10(eq17(schema_exports.payments.providerOrderId, body.orderId), eq17(schema_exports.payments.userId, c.get("userId")))).limit(1);
+  const [p] = await db.select().from(schema_exports.payments).where(and12(eq19(schema_exports.payments.providerOrderId, body.orderId), eq19(schema_exports.payments.userId, c.get("userId")))).limit(1);
   if (!p) throw new AppError(404, "not_found", "Unknown order.");
   if (body.outcome === "failure") {
-    await db.update(schema_exports.payments).set({ status: "failed", updatedAt: /* @__PURE__ */ new Date() }).where(eq17(schema_exports.payments.id, p.id));
+    await db.update(schema_exports.payments).set({ status: "failed", updatedAt: /* @__PURE__ */ new Date() }).where(eq19(schema_exports.payments.id, p.id));
     await db.insert(schema_exports.paymentEvents).values({ paymentId: p.id, type: "payment.failed", payload: { reason: "demo decline" } });
     return c.json({ ok: false, message: "Payment declined (demo). Nothing was charged." });
   }
@@ -5216,7 +5701,7 @@ payments2.post("/payments/webhook", async (c) => {
     await markPaid(e.order_id, e.id, e.method ?? null, eventId);
   } else if ((evt.event === "refund.processed" || evt.event === "refund.failed") && evt.payload?.refund?.entity) {
     const r = evt.payload.refund.entity;
-    const [req] = await db.select().from(schema_exports.cancellationRequests).where(eq17(schema_exports.cancellationRequests.providerRef, r.id)).limit(1);
+    const [req] = await db.select().from(schema_exports.cancellationRequests).where(eq19(schema_exports.cancellationRequests.providerRef, r.id)).limit(1);
     if (eventId) {
       const fresh = await db.insert(schema_exports.paymentEvents).values({ providerEventId: eventId, type: evt.event, payload: r }).onConflictDoNothing().returning();
       if (!fresh.length) return c.json({ ok: true, duplicate: true });
@@ -5230,15 +5715,15 @@ payments2.post("/payments/webhook", async (c) => {
 });
 payments2.get("/bookings", async (c) => {
   const { db } = await getDb();
-  const rows = await db.select().from(schema_exports.bookings).where(eq17(schema_exports.bookings.userId, c.get("userId")));
+  const rows = await db.select().from(schema_exports.bookings).where(eq19(schema_exports.bookings.userId, c.get("userId")));
   return c.json({ bookings: rows });
 });
 payments2.get("/bookings/:id/receipt", async (c) => {
-  const id = parse(z13.string().uuid(), c.req.param("id"));
+  const id2 = parse(z14.string().uuid(), c.req.param("id"));
   const { db } = await getDb();
-  const [b] = await db.select().from(schema_exports.bookings).where(and10(eq17(schema_exports.bookings.id, id), eq17(schema_exports.bookings.userId, c.get("userId")))).limit(1);
+  const [b] = await db.select().from(schema_exports.bookings).where(and12(eq19(schema_exports.bookings.id, id2), eq19(schema_exports.bookings.userId, c.get("userId")))).limit(1);
   if (!b || b.status === "pending") throw new AppError(404, "not_found", "No receipt for that booking.");
-  const [p] = b.paymentId ? await db.select().from(schema_exports.payments).where(eq17(schema_exports.payments.id, b.paymentId)).limit(1) : [];
+  const [p] = b.paymentId ? await db.select().from(schema_exports.payments).where(eq19(schema_exports.payments.id, b.paymentId)).limit(1) : [];
   const pdf = textPdf([
     { text: "Voyage - Receipt", size: 20, bold: true },
     { text: p?.provider === "mock" ? "TEST MODE (demo payment, no money moved)" : "Razorpay test mode", size: 10, gap: 4 },
@@ -5330,7 +5815,7 @@ function parseItems(items) {
   const ok = items.every(
     (i) => i && typeof i.id === "string" && i.id.length <= 60 && typeof i.text === "string" && i.text.length > 0 && i.text.length <= MAX_TEXT
   );
-  return ok ? items.map(({ id, text: text2 }) => ({ id, text: text2 })) : null;
+  return ok ? items.map(({ id: id2, text: text2 }) => ({ id: id2, text: text2 })) : null;
 }
 function parse2(body) {
   if (!body || typeof body !== "object") return null;
@@ -5382,7 +5867,7 @@ async function groq(env, system, user, maxTokens) {
 function guardItems(asked, content) {
   const byId = new Map(asked.map((i) => [i.id, i.text]));
   const parsed = JSON.parse(content);
-  return (parsed.items ?? []).filter((r) => r && typeof r.text === "string" && byId.has(r.id) && r.text.length <= MAX_TEXT * 2 && keepsNumbers(byId.get(r.id), r.text)).map(({ id, text: text2 }) => ({ id, text: text2.trim() }));
+  return (parsed.items ?? []).filter((r) => r && typeof r.text === "string" && byId.has(r.id) && r.text.length <= MAX_TEXT * 2 && keepsNumbers(byId.get(r.id), r.text)).map(({ id: id2, text: text2 }) => ({ id: id2, text: text2.trim() }));
 }
 async function handleAi(body, env) {
   const req = parse2(body);
@@ -5407,7 +5892,7 @@ async function handleAi(body, env) {
 }
 
 // server/app.ts
-var app = new Hono14().basePath("/api");
+var app = new Hono15().basePath("/api");
 app.use("*", secureHeaders());
 app.use("*", async (c, next) => {
   c.header("cache-control", "no-store");
@@ -5483,6 +5968,10 @@ app.route("/", assistant);
 app.use("/sync/*", rateLimit("sync", 300, 6e4));
 app.use("/trips/*", rateLimit("trips", 120, 6e4));
 app.route("/", trips2);
+app.use("/notifications/*", rateLimit("notifications", 120, 6e4));
+app.use("/cron/*", rateLimit("cron", 10, 6e4));
+app.route("/", notifications2);
+startDevScheduler();
 app.post("/ai", rateLimit("ai", 30, 6e4), async (c) => {
   let body = null;
   try {

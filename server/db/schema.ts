@@ -624,3 +624,68 @@ export const userRecords = pgTable(
   },
   (t) => [primaryKey({ columns: [t.userId, t.tbl, t.recordId] })],
 );
+
+// ---------- Notifications (section 10) ----------
+
+/** Per-user consent and limits. Every channel is off until the user opts in (in-app is always on). */
+export const notificationPrefs = pgTable('notification_prefs', {
+  userId: uuid('user_id')
+    .primaryKey()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  channels: jsonb('channels').notNull().default({}), // { push, email, sms, whatsapp, voice: boolean }
+  phone: text('phone'),
+  email: text('email'),
+  timezone: text('timezone').notNull().default('Asia/Kolkata'),
+  quietStart: integer('quiet_start').notNull().default(1320), // minutes after local midnight (22:00)
+  quietEnd: integer('quiet_end').notNull().default(420), // 07:00
+  dailyCapInr: integer('daily_cap_inr').notNull().default(20),
+  smsStopped: boolean('sms_stopped').notNull().default(false), // replied STOP
+  updatedAt: updated(),
+});
+
+/** One notification; critical ones escalate until acknowledged. Times are UTC. */
+export const notifications = pgTable(
+  'notifications',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    tripId: text('trip_id'),
+    kind: text('kind').notNull(), // booking_confirmed | flight_status | cancel_deadline | refund_update | itinerary_change | packing_reminder | leave_by
+    title: text('title').notNull(),
+    body: text('body').notNull(),
+    link: text('link'),
+    critical: boolean('critical').notNull().default(false),
+    dedupeKey: text('dedupe_key').notNull().unique(), // idempotency: the same event is scheduled once
+    dueAt: timestamp('due_at', { withTimezone: true }).notNull(),
+    leaveBy: timestamp('leave_by', { withTimezone: true }),
+    status: text('status').notNull().default('scheduled'), // scheduled | escalating | delivered | acknowledged | stopped
+    step: integer('step').notNull().default(0),
+    nextAt: timestamp('next_at', { withTimezone: true }),
+    callAttempts: integer('call_attempts').notNull().default(0),
+    fast: boolean('fast').notNull().default(false), // demo: one-minute windows
+    readAt: timestamp('read_at', { withTimezone: true }),
+    ackAt: timestamp('ack_at', { withTimezone: true }),
+    createdAt: created(),
+  },
+  (t) => [index('notifications_due_idx').on(t.status, t.nextAt), index('notifications_user_idx').on(t.userId, t.dueAt)],
+);
+
+/** User-visible timeline of every delivery step. Phone numbers are masked; no message bodies. */
+export const notificationEvents = pgTable(
+  'notification_events',
+  {
+    id: serial('id').primaryKey(),
+    notificationId: uuid('notification_id')
+      .notNull()
+      .references(() => notifications.id, { onDelete: 'cascade' }),
+    step: integer('step').notNull().default(0),
+    channel: text('channel'),
+    action: text('action').notNull(), // sent | dry_run | skipped_consent | skipped_quiet | skipped_cap | escalated | acknowledged | stopped | failed
+    detail: text('detail'),
+    costInr: real('cost_inr').notNull().default(0),
+    at: timestamp('at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('notification_events_n_idx').on(t.notificationId)],
+);

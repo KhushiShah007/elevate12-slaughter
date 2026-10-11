@@ -54,6 +54,7 @@ export default function Me() {
 
         <section className="divide-y divide-line rounded-lg border border-line bg-paper">
           {[
+            ['/notifications', 'Notifications and reminders'],
             ['/refunds', 'Refunds and cancellations'],
             ['/outbox', 'Outbox (emails and messages)'],
           ].map(([to, label]) => (

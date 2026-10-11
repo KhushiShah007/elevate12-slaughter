@@ -1,9 +1,23 @@
 {
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api" },
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
+    {
+      "source": "/api/(.*)",
+      "destination": "/api"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
+    }
   ],
   "functions": {
-    "api/index.js": { "includeFiles": "server/{db/migrations,seed/data}/**" }
-  }
+    "api/index.js": {
+      "includeFiles": "server/{db/migrations,seed/data}/**"
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/tick",
+      "schedule": "0 3 * * *"
+    }
+  ]
 }

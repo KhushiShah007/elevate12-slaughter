@@ -7,6 +7,8 @@ import { errorBody, rateLimit } from './http';
 import { catalog } from './routes/catalog';
 import { auth } from './routes/auth';
 import { trips } from './routes/trips';
+import { notifications } from './routes/notifications';
+import { startDevScheduler } from './notify/service';
 import { live } from './routes/live';
 import { flights } from './routes/flights';
 import { hotels } from './routes/hotels';
@@ -118,6 +120,10 @@ app.route('/', assistant);
 app.use('/sync/*', rateLimit('sync', 300, 60_000));
 app.use('/trips/*', rateLimit('trips', 120, 60_000));
 app.route('/', trips);
+app.use('/notifications/*', rateLimit('notifications', 120, 60_000));
+app.use('/cron/*', rateLimit('cron', 10, 60_000));
+app.route('/', notifications);
+startDevScheduler();
 
 // AI wording, translation and intent (short, guarded tasks).
 app.post('/ai', rateLimit('ai', 30, 60_000), async (c) => {

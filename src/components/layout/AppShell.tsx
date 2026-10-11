@@ -8,6 +8,8 @@ import { WifiOff } from 'lucide-react';
 import { useT } from '../../i18n';
 
 /** Phone-width column with the top bar (points pill) and bottom nav. */
+import { AckStrip } from './AckStrip';
+
 export function AppShell() {
   const { pathname } = useLocation();
   const online = useOnline();
@@ -30,6 +32,7 @@ export function AppShell() {
           {t('common.offlineBanner')}
         </div>
       )}
+      <AckStrip />
       <main>
         <Outlet />
       </main>

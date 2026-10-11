@@ -21,6 +21,12 @@ Paste these in **Vercel → Project → Settings → Environment Variables**. Ne
 | `XAI_API_KEY` | Grok key; without it the assistant uses its rule-based answers. |
 | `XAI_MODEL` | `grok-3-mini` |
 
+## Recommended for notifications
+
+| Variable | Value |
+|---|---|
+| `CRON_SECRET` | Any long random string. Vercel Cron sends it to `/api/cron/tick` (daily on the Hobby plan; the open app also delivers due reminders every 30 s). |
+
 ## Optional (each feature falls back to demo/open data without it)
 
 | Variable | Unlocks |
