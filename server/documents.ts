@@ -139,3 +139,12 @@ export function maskIdNumber(kind: IdKind, raw: string): { masked: string } | { 
       return { masked: `${'X'.repeat(Math.max(0, v.length - 4))}${v.slice(-4)}` };
   }
 }
+
+/**
+ * A masked copy must not carry a text layer (the masked PDFs Voyage makes are page images).
+ * Conservative: any font, compressed object stream or form layer means text could be hiding.
+ */
+export function pdfHasTextLayer(buf: Buffer) {
+  const s = buf.toString('latin1');
+  return /\/Font\b|\/ObjStm\b|\/XFA\b|\/AcroForm\b|\/Type0\b|\/ToUnicode\b/.test(s);
+}

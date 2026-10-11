@@ -531,6 +531,8 @@ export const verificationDocuments = pgTable('verification_documents', {
   status: text('status').notNull().default('pending'), // pending | verified | rejected
   maskedNumber: text('masked_number'), // e.g. XXXX XXXX 4417; never the full number
   extracted: jsonb('extracted').$type<Record<string, unknown>>(),
+  maskStatus: text('mask_status').notNull().default('none'), // none | masked | nothing_found
+  originalDeleted: boolean('original_deleted').notNull().default(false),
   createdAt: created(),
   updatedAt: updated(),
 });
@@ -689,3 +691,19 @@ export const notificationEvents = pgTable(
   },
   (t) => [index('notification_events_n_idx').on(t.notificationId)],
 );
+
+// ---------- Document masking (section 11) ----------
+
+/** The masked copy of a document (sensitive fields burnt out), encrypted like the original. */
+export const documentMaskedBlobs = pgTable('document_masked_blobs', {
+  docId: uuid('doc_id')
+    .primaryKey()
+    .references(() => verificationDocuments.id, { onDelete: 'cascade' }),
+  mime: text('mime').notNull(),
+  sizeBytes: integer('size_bytes').notNull(),
+  summary: jsonb('summary'), // counts by field type only, never values
+  iv: bytea('iv').notNull(),
+  tag: bytea('tag').notNull(),
+  data: bytea('data').notNull(),
+  createdAt: created(),
+});

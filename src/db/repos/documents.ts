@@ -67,6 +67,8 @@ export interface RemoteDocument {
   mime: string;
   sizeBytes: number;
   createdAt: string;
+  maskStatus?: 'none' | 'masked' | 'nothing_found';
+  originalDeleted?: boolean;
 }
 
 export interface UploadFields {
@@ -91,13 +93,19 @@ const toLocal = (d: RemoteDocument, offline = false): TravelDocument => ({
   offline,
   remote: true,
   mime: d.mime,
+  maskStatus: d.maskStatus ?? 'none',
+  originalDeleted: d.originalDeleted ?? false,
 });
 
 /** Upload a file to the account. Throws ApiError (with field messages) on failure. */
-export async function uploadDocument(fields: UploadFields, file: Blob, filename: string): Promise<TravelDocument> {
+export async function uploadDocument(fields: UploadFields, file: Blob, filename: string, masked?: { blob: Blob; mime: string; summary: Record<string, number> }): Promise<TravelDocument> {
   if (!navigator.onLine) throw new ApiError(0, 'offline', 'You are offline. Connect to upload documents.');
   const form = new FormData();
   form.set('file', file, filename);
+  if (masked) {
+    form.set('masked', masked.blob, masked.mime === 'application/pdf' ? 'masked.pdf' : 'masked.jpg');
+    form.set('maskSummary', JSON.stringify(masked.summary));
+  }
   for (const [k, v] of Object.entries(fields)) if (v) form.set(k, v);
   let res: Response;
   try {
@@ -131,11 +139,30 @@ export async function syncRemoteDocuments() {
 }
 
 /** A URL to show the file: the offline copy if there is one, otherwise a 5-minute signed link. */
-export async function openRemoteDocument(doc: TravelDocument): Promise<{ url: string; local: boolean }> {
-  const copy = await db.files.get(`${doc.id}:original`);
-  if (copy) return { url: URL.createObjectURL(copy.blob), local: true };
-  const { url } = await api<{ url: string }>('POST', `/documents/${doc.id}/link`);
-  return { url, local: false };
+export async function openRemoteDocument(doc: TravelDocument, variant: 'auto' | 'masked' | 'original' = 'auto'): Promise<{ url: string; local: boolean; mime?: string }> {
+  const copy = variant === 'auto' ? await db.files.get(`${doc.id}:original`) : undefined;
+  if (copy) return { url: URL.createObjectURL(copy.blob), local: true, mime: copy.blob.type || doc.mime };
+  const { url, mime } = await api<{ url: string; mime: string }>('POST', `/documents/${doc.id}/link?v=${variant}`);
+  return { url, local: false, mime };
+}
+
+/** Upload (or replace) the masked copy of a stored document. */
+export async function uploadMasked(doc: TravelDocument, masked: { blob: Blob; mime: string; summary: Record<string, number> }) {
+  const form = new FormData();
+  form.set('masked', masked.blob, masked.mime === 'application/pdf' ? 'masked.pdf' : 'masked.jpg');
+  form.set('maskSummary', JSON.stringify(masked.summary));
+  const res = await fetch(`/api/documents/${doc.id}/masked`, { method: 'POST', body: form, credentials: 'same-origin' }).catch(() => null);
+  const data = (await res?.json().catch(() => null)) as { document?: RemoteDocument; error?: { code: string; message: string } } | null;
+  if (!res?.ok || !data?.document) throw new ApiError(res?.status ?? 0, data?.error?.code ?? 'server_error', data?.error?.message ?? 'Could not save the masked copy.');
+  // The offline copy (if any) was the unmasked file: replace it with nothing; reopen downloads the masked one.
+  await db.files.delete(`${doc.id}:original`);
+  await db.documents.put({ ...toLocal(data.document), offline: false });
+}
+
+/** Erase the original on the server, keeping only the masked copy. */
+export async function deleteOriginal(doc: TravelDocument) {
+  const { document } = await api<{ document: RemoteDocument }>('DELETE', `/documents/${doc.id}/original`);
+  await db.documents.put({ ...toLocal(document), offline: doc.offline });
 }
 
 /** Keep (or drop) a copy of an account document on this phone, so it opens with no internet. */

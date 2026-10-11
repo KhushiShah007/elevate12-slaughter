@@ -95,6 +95,9 @@ export interface TravelDocument {
   /** Stored (encrypted) on the account; opened through a short-lived link. */
   remote?: boolean;
   mime?: string;
+  /** Sensitive details burnt out of a stored copy (section 11). */
+  maskStatus?: 'none' | 'masked' | 'nothing_found';
+  originalDeleted?: boolean;
   rev?: number;
 }
 

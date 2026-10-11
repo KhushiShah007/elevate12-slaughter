@@ -57,6 +57,13 @@
       "when": 1791677679946,
       "tag": "0007_notifications",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791678256336,
+      "tag": "0008_document_masking",
+      "breakpoints": true
     }
   ]
 }

@@ -9,6 +9,8 @@ import { useAuth } from '../../state/auth';
 import { useOnline } from '../../hooks/useOnline';
 import { uploadDocument } from '../../db/repos/documents';
 import { ApiError } from '../../api/client';
+import { MaskEditor, type MaskResult } from '../../components/wallet/MaskEditor';
+import { Toggle } from '../../components/ui/Toggle';
 import type { DocumentKind } from '../../types';
 
 const kinds: { value: DocumentKind; label: string }[] = [
@@ -28,6 +30,8 @@ const idTypes = [
 ];
 const MAX = 4 * 1024 * 1024;
 
+const sniff = (f: File) => (f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : f.type || 'image/jpeg');
+
 export default function AddDocument() {
   const navigate = useNavigate();
   const online = useOnline();
@@ -42,6 +46,10 @@ export default function AddDocument() {
   const [expires, setExpires] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);
+  const [maskOn, setMaskOn] = useState(true);
+  const [masked, setMasked] = useState<MaskResult | null>(null);
+  const [editing, setEditing] = useState(false);
+  const maskable = kind === 'passport' || kind === 'id' || kind === 'visa';
 
   const needsNumber = kind === 'passport' || kind === 'id';
   const label = kinds.find((k) => k.value === kind)!.label;
@@ -63,6 +71,7 @@ export default function AddDocument() {
         },
         file,
         file.name,
+        maskable && maskOn ? (masked ?? undefined) : undefined,
       );
       navigate(`/wallet/${doc.id}`, { replace: true });
     } catch (err) {
@@ -88,7 +97,17 @@ export default function AddDocument() {
             <span className="block text-xs text-muted">{file ? `${(file.size / 1024 / 1024).toFixed(1)} MB` : 'Up to 4 MB. Take a photo or pick a file.'}</span>
           </span>
         </button>
-        <input ref={input} type="file" accept="application/pdf,image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+        <input
+          ref={input}
+          type="file"
+          accept="application/pdf,image/jpeg,image/png,image/webp"
+          className="hidden"
+          onChange={(e) => {
+            setFile(e.target.files?.[0] ?? null);
+            setMasked(null);
+            setEditing(true);
+          }}
+        />
         {fileError && <p className="-mt-3 text-sm text-bad">{fileError}</p>}
 
         <div>
@@ -141,13 +160,38 @@ export default function AddDocument() {
         )}
         <Input label="Valid until (optional)" icon={<CalendarDays size={18} />} type="date" value={expires} onChange={(e) => setExpires(e.target.value)} />
 
+        {file && maskable && !fileError && (
+          <section className="space-y-3 rounded-lg border border-line bg-paper p-4">
+            <Toggle checked={maskOn} onChange={setMaskOn} label="Hide ID numbers, birth date and address (recommended)" />
+            <p className="text-xs text-muted">The masked copy is what you see and share. The original is kept encrypted, and you can delete it later.</p>
+            {maskOn &&
+              (masked && !editing ? (
+                <p className="flex items-center justify-between text-sm text-ink">
+                  <span>Masked copy ready ✓</span>
+                  <button type="button" className="text-sm underline underline-offset-4" onClick={() => setEditing(true)}>
+                    Review
+                  </button>
+                </p>
+              ) : (
+                <MaskEditor
+                  file={file}
+                  mime={sniff(file)}
+                  onDone={(r) => {
+                    setMasked(r);
+                    setEditing(false);
+                  }}
+                />
+              ))}
+          </section>
+        )}
+
         {!online && (
           <Chip tone="warn" dot>
             Uploading needs internet. Scan to PDF works offline.
           </Chip>
         )}
         {error && !Object.keys(error.fields).length && <p className="text-sm text-bad">{error.message}</p>}
-        <PillButton full disabled={!file || !!fileError || busy || !online} onClick={() => void save()}>
+        <PillButton full disabled={!file || !!fileError || busy || !online || (maskable && maskOn && !masked)} onClick={() => void save()}>
           {busy ? 'Encrypting and uploading…' : 'Save to my account'}
         </PillButton>
       </div>

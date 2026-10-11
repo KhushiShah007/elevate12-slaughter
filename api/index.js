@@ -25,6 +25,7 @@ __export(schema_exports, {
   destinationCostIndex: () => destinationCostIndex,
   destinations: () => destinations,
   documentBlobs: () => documentBlobs,
+  documentMaskedBlobs: () => documentMaskedBlobs,
   flightsCache: () => flightsCache,
   hotelsCache: () => hotelsCache,
   itineraries: () => itineraries,
@@ -70,7 +71,7 @@ import {
   uniqueIndex,
   uuid
 } from "drizzle-orm/pg-core";
-var bytea, created, updated, provenance, users, profiles, sessions, passwordResets, otpCodes, airports, airlines, routes, destinations, destinationCostIndex, placeColumns, attractions, restaurants, hotelsCache, flightsCache, trips, tripDrafts, tripItems, bookings, payments, paymentEvents, cancellationRequests, refundQuotes, refundEvents, outboundMessages, providerContacts, creditShells, itineraries, itineraryVersions, savedPlaces, verificationDocuments, documentBlobs, chatConversations, chatMessages, airlineReviews, airlineSentimentScores, syncReceipts, userRecords, notificationPrefs, notifications, notificationEvents;
+var bytea, created, updated, provenance, users, profiles, sessions, passwordResets, otpCodes, airports, airlines, routes, destinations, destinationCostIndex, placeColumns, attractions, restaurants, hotelsCache, flightsCache, trips, tripDrafts, tripItems, bookings, payments, paymentEvents, cancellationRequests, refundQuotes, refundEvents, outboundMessages, providerContacts, creditShells, itineraries, itineraryVersions, savedPlaces, verificationDocuments, documentBlobs, chatConversations, chatMessages, airlineReviews, airlineSentimentScores, syncReceipts, userRecords, notificationPrefs, notifications, notificationEvents, documentMaskedBlobs;
 var init_schema = __esm({
   "server/db/schema.ts"() {
     "use strict";
@@ -534,6 +535,9 @@ var init_schema = __esm({
       maskedNumber: text("masked_number"),
       // e.g. XXXX XXXX 4417; never the full number
       extracted: jsonb("extracted").$type(),
+      maskStatus: text("mask_status").notNull().default("none"),
+      // none | masked | nothing_found
+      originalDeleted: boolean("original_deleted").notNull().default(false),
       createdAt: created(),
       updatedAt: updated()
     });
@@ -663,6 +667,17 @@ var init_schema = __esm({
       },
       (t2) => [index("notification_events_n_idx").on(t2.notificationId)]
     );
+    documentMaskedBlobs = pgTable("document_masked_blobs", {
+      docId: uuid("doc_id").primaryKey().references(() => verificationDocuments.id, { onDelete: "cascade" }),
+      mime: text("mime").notNull(),
+      sizeBytes: integer("size_bytes").notNull(),
+      summary: jsonb("summary"),
+      // counts by field type only, never values
+      iv: bytea("iv").notNull(),
+      tag: bytea("tag").notNull(),
+      data: bytea("data").notNull(),
+      createdAt: created()
+    });
   }
 });
 
@@ -3563,6 +3578,10 @@ function maskIdNumber(kind, raw) {
       return { masked: `${"X".repeat(Math.max(0, v.length - 4))}${v.slice(-4)}` };
   }
 }
+function pdfHasTextLayer(buf) {
+  const s = buf.toString("latin1");
+  return /\/Font\b|\/ObjStm\b|\/XFA\b|\/AcroForm\b|\/Type0\b|\/ToUnicode\b/.test(s);
+}
 
 // server/routes/documents.ts
 var documents = new Hono8();
@@ -3588,8 +3607,30 @@ var view = (d) => ({
   maskedNumber: d.maskedNumber,
   mime: d.mime,
   sizeBytes: d.sizeBytes,
-  createdAt: d.createdAt
+  createdAt: d.createdAt,
+  maskStatus: d.maskStatus,
+  originalDeleted: d.originalDeleted
 });
+var KINDS = ["aadhaar", "pan", "passport", "driving_licence", "dob", "address", "mrz", "manual"];
+var summarySchema = z8.record(z8.enum(KINDS), z8.number().int().min(0).max(500));
+async function maskedValues(file, summaryRaw) {
+  if (!(file instanceof File)) throw new AppError(400, "invalid_input", "Missing the masked copy.");
+  if (file.size > MAX_BYTES) throw new AppError(413, "too_large", "The masked copy is over 4 MB.");
+  const bytes = Buffer.from(await file.arrayBuffer());
+  const mime = sniffMime(bytes);
+  if (!mime) throw new AppError(415, "bad_type", "The masked copy must be a PDF or an image.");
+  if (mime === "application/pdf" && pdfHasTextLayer(bytes)) throw new AppError(422, "not_masked", "That PDF still has selectable text, so hidden numbers could be copied out. Mask it in Voyage to burn the text out.");
+  let summary = {};
+  if (typeof summaryRaw === "string" && summaryRaw) {
+    try {
+      summary = parse(summarySchema, JSON.parse(summaryRaw));
+    } catch {
+      throw new AppError(400, "invalid_input", "Bad mask summary.");
+    }
+  }
+  return { mime, sizeBytes: bytes.length, summary, ...encrypt(bytes) };
+}
+var foundAnything = (summary) => Object.values(summary).some((n) => n > 0);
 documents.post("/documents", async (c) => {
   if (!documentKey()) throw new AppError(503, "storage_not_configured", "Document storage is not set up on this server yet.");
   const form = await c.req.parseBody().catch(() => {
@@ -3627,6 +3668,12 @@ documents.post("/documents", async (c) => {
     maskedNumber
   }).returning();
   await db.insert(schema_exports.documentBlobs).values({ docId: doc.id, ...box });
+  if (form.masked) {
+    const mv = await maskedValues(form.masked, form.maskSummary);
+    await db.insert(schema_exports.documentMaskedBlobs).values({ docId: doc.id, ...mv });
+    const [updated2] = await db.update(schema_exports.verificationDocuments).set({ maskStatus: foundAnything(mv.summary) ? "masked" : "nothing_found" }).where(eq11(schema_exports.verificationDocuments.id, doc.id)).returning();
+    return c.json({ document: view(updated2) }, 201);
+  }
   return c.json({ document: view(doc) }, 201);
 });
 documents.get("/documents", async (c) => {
@@ -3643,7 +3690,32 @@ async function ownDoc(userId, id2) {
 }
 documents.post("/documents/:id/link", async (c) => {
   const doc = await ownDoc(c.get("userId"), c.req.param("id"));
-  return c.json({ ...signLink(doc.id), mime: doc.mime });
+  const want = parse(z8.enum(["masked", "original", "auto"]).default("auto"), c.req.query("v") ?? void 0);
+  const { db } = await getDb();
+  const [m2] = await db.select({ mime: schema_exports.documentMaskedBlobs.mime }).from(schema_exports.documentMaskedBlobs).where(eq11(schema_exports.documentMaskedBlobs.docId, doc.id)).limit(1);
+  const v = want === "auto" ? m2 ? "masked" : "original" : want;
+  if (v === "masked" && !m2) throw new AppError(404, "not_masked", "This document has no masked copy yet.");
+  if (v === "original" && doc.originalDeleted) throw new AppError(404, "original_deleted", "You deleted the original. Only the masked copy is kept.");
+  const link = signLink(v === "masked" ? `${doc.id}:masked` : doc.id);
+  return c.json({ ...link, url: v === "masked" ? `${link.url.replace(`${doc.id}:masked`, doc.id)}&v=masked` : link.url, mime: v === "masked" ? m2.mime : doc.mime, variant: v });
+});
+documents.post("/documents/:id/masked", async (c) => {
+  const doc = await ownDoc(c.get("userId"), c.req.param("id"));
+  const form = await c.req.parseBody().catch(() => ({}));
+  const mv = await maskedValues(form.masked, form.maskSummary);
+  const { db } = await getDb();
+  await db.insert(schema_exports.documentMaskedBlobs).values({ docId: doc.id, ...mv }).onConflictDoUpdate({ target: schema_exports.documentMaskedBlobs.docId, set: { ...mv, createdAt: /* @__PURE__ */ new Date() } });
+  const [updated2] = await db.update(schema_exports.verificationDocuments).set({ maskStatus: foundAnything(mv.summary) ? "masked" : "nothing_found", updatedAt: /* @__PURE__ */ new Date() }).where(eq11(schema_exports.verificationDocuments.id, doc.id)).returning();
+  return c.json({ document: view(updated2), summary: mv.summary });
+});
+documents.delete("/documents/:id/original", async (c) => {
+  const doc = await ownDoc(c.get("userId"), c.req.param("id"));
+  const { db } = await getDb();
+  const [m2] = await db.select({ id: schema_exports.documentMaskedBlobs.docId }).from(schema_exports.documentMaskedBlobs).where(eq11(schema_exports.documentMaskedBlobs.docId, doc.id)).limit(1);
+  if (!m2) throw new AppError(409, "not_masked", "Mask the document first, so there is a copy to keep.");
+  await db.delete(schema_exports.documentBlobs).where(eq11(schema_exports.documentBlobs.docId, doc.id));
+  const [updated2] = await db.update(schema_exports.verificationDocuments).set({ originalDeleted: true, updatedAt: /* @__PURE__ */ new Date() }).where(eq11(schema_exports.verificationDocuments.id, doc.id)).returning();
+  return c.json({ document: view(updated2) });
 });
 documents.delete("/documents/:id", async (c) => {
   const doc = await ownDoc(c.get("userId"), c.req.param("id"));
@@ -3654,11 +3726,12 @@ documents.delete("/documents/:id", async (c) => {
 documents.get("/files/:id", async (c) => {
   const id2 = c.req.param("id");
   const { exp = "", sig = "" } = c.req.query();
-  if (!z8.string().uuid().safeParse(id2).success || !documentKey() || !checkLink(id2, exp, sig)) {
+  const masked = c.req.query("v") === "masked";
+  if (!z8.string().uuid().safeParse(id2).success || !documentKey() || !checkLink(masked ? `${id2}:masked` : id2, exp, sig)) {
     throw new AppError(403, "link_expired", "This link has expired. Open the document again from your wallet.");
   }
   const { db } = await getDb();
-  const [row] = await db.select({ mime: schema_exports.verificationDocuments.mime, title: schema_exports.verificationDocuments.title, iv: schema_exports.documentBlobs.iv, tag: schema_exports.documentBlobs.tag, data: schema_exports.documentBlobs.data }).from(schema_exports.documentBlobs).innerJoin(schema_exports.verificationDocuments, eq11(schema_exports.verificationDocuments.id, schema_exports.documentBlobs.docId)).where(eq11(schema_exports.documentBlobs.docId, id2)).limit(1);
+  const [row] = masked ? await db.select({ mime: schema_exports.documentMaskedBlobs.mime, title: schema_exports.verificationDocuments.title, iv: schema_exports.documentMaskedBlobs.iv, tag: schema_exports.documentMaskedBlobs.tag, data: schema_exports.documentMaskedBlobs.data }).from(schema_exports.documentMaskedBlobs).innerJoin(schema_exports.verificationDocuments, eq11(schema_exports.verificationDocuments.id, schema_exports.documentMaskedBlobs.docId)).where(eq11(schema_exports.documentMaskedBlobs.docId, id2)).limit(1) : await db.select({ mime: schema_exports.verificationDocuments.mime, title: schema_exports.verificationDocuments.title, iv: schema_exports.documentBlobs.iv, tag: schema_exports.documentBlobs.tag, data: schema_exports.documentBlobs.data }).from(schema_exports.documentBlobs).innerJoin(schema_exports.verificationDocuments, eq11(schema_exports.verificationDocuments.id, schema_exports.documentBlobs.docId)).where(eq11(schema_exports.documentBlobs.docId, id2)).limit(1);
   if (!row) throw new AppError(404, "not_found", "That document was deleted.");
   const body = decrypt(row);
   const ext = row.mime === "application/pdf" ? "pdf" : row.mime.split("/")[1];
@@ -3666,7 +3739,7 @@ documents.get("/files/:id", async (c) => {
     headers: {
       "content-type": row.mime,
       "content-length": String(body.length),
-      "content-disposition": `inline; filename="${row.title.replace(/[^\w .-]/g, "_")}.${ext}"`,
+      "content-disposition": `inline; filename="${row.title.replace(/[^\w .-]/g, "_")}${masked ? " (masked)" : ""}.${ext}"`,
       "cache-control": "private, no-store",
       "x-content-type-options": "nosniff"
     }

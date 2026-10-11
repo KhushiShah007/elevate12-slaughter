@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { CloudUpload, Download, ExternalLink, Lock, QrCode, Trash2 } from 'lucide-react';
+import { CloudUpload, Download, ExternalLink, EyeOff, Lock, QrCode, Trash2 } from 'lucide-react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { backUpScan, deleteRemoteDocument, getDocument, getDocumentFiles, openRemoteDocument } from '../../db/repos/documents';
+import { backUpScan, deleteOriginal, deleteRemoteDocument, getDocument, getDocumentFiles, openRemoteDocument, uploadMasked } from '../../db/repos/documents';
+import { MaskEditor } from '../../components/wallet/MaskEditor';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { PillButton } from '../../components/ui/PillButton';
 import { Chip, SampleTag } from '../../components/ui/Chip';
@@ -18,14 +19,32 @@ import NotFound from '../NotFound';
 function RemoteView({ doc }: { doc: TravelDocument }) {
   const navigate = useNavigate();
   const online = useOnline();
-  const [file, setFile] = useState<{ url: string; local: boolean } | null>(null);
+  const [file, setFile] = useState<{ url: string; local: boolean; mime?: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirm, setConfirm] = useState(false);
+  const [variant, setVariant] = useState<'auto' | 'original'>('auto');
+  const [masking, setMasking] = useState<Blob | null>(null);
+  const [maskMsg, setMaskMsg] = useState<string | null>(null);
+  const [confirmOriginal, setConfirmOriginal] = useState(false);
+  const isMasked = doc.maskStatus === 'masked' || doc.maskStatus === 'nothing_found';
+
+  const startMasking = async () => {
+    setMaskMsg('Downloading the original to this phone…');
+    try {
+      const f = await openRemoteDocument(doc, 'original');
+      const blob = await (await fetch(f.url)).blob();
+      setMasking(new Blob([blob], { type: f.mime ?? doc.mime ?? blob.type }));
+      setMaskMsg(null);
+    } catch {
+      setMaskMsg('Could not download the original. Try again online.');
+    }
+  };
 
   useEffect(() => {
     let url: string | null = null;
     setError(null);
-    openRemoteDocument(doc)
+    setFile(null);
+    openRemoteDocument(doc, variant)
       .then((f) => {
         url = f.local ? f.url : null;
         setFile(f);
@@ -34,9 +53,29 @@ function RemoteView({ doc }: { doc: TravelDocument }) {
     return () => {
       if (url) URL.revokeObjectURL(url);
     };
-  }, [doc.id, doc.offline, online]);
+  }, [doc.id, doc.offline, doc.maskStatus, online, variant]);
 
-  const pdf = doc.mime === 'application/pdf';
+  const pdf = (file?.mime ?? doc.mime) === 'application/pdf';
+
+  if (masking)
+    return (
+      <MaskEditor
+        file={masking}
+        mime={masking.type === 'application/pdf' ? 'application/pdf' : masking.type || 'image/jpeg'}
+        saveLabel="Save masked copy"
+        onCancel={() => setMasking(null)}
+        onDone={async (r) => {
+          try {
+            await uploadMasked(doc, r);
+            setMasking(null);
+            setVariant('auto');
+          } catch (e) {
+            setMaskMsg((e as Error).message);
+            setMasking(null);
+          }
+        }}
+      />
+    );
   return (
     <>
       {file ? (
@@ -49,6 +88,59 @@ function RemoteView({ doc }: { doc: TravelDocument }) {
         )
       ) : (
         <div className="grid aspect-[1/1.35] place-items-center rounded-md border border-line bg-paper p-6 text-center text-sm text-muted shadow-lift">{error ?? 'Opening…'}</div>
+      )}
+
+      {doc.remote && (
+        <div className="mt-3 rounded-md border border-line bg-paper px-4 py-3 text-sm">
+          {isMasked ? (
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="flex items-center gap-1.5 font-medium text-ink">
+                <EyeOff size={16} /> {variant === 'original' ? 'Showing the original' : 'Masked copy'}
+              </span>
+              {doc.originalDeleted ? (
+                <span className="text-xs text-muted">Original deleted</span>
+              ) : (
+                <button type="button" disabled={!online} className="text-sm underline underline-offset-4 disabled:opacity-50" onClick={() => setVariant(variant === 'original' ? 'auto' : 'original')}>
+                  {variant === 'original' ? 'Show masked' : 'Show original'}
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-espresso">Not masked: ID numbers and address are visible.</span>
+              <button type="button" disabled={!online} className="text-sm font-medium underline underline-offset-4 disabled:opacity-50" onClick={() => void startMasking()}>
+                Mask it
+              </button>
+            </div>
+          )}
+          {maskMsg && <p className="mt-1 text-xs text-muted">{maskMsg}</p>}
+          {isMasked && !doc.originalDeleted && (
+            <p className="mt-2 text-xs">
+              {confirmOriginal ? (
+                <>
+                  Erase the original for good? Only the masked copy stays.{' '}
+                  <button
+                    className="font-semibold text-bad underline underline-offset-4"
+                    onClick={async () => {
+                      await deleteOriginal(doc).catch(() => setMaskMsg('Could not delete the original. Try again.'));
+                      setConfirmOriginal(false);
+                      setVariant('auto');
+                    }}
+                  >
+                    Erase
+                  </button>{' '}
+                  <button className="underline underline-offset-4" onClick={() => setConfirmOriginal(false)}>
+                    Keep
+                  </button>
+                </>
+              ) : (
+                <button disabled={!online} className="text-muted underline underline-offset-4 disabled:opacity-50" onClick={() => setConfirmOriginal(true)}>
+                  Delete the original, keep the masked copy
+                </button>
+              )}
+            </p>
+          )}
+        </div>
       )}
 
       <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
@@ -78,7 +170,7 @@ function RemoteView({ doc }: { doc: TravelDocument }) {
           <a href={file.url} target="_blank" rel="noreferrer" className="flex min-h-tap items-center justify-center gap-2 rounded-pill bg-ink px-4 text-sm font-medium text-ivory">
             <ExternalLink size={16} /> Open
           </a>
-          <a href={file.url} download={`${doc.title}.${pdf ? 'pdf' : (doc.mime ?? 'image/jpeg').split('/')[1]}`} className="flex min-h-tap items-center justify-center gap-2 rounded-pill border border-line bg-paper px-4 text-sm font-medium text-ink">
+          <a href={file.url} download={`${doc.title}${variant === 'auto' && isMasked ? ' (masked)' : ''}.${pdf ? 'pdf' : (file.mime ?? doc.mime ?? 'image/jpeg').split('/')[1]}`} className="flex min-h-tap items-center justify-center gap-2 rounded-pill border border-line bg-paper px-4 text-sm font-medium text-ink">
             <Download size={16} /> Save
           </a>
         </div>

@@ -42,3 +42,10 @@ One line each, in the order they were made.
 - **Ladder:** in-app + push (+ email) → WhatsApp (or SMS) → call → second call. 30 min per step, `leaveBy` shortens it to a third of the time left (5–30 min). Demo alerts use 1-minute steps.
 - **Consent:** every channel is off until switched on; calls never in quiet hours; ordinary notifications wait for quiet hours to end; daily cost cap with rough per-message costs; STOP (Twilio-signed inbound SMS) pauses SMS and WhatsApp until the user opts in again.
 - **Real push (FCM) and real SMS/WhatsApp/voice adapters** stay dry runs even with keys (only email has a real adapter); the timeline and Outbox show exactly what would have been sent.
+
+## Section 11: document masking
+- **On the device, not PyMuPDF:** the stack is Node on Vercel (no Python), so masking runs in the browser: pdf.js renders pages and gives the text layer, tesseract.js (lazy-loaded) reads scans and photos. The originals' sensitive values never need to be processed on the server.
+- **True redaction:** boxes are painted into the page pixels and the masked PDF is rebuilt from JPEG page images (existing `imagesToPdf`), so the masked file has no text layer at all. The server double-checks: a "masked" PDF with fonts, object streams or forms is refused (422).
+- **Aadhaar:** 12 digits passing Verhoeff; only the first 8 digits are covered. DOB only on lines labelled DOB/Year of Birth (expiry dates stay visible). Address: the labelled line plus following lines until the PIN code.
+- **Storage:** masked copy encrypted (AES-GCM) in `document_masked_blobs`; links default to the masked copy and are signed separately (a masked link cannot open the original). The original can be erased, keeping the masked copy.
+- **Claude vision fallback not built** (blocked by the agent's safety check on sending document images to a third party); patterns + manual boxes cover it for now.
