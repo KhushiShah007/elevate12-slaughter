@@ -13,6 +13,7 @@ let shotNo = 0;
 async function shot(page: Page, name: string) {
   await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => {});
   await expect(page.getByText('Something went wrong on this screen')).toHaveCount(0);
+  await expect(page.getByText(/Please log in to continue/i)).toHaveCount(0);
   shotNo += 1;
   await page.screenshot({ path: `docs/screenshots/qa-${String(shotNo).padStart(2, '0')}-${name}.jpg`, type: 'jpeg', quality: 70 });
 }
@@ -35,7 +36,7 @@ test('traveller journey: sign-up to masked document', async ({ page }) => {
     if (/sync|error/i.test(m.text())) pushes.push(`console: ${m.text().slice(0, 160)}`);
   });
 
-  await test.step('sign up with a one-time code and a password', async () => {
+  await test.step('sign up: any number, code 123456, straight to Home with a server session', async () => {
     await page.goto('/welcome');
     await shot(page, 'welcome');
     await page.goto('/signup');
@@ -43,23 +44,22 @@ test('traveller journey: sign-up to masked document', async ({ page }) => {
     await page.getByLabel('Mobile number').fill(phone);
     await shot(page, 'signup');
     await page.getByRole('button', { name: 'Send code' }).click();
-    await page.getByRole('button', { name: 'Fill the code' }).click();
+    await page.locator('input[inputmode=numeric], input[autocomplete=one-time-code]').first().fill('123456');
     await page.getByRole('button', { name: 'Verify' }).click();
-    await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
-    await page.getByLabel('Repeat password').fill(PASSWORD);
-    await page.getByRole('button', { name: 'Save and continue' }).click();
-    await expect(page).toHaveURL(/\/quiz/);
-    await shot(page, 'persona-quiz');
+    await expect(page).toHaveURL(/\/home/, { timeout: 60_000 });
+    await expect.poll(async () => (await page.request.get('/api/me')).status()).toBe(200);
+    await shot(page, 'home');
   });
 
-  await test.step('log out and log in with the password', async () => {
+  await test.step('log out and log in with any number and password', async () => {
     await api(page, 'POST', '/auth/logout');
+    await page.evaluate(() => localStorage.clear());
     await page.goto('/login');
     await page.locator('input:not([type=password])').first().fill(phone);
     await page.getByLabel('Password').fill(PASSWORD);
     await page.getByRole('button', { name: 'Log in' }).click();
-    await expect(page).toHaveURL(/\/home/);
-    await shot(page, 'home');
+    await expect(page).toHaveURL(/\/home/, { timeout: 60_000 });
+    await expect.poll(async () => (await page.request.get('/api/me')).status()).toBe(200);
   });
 
   await test.step('budget search and pick a destination', async () => {
@@ -192,4 +192,20 @@ test('traveller journey: sign-up to masked document', async ({ page }) => {
       await shot(page, p.slice(1));
     }
   });
+});
+
+test('"Continue as demo" gives a working session for every feature', async ({ browser, baseURL }) => {
+  const ctx = await browser.newContext({ baseURL, viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  const page = await ctx.newPage();
+  await page.goto('/login');
+  await page.getByRole('button', { name: 'Continue as demo' }).click();
+  await expect(page).toHaveURL(/\/home/, { timeout: 60_000 });
+  await expect.poll(async () => (await page.request.get('/api/me')).status()).toBe(200);
+  for (const p of ['/home', '/plan', '/trips', '/wallet', '/notifications', '/refunds', '/outbox', '/assistant', '/me', '/privacy']) {
+    await page.goto(p);
+    await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => {});
+    await expect(page.getByText('Something went wrong on this screen'), p).toHaveCount(0);
+    await expect(page.getByText(/Please log in to continue/i), p).toHaveCount(0);
+  }
+  await ctx.close();
 });

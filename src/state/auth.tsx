@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { api, ApiError, type Me } from '../api/client';
+import { api, ApiError, type Me, type OtpSent } from '../api/client';
 import { db } from '../db/db';
 import { pullFromServer, replay } from '../db/syncQueue';
 import { resetDemo } from '../db/seed';
@@ -28,6 +28,34 @@ const PENDING_KEY = 'voyage.profilePending';
 const DEMO_KEY = 'voyage.demo';
 export const isDemo = () => readJson<boolean>(DEMO_KEY) === true;
 export const DEMO_OTP = '123456';
+const GUEST_KEY = 'voyage.guest';
+
+/**
+ * A real server session for the demo, so every feature (itinerary, payments, wallet, alerts)
+ * works. Uses the normal sign-up endpoints with a throwaway guest account on this device;
+ * returns null when the server cannot be reached (the app then runs on the device only).
+ */
+async function guestSession(name: string): Promise<Me | null> {
+  try {
+    const saved = readJson<{ contact: string; password: string }>(GUEST_KEY);
+    if (saved) {
+      try {
+        return (await api<{ me: Me }>('POST', '/auth/login', saved, 30_000)).me;
+      } catch {
+        /* the guest account is gone (new database): make a new one */
+      }
+    }
+    const contact = `guest-${crypto.randomUUID().slice(0, 12)}@demo.voyage.app`;
+    const password = crypto.randomUUID();
+    const sent = await api<OtpSent>('POST', '/auth/otp', { contact, purpose: 'signup' }, 30_000);
+    if (!sent.devCode) return null;
+    const res = await api<{ me: Me }>('POST', '/auth/signup', { name: name.trim().length >= 2 ? name.trim() : 'Demo Traveller', contact, code: sent.devCode, password }, 30_000);
+    writeJson(GUEST_KEY, { contact, password });
+    return res.me;
+  } catch {
+    return null;
+  }
+}
 
 const readJson = <T,>(key: string): T | null => {
   try {
@@ -132,7 +160,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const check = async () => {
       if (isDemo()) {
-        setStatus(readJson(CACHE_KEY) ? 'signedIn' : 'signedOut');
+        const cached = readJson<Me>(CACHE_KEY);
+        setStatus(cached ? 'signedIn' : 'signedOut');
+        // Signed in on the device only (no server earlier): get a real session now if possible.
+        if (cached && navigator.onLine) {
+          const server = await guestSession(cached.name);
+          if (server) {
+            writeJson(DEMO_KEY, null);
+            await accept(server);
+          }
+        }
         return;
       }
       if (!navigator.onLine) {
@@ -169,6 +206,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const demoSignIn = useCallback(
     async (contact = 'demo@voyage.app', name = 'Demo Traveller') => {
+      const server = await guestSession(name);
+      if (server) {
+        writeJson(DEMO_KEY, null);
+        await signedIn(server);
+        return;
+      }
+      // No server: sign in on this device only.
       writeJson(DEMO_KEY, true);
       const email = contact.includes('@') ? contact : null;
       await signedIn({ id: 'demo-user', email, phone: email ? null : contact, contact, name: name || 'Demo Traveller', homeCity: 'Mumbai', language: settingsRef.current.language ?? 'en', seniorMode: false, personaId: null, personaAnswers: null, personaNotes: null, cards: [] } as Me);

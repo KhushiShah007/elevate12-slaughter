@@ -3,6 +3,9 @@ import { defineConfig } from '@playwright/test';
 // End-to-end smoke test against a dev server with its own throwaway database.
 // Uses the Microsoft Edge already on the machine (no browser download). AI keys are blanked so
 // the assistant answers from its rules, and nothing is ever sent for real.
+// PW_BASE_URL=https://… runs the same tests against a deployed site (no local server).
+const live = process.env.PW_BASE_URL;
+
 export default defineConfig({
   testDir: 'e2e',
   timeout: 600_000,
@@ -10,14 +13,16 @@ export default defineConfig({
   workers: 1,
   reporter: [['list']],
   use: {
-    baseURL: 'http://localhost:5175',
+    baseURL: live ?? 'http://localhost:5175',
     channel: process.env.PW_CHANNEL ?? 'msedge',
     viewport: { width: 390, height: 844 },
     deviceScaleFactor: 2,
     isMobile: true,
     hasTouch: true,
   },
-  webServer: {
+  webServer: live
+    ? undefined
+    : {
     command: 'npx vite --port 5175 --strictPort',
     url: 'http://localhost:5175/api/health',
     timeout: 240_000,
