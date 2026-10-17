@@ -62,5 +62,7 @@ See [DECISIONS.md](DECISIONS.md).
 - Section 13 (API reference): followed throughout; no separate work.
 - Section 14 (final QA): done — full Vitest suite (224) green, Playwright smoke (sign-up → login → budget → destination → trip → flights/hotels → test payment → itinerary → "I feel sick" → experiences/restaurants/transport → cancel → refund tracker and Outbox → chatbot → voice → packing → notifications → mask a document) green, build green, README / API_KEYS_NEEDED / DEPLOY_ENV updated, screenshots saved. The smoke test found and fixed a sync-queue race and a packing tick lag.
 
+- Final fixes (live site): demo login now also gets a real server session (any number + code 123456, or "Continue as demo"), so every feature works; the API now runs in Singapore next to the database (was Washington), making requests about 6x faster and ending dropped connections. Both end-to-end tests pass against https://elevate12-slaughter-fgz4.vercel.app.
+
 ## Pushed
 - Repo: https://github.com/KhushiShah007/elevate12-slaughter — branches `feature/complete-app` and `main`.

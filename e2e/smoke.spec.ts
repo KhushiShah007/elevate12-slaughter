@@ -19,7 +19,9 @@ async function shot(page: Page, name: string) {
 }
 
 async function api(page: Page, method: 'GET' | 'POST', path: string, data?: unknown) {
-  const res = method === 'GET' ? await page.request.get(`/api${path}`) : await page.request.post(`/api${path}`, { data });
+  const send = () => (method === 'GET' ? page.request.get(`/api${path}`) : page.request.post(`/api${path}`, { data }));
+  // A reused idle connection can be closed by the host (ECONNRESET); browsers retry, so do the same once.
+  const res = await send().catch((e: Error) => (/ECONNRESET|socket hang up/.test(e.message) ? send() : Promise.reject(e)));
   expect(res.status(), `${method} ${path}`).toBeLessThan(400);
   return res.json();
 }
