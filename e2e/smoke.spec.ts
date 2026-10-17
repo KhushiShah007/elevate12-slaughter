@@ -197,10 +197,16 @@ test('traveller journey: sign-up to masked document', async ({ page }) => {
 test('"Continue as demo" gives a working session for every feature', async ({ browser, baseURL }) => {
   const ctx = await browser.newContext({ baseURL, viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   const page = await ctx.newPage();
+  const log: string[] = [];
+  page.on('response', (r) => {
+    const u = new URL(r.url());
+    if (u.pathname.startsWith('/api/')) log.push(`${r.request().method()} ${u.pathname} ${r.status()}`);
+  });
+  page.on('console', (m) => m.type() === 'error' && log.push(`console ${m.text().slice(0, 120)}`));
   await page.goto('/login');
   await page.getByRole('button', { name: 'Continue as demo' }).click();
   await expect(page).toHaveURL(/\/home/, { timeout: 60_000 });
-  await expect.poll(async () => (await page.request.get('/api/me')).status()).toBe(200);
+  await expect.poll(async () => `${(await page.request.get('/api/me')).status()} | ${log.join(' ; ')}`).toMatch(/^200/);
   for (const p of ['/home', '/plan', '/trips', '/wallet', '/notifications', '/refunds', '/outbox', '/assistant', '/me', '/privacy']) {
     await page.goto(p);
     await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => {});

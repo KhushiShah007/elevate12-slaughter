@@ -11,7 +11,8 @@
   ],
   "functions": {
     "api/index.js": {
-      "includeFiles": "server/{db/migrations,seed/data}/**"
+      "includeFiles": "server/{db/migrations,seed/data}/**",
+      "maxDuration": 60
     }
   },
   "crons": [
@@ -50,5 +51,8 @@
         }
       ]
     }
+  ],
+  "regions": [
+    "sin1"
   ]
 }
