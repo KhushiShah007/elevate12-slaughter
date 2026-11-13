@@ -31,7 +31,7 @@ Paste these in **Vercel → Project → Settings → Environment Variables**. Ne
 
 | Variable | Unlocks |
 |---|---|
-| `GROQ_API_KEY`, `GROQ_MODEL` | Alternative LLM if no Grok key (`llama-3.3-70b-versatile`) |
+| `GROQ_API_KEY`, `GROQ_MODEL` | Alternative LLM if no Grok key (`openai/gpt-oss-120b`) |
 | `DEEPGRAM_API_KEY` or `OPENAI_API_KEY` | Server speech-to-text when the browser cannot transcribe |
 | `AMADEUS_CLIENT_ID`, `AMADEUS_CLIENT_SECRET`, `AMADEUS_ENV` | Live flight and hotel offers (`AMADEUS_ENV=test`) |
 | `GOOGLE_MAPS_API_KEY` | Google ratings and places |

@@ -23,7 +23,7 @@ export interface LlmProvider {
 /** The configured provider, or null when no key is set. */
 export function llmProvider(env: NodeJS.ProcessEnv = process.env): LlmProvider | null {
   if (env.XAI_API_KEY) return { name: 'grok', model: env.XAI_MODEL || 'grok-3-mini', url: 'https://api.x.ai/v1/chat/completions', key: env.XAI_API_KEY };
-  if (env.GROQ_API_KEY) return { name: 'groq', model: env.GROQ_MODEL || 'llama-3.3-70b-versatile', url: 'https://api.groq.com/openai/v1/chat/completions', key: env.GROQ_API_KEY };
+  if (env.GROQ_API_KEY) return { name: 'groq', model: env.GROQ_MODEL || 'openai/gpt-oss-120b', url: 'https://api.groq.com/openai/v1/chat/completions', key: env.GROQ_API_KEY };
   return null;
 }
 
