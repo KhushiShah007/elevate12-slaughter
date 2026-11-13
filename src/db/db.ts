@@ -48,7 +48,7 @@ export interface AiCacheEntry {
 }
 
 export interface Meta {
-  key: 'seededAt' | 'dataVersion' | 'currentUserId' | 'lastSyncedAt';
+  key: 'seededAt' | 'dataVersion' | 'currentUserId' | 'lastSyncedAt' | 'sampleShiftDays';
   value: string;
 }
 

@@ -1,11 +1,16 @@
 import { db } from './db';
-import * as sample from '../data/sampleTrips';
-import { documents } from '../data/sampleDocuments';
+import * as original from '../data/sampleTrips';
+import { documents as originalDocuments } from '../data/sampleDocuments';
+import { sampleShiftDays, shiftDates } from '../data/sampleShift';
 
 // Bump when the bundled sample data changes, so devices reseed.
-export const DATA_VERSION = '9';
+// v10: sample dates are moved to start about a week from the day the device is seeded.
+export const DATA_VERSION = '10';
 
 async function seed() {
+  const days = sampleShiftDays();
+  const sample = shiftDates({ ...original }, days);
+  const documents = shiftDates(originalDocuments, days);
   await db.transaction('rw', db.tables, async () => {
     await Promise.all([
       db.users.put(sample.sampleUser),
@@ -29,6 +34,8 @@ async function seed() {
       { key: 'seededAt', value: new Date().toISOString() },
       { key: 'dataVersion', value: DATA_VERSION },
       { key: 'currentUserId', value: sample.sampleUser.id },
+      // Read by screens that use bundled sample data directly (recovery options), so they move too.
+      { key: 'sampleShiftDays', value: String(days) },
     ]);
   });
 }

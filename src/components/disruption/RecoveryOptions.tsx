@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { RefreshCw, WifiOff } from 'lucide-react';
 import { recoveryCandidates } from '../../data/sampleDisruptions';
+import { shiftDates } from '../../data/sampleShift';
+import { db } from '../../db/db';
 import type { DisruptionType, RecheckResult } from '../../types';
 import type { TripBundle } from '../../db/repos/trips';
 import { rankOptions, recheckRows, withRecheck, type RankContext } from '../../engines/ranking';
@@ -37,7 +39,12 @@ export function RecoveryOptions({ bundle, type, fixKey }: { bundle: TripBundle; 
 
   const tripId = bundle.trip.id;
   const valueOfHourInr = usePersona()?.persona.valueOfHourInr;
-  const candidates = useMemo(() => recoveryCandidates.filter((c) => c.tripId === tripId && c.appliesTo.includes(type)), [tripId, type]);
+  // The sample trip's dates were moved when the device was seeded; move the sample options by the same days.
+  const shiftDays = Number(useLiveQuery(() => db.meta.get('sampleShiftDays'), [])?.value ?? 0) || 0;
+  const candidates = useMemo(
+    () => shiftDates(recoveryCandidates.filter((c) => c.tripId === tripId && c.appliesTo.includes(type)), shiftDays),
+    [tripId, type, shiftDays],
+  );
   // undefined while loading; null when nothing has been chosen for this disruption yet.
   const already = useLiveQuery(() => getChosenRecovery(tripId, fixKey), [tripId, fixKey]);
   const ctx: RankContext = useMemo(
